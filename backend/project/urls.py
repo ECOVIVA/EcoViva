@@ -10,13 +10,11 @@ urlpatterns = [
     #
     # Estas são as rotas principais da API:
     # 
-    # - api/bubble/: Endpoints da aplicação 'bubble'.
     # - api/posts/: Endpoints para gerenciar os posts.
     # - api/users/: Endpoints para gerenciar os usuários.
     # 
     # Cada aplicação tem suas próprias rotas, organizadas aqui.
 
-    path('api/bubble/', include("apps.bolha.urls")),
     path('api/posts/', include("apps.posts.urls")),
     path('api/users/', include("apps.usuarios.urls")),
 ]
