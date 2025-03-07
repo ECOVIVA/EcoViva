@@ -1,22 +1,22 @@
-"""
-URL configuration for project project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.1/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 
 urlpatterns = [
+
+    #URL da pagina de administrativa
     path('admin/', admin.site.urls),
+
+    # URLs da API
+    #
+    # Estas são as rotas principais da API:
+    # 
+    # - api/bubble/: Endpoints da aplicação 'bubble'.
+    # - api/posts/: Endpoints para gerenciar os posts.
+    # - api/users/: Endpoints para gerenciar os usuários.
+    # 
+    # Cada aplicação tem suas próprias rotas, organizadas aqui.
+
+    path('api/bubble/', include("apps.bolha.urls")),
+    path('api/posts/', include("apps.posts.urls")),
+    path('api/users/', include("apps.usuarios.urls")),
 ]
