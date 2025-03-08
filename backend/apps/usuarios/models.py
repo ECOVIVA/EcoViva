@@ -13,6 +13,8 @@ Tabela refrerente aos dados de usuários, herdando do Model nativo do Django, Ab
     - email ( Email do usuario)
     - phone ( Numero de telefone do usuario)
 
+    Obs: Os campos groups e user_permissions foram definidos como None devido à obrigatoriedade imposta pela herança do AbstractUser, porém, não serão utilizados neste projeto.
+
 """
 
 class Users(AbstractUser):
@@ -23,6 +25,7 @@ class Users(AbstractUser):
         verbose_name_plural = "Users"
 
     phone = models.CharField(max_length=15, blank=True, null=True)
+
     groups = None
     user_permissions = None
 
