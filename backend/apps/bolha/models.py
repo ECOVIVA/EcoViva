@@ -10,6 +10,7 @@ Tabelas refrerente aos dados das Bolhas
     - id( Identificador de cada post )
     - user( id do Usuario dono da Bolha)
     - progress( Progresso da bolha)
+    - rank (Define o rank daquela bolha)
 
     Os Campos que sarão usados em Check In: 
     - id( Identificador de cada post )
@@ -20,7 +21,14 @@ Tabelas refrerente aos dados das Bolhas
 """
 
 class Bubble(models.Model):
-
+    RANKS_CHOICES = [
+        ('INICIANTE_VERDE', 'Iniciante Verde'),
+        ('GUARDIAO_DO_ECO', 'Guardião do Eco'),
+        ('DEFENSOR_DA_NATUREZA', 'Defensor da Natureza'),
+        ('HEROI_SUSTENTAVEL', 'Herói Sustentável'),
+        ('LIDER_VERDE', 'Líder Verde'),
+    ]
+    
     # Classe responsável por definir como o model será chamado na area administrativa
     class Meta:
         verbose_name = "Bubble"
@@ -28,6 +36,11 @@ class Bubble(models.Model):
 
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
     progress = models.FloatField()
+    rank = models.CharField(
+        max_length=50,
+        choices= RANKS_CHOICES,
+        default="INICIANTE_VERDE"
+    )
 
     # Metodo responsável pela representação em string do Model
     def __str__(self):
