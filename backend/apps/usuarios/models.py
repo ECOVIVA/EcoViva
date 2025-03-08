@@ -1,11 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import FileExtensionValidator
+
+from ...utils.image import validate_image_dimensions,validate_image_size
 
 """ 
 
 Tabela refrerente aos dados de usuários, herdando do Model nativo do Django, Abstract User
 
-    Os Campos que sarão usados: 
+    Os Campos que serão usados: 
     - id( Identificador de cada usuario )
     - username( Nome exclusivo de usuario)
     - first_name( Primeiro Nome do usuario)
@@ -26,7 +29,7 @@ class Users(AbstractUser):
         verbose_name_plural = "Users"
 
     phone = models.CharField(max_length=15, blank=True, null=True)
-    photo = models.ImageField(upload_to = "users_photos", null=True, blank=True)
+    photo = models.ImageField(upload_to = "users_photos",  validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png']),validate_image_size,validate_image_dimensions,], null=True, blank=True)
 
     groups = None
     user_permissions = None
