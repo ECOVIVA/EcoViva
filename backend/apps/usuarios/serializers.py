@@ -28,7 +28,6 @@ class UsersSerializerPost(serializers.ModelSerializer):
         
         model = models.Users
         fields = ['id', 'username', 'first_name', 'last_name', 'password', 'email', 'phone', 'photo']
-
     
     # Validação para numero de celular
     def validate_phone(self, value):

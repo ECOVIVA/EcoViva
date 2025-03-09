@@ -30,7 +30,7 @@ class Users(AbstractUser):
         verbose_name_plural = "Users"
 
     email = models.EmailField(unique=True, blank = False, null=False)
-    phone = models.CharField(max_length=15, blank=True, null=True)
+    phone = models.CharField(max_length=15, blank=False, null=False)
     photo = models.ImageField(upload_to = "users_photos",  validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png']),validate_image_size, validate_image_dimensions,], null=True, blank=True)
 
     groups = None

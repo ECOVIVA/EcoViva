@@ -35,7 +35,6 @@ class UserView(APIView):
                 serializer.save()
                 return Response({'detail': 'Usuario criado com sucesso!!!'}, status=status.HTTP_201_CREATED)
             
-            print(serializer.errors)
             return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
         except:
             return Response("ERROR", status = status.HTTP_400_BAD_REQUEST)
@@ -43,10 +42,40 @@ class UserView(APIView):
 
 class UserDetailView(APIView):
     def get(self, request, username):
-        ...
+        try:
+            user = get_object_or_404(models.Users, username = username)
+            serializer = serializers.UsersSerializer(user)
+
+            return Response(serializer.data, status = status.HTTP_200_OK)
+        except Http404:
+            return Response('O usuario não foi encontrado!!!', status = status.HTTP_404_NOT_FOUND)
+        except:
+            return Response("ERROR", status = status.HTTP_400_BAD_REQUEST)
 
     def patch(self, request, username):
-        ...
+        try:
+            data = request.data
+            user = get_object_or_404(models.Users, username = username)
+            serializer = serializers.UsersSerializerPost(user, data = data, partial = True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response("Dados atualizados com sucesso!!", status = status.HTTP_200_OK)
+
+            print(serializer.errors)
+            return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        except Http404:
+            return Response('O usuario não foi encontrado!!!', status = status.HTTP_404_NOT_FOUND)
+        except:
+            return Response("ERROR", status = status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, username):
-        ...
+        try:
+            user = get_object_or_404(models.Users, username = username)
+
+            user.delete()
+            return Response("Dados excluidos com sucesso!!", status = status.HTTP_204_NO_CONTENT)
+        
+        except Http404:
+            return Response('O usuario não foi encontrado!!!', status = status.HTTP_404_NOT_FOUND)
+        except:
+            return Response("ERROR", status = status.HTTP_400_BAD_REQUEST)
