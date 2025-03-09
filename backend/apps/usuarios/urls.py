@@ -14,8 +14,10 @@ from . import views
       Rota para acessar as funcionalidades relacionadas às bolhas associadas a um usuário específico.
 """
 
+app_name = 'users'
+
 urlpatterns = [
-    path('', views.UserView.as_view()),
-    path('<str:username>/', views.UserDetailView.as_view()),
+    path('', views.UserView.as_view(), name="user_list"),
+    path('<str:username>/', views.UserDetailView.as_view(), name="user_detail"),
     path('<str:username>/bubble/', include('apps.bolha.urls')),
 ]

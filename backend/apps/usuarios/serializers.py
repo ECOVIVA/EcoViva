@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.contrib.auth import password_validation
 import re
 from . import models
 
@@ -36,7 +37,14 @@ class UsersSerializerPost(serializers.ModelSerializer):
         elif re.match(r'^\(\d{2}\) \d{5}-\d{4}$', value):
             formatted_value = value
         else:
-
             raise serializers.ValidationError("Número de telefone inválido. O formato correto é (XX) XXXXX-XXXX ou 119XXXXXXXX.")
         
         return formatted_value
+    
+    # Validação da senha
+    def validate_password(self, value):
+        try:
+            password_validation.validate_password(value)  # Valida conforme os validadores do Django
+        except serializers.ValidationError as e:
+            raise serializers.ValidationError({"password": str(e)})
+        return value

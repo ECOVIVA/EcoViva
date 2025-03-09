@@ -1,4 +1,5 @@
 from django.shortcuts import get_list_or_404, get_object_or_404
+from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -14,21 +15,31 @@ from . import models, serializers
 
 class UserView(APIView):
     def get(self, request):
-        users = get_list_or_404(models.Users)
-        serializer = serializers.UsersSerializer(users, many = True)
+        try:
+            users = get_list_or_404(models.Users)
+            serializer = serializers.UsersSerializer(users, many = True)
 
-        return Response(serializer.data, status = status.HTTP_200_OK)
+            return Response(serializer.data, status = status.HTTP_200_OK)
+        except Http404:
+            return Response('Nenhum usuário encontrado', status = status.HTTP_204_NO_CONTENT)
+        except:
+            return Response("ERROR", status = status.HTTP_400_BAD_REQUEST)
+  
 
     def post(self, request):
-        data = request.data
+        try:
+            data = request.data
+            serializer = serializers.UsersSerializerPost(data = data)
+            
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'detail': 'Usuario criado com sucesso!!!'}, status=status.HTTP_201_CREATED)
+            
+            print(serializer.errors)
+            return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response("ERROR", status = status.HTTP_400_BAD_REQUEST)
 
-        serializer = serializers.UsersSerializerPost(data = data)
-        
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'detail': 'Usuario criado com sucesso!!!'}, status=status.HTTP_200_OK)
-        
-        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
 class UserDetailView(APIView):
     def get(self, request, username):
