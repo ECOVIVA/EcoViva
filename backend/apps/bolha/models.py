@@ -35,7 +35,7 @@ class Bubble(models.Model):
         verbose_name_plural = "Bubbles"
 
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
-    progress = models.FloatField()
+    progress = models.FloatField(default = 0)
     rank = models.CharField(
         max_length=50,
         choices= RANKS_CHOICES,

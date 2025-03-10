@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { CheckIn } from '../types';
+import { CheckIn } from '../types/types';
 import { persist } from 'zustand/middleware';
 
 interface CheckInState {

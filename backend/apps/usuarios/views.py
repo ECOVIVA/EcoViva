@@ -1,5 +1,6 @@
 from django.shortcuts import get_list_or_404, get_object_or_404
 from django.http import Http404
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -24,20 +25,44 @@ class UserView(APIView):
             return Response('Nenhum usuário encontrado', status = status.HTTP_204_NO_CONTENT)
         except:
             return Response("ERROR", status = status.HTTP_400_BAD_REQUEST)
-  
-
+        
+class UserCreateView(APIView):
     def post(self, request):
         try:
             data = request.data
-            serializer = serializers.UsersSerializerPost(data = data)
+            serializer = serializers.UsersSerializer(data = data)
             
             if serializer.is_valid():
-                serializer.save()
-                return Response({'detail': 'Usuario criado com sucesso!!!'}, status=status.HTTP_201_CREATED)
+                user = serializer.save()
+
+                refresh = RefreshToken.for_user(user)
+                access_token = str(refresh.access_token)
+
+                response = Response({'detail': 'Usuario criado com sucesso!!!', 'user': serializer.data}, status=status.HTTP_201_CREATED)
+                
+                response.set_cookie(
+                    key='access_token',
+                    value=access_token,
+                    secure=True,
+                    httponly=True,
+                    samesite='None',
+                    max_age=300
+                )
+
+                response.set_cookie(
+                    key='refresh_token',
+                    value=str(refresh),
+                    secure=True,
+                    httponly=True,
+                    samesite='None',
+                    max_age=86400
+                )
+
+                return response
             
             return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
-        except:
-            return Response("ERROR", status = status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status = status.HTTP_400_BAD_REQUEST)
 
 
 class UserDetailView(APIView):
@@ -56,7 +81,7 @@ class UserDetailView(APIView):
         try:
             data = request.data
             user = get_object_or_404(models.Users, username = username)
-            serializer = serializers.UsersSerializerPost(user, data = data, partial = True)
+            serializer = serializers.UsersSerializer(user, data = data, partial = True)
             if serializer.is_valid():
                 serializer.save()
                 return Response("Dados atualizados com sucesso!!", status = status.HTTP_200_OK)

@@ -3,6 +3,7 @@ from django.conf import settings
 from django.urls import path, include
 from django.conf.urls.static import static
 
+from apps.usuarios.auth.views import LoginView,LogoutView,RefreshView
 
 urlpatterns = [
 
@@ -20,6 +21,9 @@ urlpatterns = [
 
     path('api/posts/', include("apps.posts.urls")),
     path('api/users/', include("apps.usuarios.urls")),
+    path('api/login/', LoginView.as_view(), name="login"),
+    path('api/logout/', LogoutView.as_view(), name="logout"),
+    path('api/refresh/', RefreshView.as_view(), name="refresh"),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

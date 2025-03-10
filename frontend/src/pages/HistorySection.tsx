@@ -1,4 +1,3 @@
-import React from 'react';
 import { Leaf, Recycle, School, TreePine, Globe2, ArrowDownCircle, Sprout, Award, Users, Target } from 'lucide-react';
 
 function App() {
@@ -10,7 +9,7 @@ function App() {
           <div
             className="absolute inset-0 transform scale-110"
             style={{
-              backgroundImage: "url('https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80')",
+              backgroundImage: "url('https://th.bing.com/th/id/R.34fa1f8ef9b6536890a74dec53e5a689?rik=SXLJfUYR78WlxQ&pid=ImgRaw&r=0')",
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               filter: 'brightness(0.3)',
@@ -91,7 +90,7 @@ function App() {
 
       {/* Mission Section with Floating Cards */}
       <section className="py-24 px-4 bg-gradient-to-br from-green-800 to-green-900 relative">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80')] opacity-10"></div>
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80')] opacity-95"></div>
         <div className="max-w-6xl mx-auto relative">
           <h2 className="text-5xl font-bold text-white text-center mb-20">Nossa Missão</h2>
           <div className="grid md:grid-cols-3 gap-8">

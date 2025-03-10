@@ -32,3 +32,21 @@ export interface Comment {
   content: string;
   date: string;
 }
+
+
+export interface user {
+  id: string;
+  username: string;
+  email: string;
+  avatar?: string;
+}
+
+
+export interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => void;
+  initAuth: () => void;
+  register: (formData: any) => Promise<boolean>;
+}

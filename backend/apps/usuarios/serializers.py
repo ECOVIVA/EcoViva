@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import password_validation
 import re
+from apps.bolha.serializers import BubbleSerializer
 from . import models
 
 """
@@ -13,19 +14,12 @@ from . import models
 """
 
 class UsersSerializer(serializers.ModelSerializer):
-    class Meta:
-        # Classe responsavel por definir qual model o serializer vai realizar as operações, e quais campos
-        # serão usados por ele.
-        
-        model = models.Users
-        fields = ['id', 'username', 'first_name', 'last_name','email', 'phone', 'photo']
 
-    
-class UsersSerializerPost(serializers.ModelSerializer):
+    password = serializers.CharField(write_only = True)
+
     class Meta:
         # Classe responsavel por definir qual model o serializer vai realizar as operações, e quais campos
         # serão usados por ele.
-        
         model = models.Users
         fields = ['id', 'username', 'first_name', 'last_name', 'password', 'email', 'phone', 'photo']
     
@@ -47,3 +41,19 @@ class UsersSerializerPost(serializers.ModelSerializer):
         except serializers.ValidationError as e:
             raise serializers.ValidationError({"password": str(e)})
         return value
+    
+    def create(self, validated_data):
+        # Criar o usuário
+        user = super().create(validated_data)
+
+        # Criação automática da bolha para o novo usuário
+        bubble_data = {'user': user.id}
+        bubble_serializer = BubbleSerializer(data=bubble_data)
+
+        if bubble_serializer.is_valid():
+            bubble_serializer.save()
+            print("Bolha criada com sucesso:", bubble_serializer.data)
+        else:
+            print("Erro ao criar a bolha:", bubble_serializer.errors)
+
+        return user

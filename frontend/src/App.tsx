@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { initAuth, useAuthStore } from './store/authStore';
+import { useAuthStore } from './store/authStore'; 
 
 // Components
-import Navbar from './components/Navbar'
+import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
 // Pages
@@ -13,13 +13,16 @@ import CheckInPage from './pages/CheckInPage';
 import ForumPage from './pages/ForumPage';
 import HistorySection from './pages/HistorySection';
 import ImpactPage from './pages/ImpactPage';
+import CertificatePage from './pages/CertificatePage';
+import ParceriaPage from './pages/ParceriasPage';
+import CreateAccount from './pages/CreateAccount';
 
 function App() {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, initAuth } = useAuthStore(); 
 
   useEffect(() => {
-    initAuth();
-  }, []);
+    initAuth(); // Inicialize a autenticação ao carregar a página
+  }, [initAuth]); // Garantir que o useEffect não dispare novamente desnecessariamente
 
   return (
     <Router>
@@ -29,7 +32,6 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
-        
             <Route 
               path="/checkin" 
               element={
@@ -39,6 +41,9 @@ function App() {
             <Route path="/forum" element={<ForumPage />} />
             <Route path="/HistorySection" element={<HistorySection />} />
             <Route path="/ImpactPage" element={<ImpactPage />} />
+            <Route path="/CertificatePage" element={<CertificatePage />} />
+            <Route path="/ParceriasPage" element={<ParceriaPage />} />
+            <Route path="/CreateAccount" element={<CreateAccount />} />
           </Routes>
         </main>
         <Footer />

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { ForumPost, Comment } from '../types';
+import { ForumPost, Comment } from '../types/types';
 import { persist } from 'zustand/middleware';
 
 interface ForumState {

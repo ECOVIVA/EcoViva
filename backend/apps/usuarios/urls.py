@@ -18,6 +18,7 @@ app_name = 'users'
 
 urlpatterns = [
     path('', views.UserView.as_view(), name="user_list"),
-    path('<str:username>/', views.UserDetailView.as_view(), name="user_detail"),
-    path('<str:username>/bubble/', include('apps.bolha.urls')),
+    path('create/', views.UserCreateView.as_view(), name="user_create"),
+    path('detail/<str:username>/', views.UserDetailView.as_view(), name="user_detail"),
+    path('bubble/', include('apps.bolha.urls')),
 ]

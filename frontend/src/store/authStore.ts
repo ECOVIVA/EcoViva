@@ -1,11 +1,12 @@
 import { create } from 'zustand';
-import { User } from '../types';
+import { User } from '../types/types';
 
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  initAuth: () => void; // Adiciona a função initAuth aqui na interface
 }
 
 // Mock users for demo
@@ -49,19 +50,20 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: () => {
     set({ user: null, isAuthenticated: false });
     localStorage.removeItem('ecovivaUser');
+  },
+  initAuth: () => {
+    const storedUser = localStorage.getItem('ecovivaUser');
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        set({ user, isAuthenticated: true });
+      } catch (error) {
+        console.error('Failed to parse stored user', error);
+        localStorage.removeItem('ecovivaUser');
+      }
+    }
   }
 }));
 
-// Check if user is already logged in from localStorage
-export const initAuth = () => {
-  const storedUser = localStorage.getItem('ecovivaUser');
-  if (storedUser) {
-    try {
-      const user = JSON.parse(storedUser);
-      useAuthStore.setState({ user, isAuthenticated: true });
-    } catch (error) {
-      console.error('Failed to parse stored user', error);
-      localStorage.removeItem('ecovivaUser');
-    }
-  }
-};
+// Initialize authentication on app load
+useAuthStore.getState().initAuth();

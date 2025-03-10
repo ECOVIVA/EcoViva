@@ -1,10 +1,11 @@
 from django.urls import reverse
 from rest_framework.test import APITestCase
+from rest_framework import status
 from django.core.files.uploadedfile import SimpleUploadedFile
 from io import BytesIO
 from PIL import Image
 
-from apps.usuarios import models
+from apps.usuarios import models,serializers
 
 class UsersMixin:
     def make_user(
@@ -25,6 +26,30 @@ class UsersMixin:
             email=email,
             phone=phone
         )
+    
+    def make_user_with_serializer(
+        self,
+        first_name='user',
+        last_name='name',
+        username='username',
+        password='SenhaMuitoSegura123',
+        email='username@email.com',
+        phone = '(11) 11111-1111',
+        photo = None
+    ):
+        
+        serializer = serializers.UsersSerializerPost(data ={
+            "first_name": first_name,
+            "last_name": last_name,
+            "username":username,
+            "password":password,
+            "email":email,
+            "phone":phone
+            }
+        )
+
+        if serializer.is_valid():
+            serializer.save()
     
     def make_user_for_comparison(
         self,
@@ -57,12 +82,12 @@ class UsersTest(APITestCase, UsersMixin ):
 
         self.assertIn(
             response.status_code,
-            [200, 204]
+            [status.HTTP_200_OK, status.HTTP_204_NO_CONTENT]
         )
 
     # Testando o Metodo Post, caso de sucesso sem foto
     def test_users_api_create(self):
-        api_url = reverse('users:user_list')
+        api_url = reverse('users:user_create')
 
         # Dados válidos para criação de usuário
         valid_data = {
@@ -79,10 +104,13 @@ class UsersTest(APITestCase, UsersMixin ):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(models.Users.objects.count(), 1)
         self.assertEqual(models.Users.objects.first().username, "novouser")
+        self.assertIn('access_token', response.cookies)
+        self.assertIn('refresh_token', response.cookies)
+
 
     # Testando o Metodo Post, caso de sucesso com foto
     def test_users_api_create_with_photo(self):
-        api_url = reverse('users:user_list')
+        api_url = reverse('users:user_create')
 
         image = Image.new('RGB', (100, 100), color='red')
         image_file = BytesIO()
@@ -114,7 +142,7 @@ class UsersTest(APITestCase, UsersMixin ):
 
     # Testando o Metodo Post, caso de falha, pelo fato dos campos email e password estarem ausentes
     def test_users_api_create_invalid(self):
-        api_url = reverse('users:user_list')
+        api_url = reverse('users:user_create')
 
         # Dados inválidos (faltando email e senha)
         invalid_data = {
@@ -126,14 +154,14 @@ class UsersTest(APITestCase, UsersMixin ):
 
         response = self.client.post(api_url, data=invalid_data, format='json')
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("email", response.data)
         self.assertIn("password", response.data)
         self.assertIn("phone", response.data)
 
     # Testando o Metodo Post, caso de falha, pelo fato dos campos email, password e phone estarem Invalidos
     def test_users_api_create_with_password_and_email_invalid(self):
-        api_url = reverse('users:user_list')
+        api_url = reverse('users:user_create')
 
         invalid_data = {
             "first_name": "Erro",
@@ -146,14 +174,14 @@ class UsersTest(APITestCase, UsersMixin ):
 
         response = self.client.post(api_url, data=invalid_data, format='json')
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("email", response.data)
         self.assertIn("password", response.data)
         self.assertIn("phone", response.data)
 
     # Testando o Metodo Post, caso de falha, pelo fato do tipo de imagem ser incompativel em validação
     def test_users_api_create_with_photo_invalid_for_type(self):
-        api_url = reverse('users:user_list')
+        api_url = reverse('users:user_create')
 
         image = Image.new('RGB', (100, 100), color='red')
         image_file = BytesIO()
@@ -177,13 +205,13 @@ class UsersTest(APITestCase, UsersMixin ):
 
         response = self.client.post(api_url, data=valid_data, format='multipart')
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("photo", response.data)
 
 
     # Testando o Metodo Post, caso de falha, pelo fato do tamanho da imagem ser maior que a aceita em validação
     def test_users_api_create_with_photo_invalid_for_size(self):
-        api_url = reverse('users:user_list')
+        api_url = reverse('users:user_create')
 
         image = Image.new('RGB', (2000, 2000), color='red')
         image_file = BytesIO()
@@ -207,7 +235,7 @@ class UsersTest(APITestCase, UsersMixin ):
 
         response = self.client.post(api_url, data=valid_data, format='multipart')
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("photo", response.data)
 
     # Tests de UsersDetailView
@@ -233,7 +261,7 @@ class UsersTest(APITestCase, UsersMixin ):
 
         self.assertEqual(
             response.status_code,
-            404
+            status.HTTP_404_NOT_FOUND
         )
 
 
@@ -251,7 +279,7 @@ class UsersTest(APITestCase, UsersMixin ):
 
         self.assertEqual(
             response.status_code,
-            200
+            status.HTTP_200_OK
         )
 
     # Testando a api em caso de Update, caso de falha, por motivos de duplicação de dados que deveriam ser unicos
@@ -269,7 +297,7 @@ class UsersTest(APITestCase, UsersMixin ):
 
         self.assertEqual(
             response.status_code,
-            400
+            status.HTTP_400_BAD_REQUEST
         )
         self.assertIn('username', response.data)
 
@@ -282,5 +310,5 @@ class UsersTest(APITestCase, UsersMixin ):
 
         self.assertEqual(
             response.status_code,
-            204
+            status.HTTP_204_NO_CONTENT
         )
