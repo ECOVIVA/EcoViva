@@ -1,6 +1,7 @@
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from rest_framework import status
+from apps.usuarios.tests import UsersMixin
 from apps.usuarios.models import Users  # ou o caminho correto para o seu model de usuários
 from apps.bolha.models import Bubble, CheckIn
 
@@ -41,15 +42,10 @@ class BubbleViewTests(APITestCase):
         # Verificando se a resposta retorna o status 404 Not Found
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND) 
 
-class CheckInViewTest(APITestCase):
+class CheckInViewTest(APITestCase,UsersMixin):
     def setUp(self):
         # Criando um usuário de teste
-        self.user = Users.objects.create_user(
-            username='testuser',
-            password='testpassword',
-            email='testuser@email.com',
-            phone='(11) 99999-9999'
-        )
+        self.user = self.make_user()
 
         # Criando uma bolha associada ao usuário
         self.bubble = Bubble.objects.create(user=self.user)
@@ -83,15 +79,10 @@ class CheckInViewTest(APITestCase):
         # Verificando se o status da resposta é 201 CREATED
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-class CheckInDetailViewTest(APITestCase):
+class CheckInDetailViewTest(APITestCase, UsersMixin):
     def setUp(self):
         # Criação de usuário
-        self.user = Users.objects.create_user(
-        username='testuser',
-        password='testpassword',
-        email='testuser@email.com',
-        phone='(11) 99999-9999'
-    )
+        self.user = self.make_user('user')
 
         # Criação de uma bolha associada ao usuário
         self.bubble = Bubble.objects.create(user=self.user)

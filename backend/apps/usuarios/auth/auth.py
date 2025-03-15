@@ -7,9 +7,11 @@ class EmailBackend(BaseBackend):
     def authenticate(self, request, email=None, password=None, **kwargs):
         try:
             user = User.objects.get(email=email)
+            print(user)
         except User.DoesNotExist:
             return None
 
+        print(user.check_password(password))
         if user.check_password(password) and self.user_can_authenticate(user):
             return user
         return None

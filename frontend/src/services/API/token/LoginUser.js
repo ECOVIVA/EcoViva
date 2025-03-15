@@ -1,18 +1,20 @@
 import axios from 'axios';
+import { loginUser } from './path/to/axiosFile';
 
 // Instância do axios!!!!
 const api = axios.create({
-  baseURL: 'http://seu-servidor-django/api/', 
+  baseURL: 'http://127.0.0.1:8000/api/users/', 
   headers: {
     'Content-Type': 'application/json',
   },
   withCredentials: true, // aqui garante que os cookies sejam enviandos a requisiçao
 });
 
+
 // Função para login do usuário.
-const loginUser = async (username, password) => {
+const loginUser = async (Email, password) => {
   try {
-    const response = await api.post('/token/', { username, password });
+    const response = await api.post('/token/', { Email, password });
     const { access, refresh } = response.data;
 
     // Armazenando o token de acesso e refresh no cookie.
@@ -26,6 +28,8 @@ const loginUser = async (username, password) => {
     throw new Error('Usuário ou senha inválidos');
   }
 };
+
+
 
 // Função para renovar o token de acesso.
 const refreshAccessToken = async () => {
@@ -61,10 +65,11 @@ const getRefreshTokenFromCookie = () => {
   return null;
 };
 
-// Função para fazer logout e limpar os dados armazenados.
+
+// Essas opções ajudam a melhorar a segurança dos cookies, evitando que eles sejam acessados via JavaScript em algumas situações e garantem que apenas conexões HTTPS possam enviar os cookies.
 const logoutUser = () => {
-  document.cookie = 'access_token=; Max-Age=0'; // Apaga o cookie de token.
-  document.cookie = 'refresh_token=; Max-Age=0'; // Apaga o cookie de refresh token.
+  document.cookie = `access_token=${access}; Max-Age=3600; path=/; Secure; HttpOnly; SameSite=Strict`;
+  document.cookie = `refresh_token=${refresh}; Max-Age=86400; path=/; Secure; HttpOnly; SameSite=Strict`;  
   console.log('Usuário deslogado');
 };
 
@@ -85,4 +90,17 @@ const getAccessTokenFromCookie = () => {
   return null;
 };
 
+export const useAuthStore = create((set) => ({
+  isAuthenticated: false,
+  login: async (email, password) => {
+    try {
+      const response = await loginUser(email, password);
+      set({ isAuthenticated: true, user: response });
+      return true;
+    } catch (error) {
+      set({ isAuthenticated: false });
+      return false;
+    }
+  }
+}));
 export { loginUser, refreshAccessToken, logoutUser, isAuthenticated };

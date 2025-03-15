@@ -17,8 +17,10 @@ from . import views
 app_name = 'users'
 
 urlpatterns = [
-    path('', views.UserView.as_view(), name="user_list"),
+    path('list/', views.UserListView.as_view(), name="user_list"),
     path('create/', views.UserCreateView.as_view(), name="user_create"),
     path('detail/<str:username>/', views.UserDetailView.as_view(), name="user_detail"),
+    path('update/<str:username>/', views.UserUpdateView.as_view(), name="user_update"),
+    path('delete/<str:username>/', views.UserDeleteView.as_view(), name="user_delete"),
     path('bubble/', include('apps.bolha.urls')),
 ]

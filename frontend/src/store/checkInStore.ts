@@ -25,7 +25,7 @@ export const useCheckInStore = create<CheckInState>()(
         );
         
         if (existingCheckIn) {
-          // User already checked in today
+          
           return;
         }
         

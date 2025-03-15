@@ -43,8 +43,16 @@ class UsersSerializer(serializers.ModelSerializer):
         return value
     
     def create(self, validated_data):
-        # Criar o usuário
+        password = validated_data.pop('password')
+        
+        # Cria o usuário sem a senha
         user = super().create(validated_data)
+        
+        # Usa o set_password para criptografar a senha
+        user.set_password(password)
+        
+        # Salva o usuário após definir a senha
+        user.save()
 
         # Criação automática da bolha para o novo usuário
         bubble_data = {'user': user.id}

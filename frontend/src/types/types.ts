@@ -1,9 +1,15 @@
+// types/types.ts
 export interface User {
-  id: string;
-  name: string;
+  id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  avatar?: string;
+  phone: string;
+  avatar: string;
+  role?: string;
 }
+
 
 export interface CheckIn {
   id: string;
@@ -13,6 +19,7 @@ export interface CheckIn {
 }
 
 export interface ForumPost {
+  tags: any;
   id: string;
   userId: string;
   userName: string;
@@ -34,11 +41,14 @@ export interface Comment {
 }
 
 
-export interface user {
+export interface ser {
   id: string;
-  username: string;
+  username: string; 
+  first_name: string;
+  last_name: string;
   email: string;
-  avatar?: string;
+  phone: string;
+  photos: string;
 }
 
 
@@ -50,3 +60,4 @@ export interface AuthState {
   initAuth: () => void;
   register: (formData: any) => Promise<boolean>;
 }
+

@@ -8,19 +8,30 @@ from rest_framework.views import APIView
     as respostas no formato apropriado, como JSON, para as requisições da API.
 """
 
-class PostView(APIView):
+class ThreadListView(APIView):
     def get(self, request):
         ...
 
+class ThreadCreateView(APIView):
     def post(self, request):
         ...
 
-class PostDetailView(APIView):
+class ThreadDetailView(APIView):
+    def get(self, request, slug):
+        ...
+
+class PostListView(APIView):
     def get(self, request):
         ...
 
+class PostCreateView(APIView):
+    def post(self, request):
+        ...
+
+class PostUpdateView(APIView):
     def patch(self, request):
         ...
 
+class PostDeleteView(APIView):
     def delete(self, request):
         ...

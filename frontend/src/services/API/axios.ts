@@ -1,26 +1,48 @@
-// authStore.ts
 import { create } from 'zustand';
-import { user, AuthState } from '../../types/types';  // Importando as interfaces
+import { AuthState } from '../../types/types';  // Importando as interfaces
 import axios from 'axios';
 
 // Instância do Axios
 const api = axios.create({
-  baseURL: 'http://seu-servidor-django/api/', // Substitua com sua URL
+  baseURL: 'http://127.0.0.1:8000/user/create/',  // URL da sua API
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
+  withCredentials: true,  // Habilita o envio de cookies em todas as requisições
 });
 
+// Adicionando um interceptor para incluir o token em todas as requisições.
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 // Função de login
-const loginUser = async (email: string, password: string) => {
+const loginUser = async (Email: string, password: string) => {
   try {
-    const response = await api.post('/token/', { email, password });
+    const response = await api.post('/token/', { Email, password });
     const { access, user } = response.data;
-    document.cookie = `access_token=${access}; Max-Age=3600; path=/`;
-    return { user, access }; // Retorna o usuário e o token
+    
+    // Armazenar o token no localStorage para persistência
+    localStorage.setItem('authToken', access);
+
+    return { user, access };
   } catch (error) {
-    throw new Error('Erro ao fazer login');
+    // Tratar erros de forma mais detalhada
+    if (axios.isAxiosError(error)) {
+      console.error('Erro ao autenticar usuário:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.detail || 'Erro desconhecido ao autenticar');
+    } else {
+      throw new Error('Erro ao fazer login');
+    }
   }
 };
 
@@ -28,9 +50,15 @@ const loginUser = async (email: string, password: string) => {
 export const createAccount = async (formData: any) => {
   try {
     const response = await api.post('/register/', formData);
-    return response.data; // Retorna os dados do usuário
+    return response.data;
   } catch (error) {
-    throw new Error('Erro ao criar conta');
+    // Tratar erro de registro
+    if (axios.isAxiosError(error)) {
+      console.error('Erro ao criar conta:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.detail || 'Erro desconhecido ao criar conta');
+    } else {
+      throw new Error('Erro ao criar conta');
+    }
   }
 };
 
@@ -40,10 +68,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
 
   // Função de login com axios
-  login: async (email: string, password: string) => {
+  login: async (Email: string, password: string) => {
     try {
-      const { user, access } = await loginUser(email, password);
-      localStorage.setItem('authToken', access);
+      const { user, access } = await loginUser(Email, password);
       set({ user, isAuthenticated: true });
       return true;
     } catch (error) {
@@ -55,14 +82,22 @@ export const useAuthStore = create<AuthState>((set) => ({
   // Função de logout
   logout: () => {
     set({ user: null, isAuthenticated: false });
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('authToken');  // Limpar o token ao fazer logout
   },
 
   // Função para inicializar a autenticação
-  initAuth: () => {
+  initAuth: async () => {
     const token = localStorage.getItem('authToken');
     if (token) {
-      set({ isAuthenticated: true });
+      try {
+        // Verifique se o token é válido com um endpoint de verificação
+        await api.get('/me');  // Endpoint exemplo de verificação
+        set({ isAuthenticated: true });
+      } catch (error) {
+        console.error('Token inválido ou expirado');
+        localStorage.removeItem('authToken');
+        set({ isAuthenticated: false });
+      }
     }
   },
 
@@ -78,3 +113,5 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 }));
+
+export default api;

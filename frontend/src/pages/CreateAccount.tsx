@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Leaf, Mail, Lock, Eye, EyeOff, User, Phone, Upload } from 'lucide-react';
 import axios from 'axios';
-
-
+import { useNavigate } from 'react-router-dom';
 
 
 function App() {
+  const navigator = useNavigate();
+
   const [formData, setFormData] = useState({
     username: "",
     firstName: "",
@@ -26,6 +27,7 @@ function App() {
     setError("");
     setIsLoading(true);
 
+    // Verifica se as senhas coincidem
     if (formData.password !== formData.confirmPassword) {
       setError("As senhas não coincidem");
       setIsLoading(false);
@@ -33,21 +35,41 @@ function App() {
     }
 
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append("username", formData.username);
-      formDataToSend.append("first_name", formData.firstName);
-      formDataToSend.append("last_name", formData.lastName);
-      formDataToSend.append("email", formData.email);
-      formDataToSend.append("phone", formData.phone);
-      formDataToSend.append("password", formData.password);
-      if (formData.photo) {
-        formDataToSend.append("photo", formData.photo);
+      // Enviando dados de texto (usuário) como JSON
+      const userData = {
+        username: formData.username,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
       };
+     
+    
+      const response = await axios.post('http://127.0.0.1:8000/api/users/create/', userData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        withCredentials: true, // Se você estiver lidando com cookies de sessão
+      });
+      
+   if (response.status === 201) {
+      // Se houver uma foto, fazer o upload
+      if (formData.photo) {
+        const formDataToSend = new FormData();
+        formDataToSend.append("photo", formData.photo);
 
-      const response = await axios.post('http://127.0.0.1:8000/api/users/', formDataToSend);
-
-      if (response) {
+        await axios.post(
+          `http://127.0.0.1:8000/api/users/upload-photo/`, // Usando o ID em vez do username
+          formDataToSend,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+            withCredentials: true,
+          }
+        );
+      }
         alert("Usuário cadastrado com sucesso!");
+        navigator('/CheckInpage');
       }
     } catch (err) {
       setError("Ocorreu um erro ao criar a conta. Tente novamente.");
@@ -61,7 +83,7 @@ function App() {
     if (e.target.files && e.target.files.length > 0) {
       setFormData((prev) => ({ ...prev, photo: e.target.files![0] }));
     }
-  }; 
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">

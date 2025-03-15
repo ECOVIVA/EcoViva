@@ -1,13 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import {
-  Leaf, User, LogOut, LogIn,
-  ChevronDown, Globe, Award, Users, Menu, X
-} from 'lucide-react';
-import { useAuthStore } from '../store/authStore';
+import { Leaf, User, LogOut, LogIn, ChevronDown, Globe, Award, Users, Menu, X } from 'lucide-react';
+import { useAuth } from './AuthContext'; // Certifique-se de ter o contexto de autenticação implementado
 
 const Navbar: React.FC = () => {
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuth(); // Usando o contexto de autenticação
   const navigate = useNavigate();
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -18,9 +15,7 @@ const Navbar: React.FC = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -41,14 +36,12 @@ const Navbar: React.FC = () => {
   }, [isMobileMenuOpen]);
 
   const handleLogout = () => {
-    logout();
-    navigate('/');
+    logout(); // Chama a função de logout do contexto
+    navigate('/'); // Redireciona para a página inicial após o logout
   };
 
   const navbarClass = `fixed w-full z-50 transition-all duration-500 ${
-    isScrolled
-      ? 'bg-green-900/95 backdrop-blur-lg shadow-[0_0_20px_rgba(0,0,0,0.3)] py-2'
-      : 'bg-white/80 backdrop-blur-sm shadow-sm py-4'
+    isScrolled ? 'bg-green-900/100 backdrop-blur-lg shadow-[0_0_20px_rgba(0,0,0,0.3)] py-5' : 'bg-white/90 backdrop-blur-sm py-1'
   }`;
 
   const menuItems = [
@@ -69,7 +62,7 @@ const Navbar: React.FC = () => {
       label: 'Programas',
       submenu: [
         { label: 'Reciclagem Diária', icon: Leaf, href: '/checkin' },
-        { label: 'Educação Ambiental', icon: Globe, href: '#' },
+        { label: 'Educação Ambiental', icon: Globe, href: '/ECOlições' },
         { label: 'Parcerias', icon: Users, href: '/ParceriasPage' },
       ]
     }
@@ -96,12 +89,9 @@ const Navbar: React.FC = () => {
   return (
     <>
       <nav className={navbarClass}>
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-6">
           <div className="flex justify-between items-center">
-            <Link
-              to="/"
-              className="flex items-center space-x-3 group"
-            >
+            <Link to="/" className="flex items-center space-1 group">
               <div className="relative">
                 <div className={`absolute inset-0 rounded-full blur-[5px] group-hover:blur-[5px] transition-all duration-300 ${
                   isScrolled ? 'bg-green-300/50' : 'bg-green-400/50'
@@ -135,9 +125,7 @@ const Navbar: React.FC = () => {
                     <Link
                       to={item.href}
                       className={`nav-item flex items-center space-x-1 transition-colors py-2 ${
-                        isScrolled
-                          ? 'text-gray-300 hover:text-green-400'
-                          : 'text-gray-800 hover:text-green-600'
+                        isScrolled ? 'text-gray-300 hover:text-green-400' : 'text-gray-800 hover:text-green-600'
                       }`}
                     >
                       <span>{item.label}</span>
@@ -145,9 +133,7 @@ const Navbar: React.FC = () => {
                   ) : (
                     <button
                       className={`nav-item flex items-center space-x-1 transition-colors py-2 ${
-                        isScrolled
-                          ? 'text-gray-300 hover:text-green-400'
-                          : 'text-gray-800 hover:text-green-600'
+                        isScrolled ? 'text-gray-300 hover:text-green-400' : 'text-gray-800 hover:text-green-600'
                       }`}
                     >
                       <span>{item.label}</span>
@@ -165,7 +151,7 @@ const Navbar: React.FC = () => {
                       } ${isDropdownExiting ? 'dropdown-exit' : 'dropdown-enter'}`}
                     >
                       <div className="py-2">
-                        {item.submenu.map((subItem, _idx) => (
+                        {item.submenu.map((subItem: { label: boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | Promise<React.AwaitedReactNode> | React.Key | null | undefined; href: unknown; icon: any; }) => (
                           <Link
                             key={subItem.label}
                             to={subItem.href}
@@ -190,7 +176,6 @@ const Navbar: React.FC = () => {
 
             {/* User Actions */}
             <div className="flex items-center space-x-6">
-              {/* Mobile Menu Toggle */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className={`lg:hidden transition-colors ${
@@ -205,67 +190,46 @@ const Navbar: React.FC = () => {
                 )}
               </button>
 
-              {/* Desktop User Actions */}
               <div className="hidden lg:flex items-center space-x-6">
                 {isAuthenticated ? (
                   <>
                     <Link
-                      to="/profile"
+                      to="/ProfilePage"
                       className={`flex items-center space-x-3 transition-colors group ${
                         isScrolled ? 'text-gray-300 hover:text-green-400' : 'text-gray-800 hover:text-green-600'
                       }`}
                     >
-                      {user?.avatar ? (
+                      {user?.profile_picture ? (
                         <img
-                          src={user.avatar}
-                          alt={user.name}
+                          src={user.profile_picture}
+                          alt={user.email}
                           className={`w-10 h-10 rounded-full border-2 transition-colors ${
-                            isScrolled
-                              ? 'border-green-400/50 group-hover:border-green-400'
-                              : 'border-green-600/50 group-hover:border-green-600'
+                            isScrolled ? 'border-green-400/50 group-hover:border-green-400' : 'border-green-600/50 group-hover:border-green-600'
                           }`}
                         />
                       ) : (
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors border-2 ${
-                          isScrolled
-                            ? 'bg-gray-800 border-green-400/50 group-hover:border-green-400'
-                            : 'bg-gray-100 border-green-600/50 group-hover:border-green-600'
+                          isScrolled ? 'border-green-400/50 group-hover:border-green-400' : 'border-green-600/50 group-hover:border-green-600'
                         }`}>
-                          <User className={`h-6 w-6 ${
-                            isScrolled ? 'text-green-400' : 'text-green-600'
-                          }`} />
+                          <User className="h-5 w-5" />
                         </div>
                       )}
-                      <div>
-                        <p className="font-medium">{user?.name}</p>
-                        <p className={`text-xs ${
-                          isScrolled ? 'text-green-400/80' : 'text-green-600/80'
-                        }`}>Membro Ativo</p>
-                      </div>
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className={`px-4 py-2 rounded-full transition-colors flex items-center space-x-2 border ${
-                        isScrolled
-                          ? 'bg-gray-800 text-gray-300 hover:text-green-400 border-gray-700'
-                          : 'bg-gray-100 text-gray-800 hover:text-green-600 border-gray-200'
-                      }`}
+                      className="text-red-600 transition-colors hover:text-red-400"
                     >
                       <LogOut className="h-5 w-5" />
-                      <span>Sair</span>
                     </button>
                   </>
                 ) : (
                   <Link
                     to="/login"
-                    className={`px-6 py-3 rounded-full transition-colors flex items-center space-x-2 border ${
-                      isScrolled
-                        ? 'bg-green-400/10 text-green-400 hover:bg-green-400/20 border-green-400/20'
-                        : 'bg-green-600/10 text-green-600 hover:bg-green-600/20 border-green-600/20'
+                    className={`text-gray-800 hover:text-green-600 transition-colors ${
+                      isScrolled ? 'text-gray-300 hover:text-green-400' : 'text-gray-800 hover:text-green-600'
                     }`}
                   >
                     <LogIn className="h-5 w-5" />
-                    <span>Entrar</span>
                   </Link>
                 )}
               </div>
@@ -273,106 +237,6 @@ const Navbar: React.FC = () => {
           </div>
         </div>
       </nav>
-
-      {/* Mobile Menu Overlay */}
-      <div
-        className={`lg:hidden fixed inset-0 bg-white-900/95 backdrop-blur-sm z-40 transition-all duration-300 ${
-          isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={() => setIsMobileMenuOpen(false)}
-      />
-
-      {/* Mobile Menu */}
-      <div
-        className={`lg:hidden fixed inset-y-0 right-0 w-[280px] bg-gray-900 z-50 transform transition-transform duration-300 ease-in-out ${
-          isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
-      >
-        <div className="h-full overflow-y-auto">
-          <div className="px-4 py-6">
-            <div className="flex flex-col space-y-6">
-              {menuItems.map((item) => (
-                <div key={item.label}>
-                  {item.href ? (
-                    <Link
-                      to={item.href}
-                      className="block text-lg text-gray-300 hover:text-green-400 py-2 transition-colors"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {item.label}
-                    </Link>
-                  ) : (
-                    <>
-                      <div className="text-lg text-gray-300 py-2 mb-2">{item.label}</div>
-                      <div className="pl-4 flex flex-col space-y-2">
-                        {item.submenu?.map((subItem) => (
-                          <Link
-                            key={subItem.label}
-                            to={subItem.href}
-                            className="flex items-center space-x-3 text-gray-400 hover:text-green-400 py-2 transition-colors"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            <subItem.icon className="h-5 w-5" />
-                            <span>{subItem.label}</span>
-                          </Link>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))}
-
-              {/* Mobile User Actions */}
-              <div className="pt-6 border-t border-gray-800">
-                {isAuthenticated ? (
-                  <>
-                    <Link
-                      to="/profile"
-                      className="flex items-center space-x-3 text-gray-300 hover:text-green-400 py-2 transition-colors"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {user?.avatar ? (
-                        <img
-                          src={user.avatar}
-                          alt={user.name}
-                          className="w-10 h-10 rounded-full border-2 border-green-400/50"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center border-2 border-green-400/50">
-                          <User className="h-6 w-6 text-green-400" />
-                        </div>
-                      )}
-                      <div>
-                        <p className="font-medium">{user?.name}</p>
-                        <p className="text-sm text-green-400/80">Membro Ativo</p>
-                      </div>
-                    </Link>
-                    <button
-                      onClick={() => {
-                        handleLogout();
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="mt-4 w-full px-4 py-3 rounded-full bg-gray-800 text-gray-300 hover:text-green-400 transition-colors flex items-center justify-center space-x-2 border border-gray-700"
-                    >
-                      <LogOut className="h-5 w-5" />
-                      <span>Sair</span>
-                    </button>
-                  </>
-                ) : (
-                  <Link
-                    to="/login"
-                    className="w-full px-6 py-3 rounded-full bg-green-400/10 text-green-400 hover:bg-green-400/20 transition-colors flex items-center justify-center space-x-2 border border-green-400/20"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <LogIn className="h-5 w-5" />
-                    <span>Entrar</span>
-                  </Link>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </>
   );
 };

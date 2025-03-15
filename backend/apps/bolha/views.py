@@ -1,10 +1,11 @@
 from django.shortcuts import get_list_or_404, get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.exceptions import NotFound
 
 from apps.bolha import models, serializers
+from apps.usuarios.auth.permissions import IsOwnerOrReadOnly, IsOwner
 
 """
     Arquivo responsável pela lógica por trás de cada requisição HTTP, retornando a resposta adequada.
@@ -15,6 +16,7 @@ from apps.bolha import models, serializers
 """
 
 class BubbleView(APIView):
+    permission_classes = [permissions.AllowAny]
     def get(self, request, username):
         try:
             bubble = get_object_or_404(models.Bubble, user__username = username)
@@ -26,6 +28,8 @@ class BubbleView(APIView):
 
 
 class CheckInView(APIView):
+    permission_classes = [IsOwnerOrReadOnly]
+
     def get(self, request,username):
         try:
             bubble = get_object_or_404(models.Bubble, user__username = username)
@@ -57,6 +61,8 @@ class CheckInView(APIView):
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
 class CheckInDetailView(APIView):
+    permission_classes = [IsOwner]
+
     def get(self,request, username, checkin_id):
         try:
             bubble = get_object_or_404(models.Bubble, user__username = username)

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '../store/AuthStore';
 import { useCheckInStore } from '../store/checkInStore';
 import CheckInBubble from '../components/CheckInBubble';
 import { Calendar, Award, TrendingUp } from 'lucide-react';
@@ -32,10 +32,7 @@ const CheckInPage: React.FC = () => {
     }, 3000);
   };
   
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
-  }
+ 
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white py-12">
