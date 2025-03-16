@@ -40,9 +40,9 @@ INSTALLED_APPS = [
     'rest_framework',
     "rest_framework_simplejwt",
     'corsheaders',
-    'apps.bolha',
-    'apps.posts',
-    'apps.usuarios',
+    'apps.bubble',
+    'apps.forum',
+    'apps.users',
 ]
 
 MIDDLEWARE = [
@@ -126,11 +126,11 @@ STATIC_URL = 'static/'
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-AUTH_USER_MODEL = 'usuarios.Users'
+AUTH_USER_MODEL = 'users.Users'
 
 
 AUTHENTICATION_BACKENDS = [
-    'apps.usuarios.auth.auth.EmailBackend',  
+    'apps.users.auth.auth.EmailBackend',  
     'django.contrib.auth.backends.ModelBackend',
 ]
 
@@ -147,7 +147,7 @@ CORS_ALLOW_CREDENTIALS = True
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        'apps.usuarios.auth.middleware.CookieJWTAuthentication',
+        'apps.users.auth.middleware.CookieJWTAuthentication',
     ],
 }
 

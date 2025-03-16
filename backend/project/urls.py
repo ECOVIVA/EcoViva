@@ -3,7 +3,7 @@ from django.conf import settings
 from django.urls import path, include
 from django.conf.urls.static import static
 
-from apps.usuarios.auth.views import LoginView,LogoutView,RefreshView
+from apps.users.auth.views import LoginView,LogoutView,RefreshView
 
 urlpatterns = [
 
@@ -19,8 +19,8 @@ urlpatterns = [
     # 
     # Cada aplicação tem suas próprias rotas, organizadas aqui.
 
-    path('api/posts/', include("apps.posts.urls")),
-    path('api/users/', include("apps.usuarios.urls")),
+    path('api/forum/', include("apps.forum.urls")),
+    path('api/users/', include("apps.users.urls")),
     path('api/login/', LoginView.as_view(), name="login"),
     path('api/logout/', LogoutView.as_view(), name="logout"),
     path('api/refresh/', RefreshView.as_view(), name="refresh"),
