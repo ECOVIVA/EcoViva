@@ -10,13 +10,33 @@ export interface User {
   role?: string;
 }
 
+export interface Rank {
+  id: number;
+  name: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  xpRequired: number;
+  color: string;
+}
 
 export interface CheckIn {
   id: string;
-  userId: string;
-  date: string;
-  count: number;
+  description: string;
+  created_at: Date;
+  xp_earned: number;
 }
+
+export interface UserProgress {
+  currentXP: number;
+  currentRank: number;
+  checkIns: CheckIn[];
+}
+
+export interface Bubble {
+  progress: number; // Progresso do usuário (porcentagem de XP)
+  rank: Rank; // Rank atual do usuário
+  checkIns: CheckIn[]; // Lista de check-ins feitos pelo usuário
+}
+
 
 export interface ForumPost {
   tags: any;

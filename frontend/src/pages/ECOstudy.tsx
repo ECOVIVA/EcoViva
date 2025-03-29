@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Book, Leaf, TreePine, Recycle, Wind, Sprout, Bird, Fish } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Book, Leaf, TreePine, Recycle, Wind, Sprout, Fish } from 'lucide-react';
 import Lesson1 from '../components/Lesson1';
 import Lesson2 from '../components/Lesson2';
 import Lesson3 from '../components/Lesson3';
@@ -8,6 +8,7 @@ import Lesson5 from '../components/Lesson5';
 import Lesson6 from '../components/Lesson6';
 import Lesson7 from '../components/Lesson7';
 import Lesson8 from '../components/Lesson8';
+import AuthGuardian from '@/components/AuthGuardian';
 
 
 const App = () => {
@@ -180,6 +181,7 @@ const App = () => {
 
 
   return (
+    <AuthGuardian>
     <div className="min-h-screen bg-gradient-to-b from-green-50 via-blue-50 to-emerald-50">
       {isLoading ? (
         <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-r from-green-600 to-teal-600 z-50">
@@ -326,6 +328,7 @@ const App = () => {
         </>
       )}
     </div>
+    </AuthGuardian>
   );
 };
 

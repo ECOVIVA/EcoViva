@@ -1,5 +1,6 @@
-import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
-
+import { useAuthStore } from '@/store/authStore';
+import { loginUser, logoutUser, isAuthenticated as Auth } from '../services/authService';
+import React, { createContext, useState, useContext, ReactNode } from 'react';
 interface User {
   profile_picture?: string;
   id: string;
@@ -10,8 +11,9 @@ interface User {
 interface AuthContextProps {
   isAuthenticated: boolean;
   user: User | null;
-  login: (token: string, userData: User) => void;
-  logout: () => void;
+  login: (email:string, password :string) => Promise<boolean>;
+  logout: () => Promise<void>;
+  isAuth: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -19,59 +21,49 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
+  const { initAuth } = useAuthStore();
+  
 
-  useEffect(() => {
+  const login = async(email:string, password:string) => {
     try {
-      const token = localStorage.getItem('access_token');
-      const storedUser = localStorage.getItem('user');
-
-      if (token && storedUser) {
+      const login = await loginUser(email, password)
+      if (login){
+        console.log("login feito com sucesso!!!")
         setIsAuthenticated(true);
-        setUser(JSON.parse(storedUser));
+        return true
+      }
+      else{
+        console.log("login falhou!!!")
+        setIsAuthenticated(false);
+        return false
       }
     } catch (error) {
-      console.error("Erro ao recuperar usuário do localStorage:", error);
-      localStorage.removeItem('user'); // Corrigir possíveis dados inválidos
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleStorageChange = () => {
-      try {
-        const token = localStorage.getItem('access_token');
-        const storedUser = localStorage.getItem('user');
-
-        setIsAuthenticated(!!token);
-        setUser(storedUser ? JSON.parse(storedUser) : null);
-      } catch (error) {
-        console.error("Erro ao processar mudanças no localStorage:", error);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  const login = (token: string, userData: User) => {
-    try {
-      localStorage.setItem('access_token', token);
-      localStorage.setItem('user', JSON.stringify(userData));
-      setIsAuthenticated(true);
-      setUser(userData);
-    } catch (error) {
-      console.error("Erro ao salvar dados no localStorage:", error);
+      console.error("Erro ao fazer login", error);
+      return false
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user');
-    setIsAuthenticated(false);
-    setUser(null);
+  const logout = async() => {
+      logoutUser()
+      setIsAuthenticated(false);
   };
+
+  const isAuth = async() => {
+    const auth = await Auth()
+    console.log(auth)
+    if (auth){
+      setIsAuthenticated(true)
+      return true
+    }
+
+    else{
+      setIsAuthenticated(false)
+      return false
+    }
+  }; 
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, isAuth }}>
       {children}
     </AuthContext.Provider>
   );
@@ -86,4 +78,4 @@ const useAuth = () => {
   return context;
 };
 
-export { AuthProvider, useAuth, AuthContext };
+export { AuthProvider, useAuth, AuthContext,  };

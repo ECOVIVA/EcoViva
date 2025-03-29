@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Leaf, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AuthContext } from '../components/AuthContext';
-import axios from 'axios';
 
 const LoginPage: React.FC = () => {
   const [Email, setEmail] = useState('');
@@ -27,36 +26,13 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(
-        'http://localhost:8000/api/login/',
-        { email: Email, password: password },
-        { withCredentials: true }
-      );
-
-      const { access_token, refresh_token } = response.data;
-
-      // Passando o token correto para o login
-      login(access_token);
-
-      // Armazenando os tokens no localStorage
-      localStorage.setItem('access_token', access_token);
-      localStorage.setItem('refresh_token', refresh_token);
-
-      // Após o login, verificando o perfil do usuário
-      const getProfileData = async (username: any) => {
-        try {
-          const response = await axios.get(`http://localhost:8000/api/detail/${username}/`, {
-            withCredentials: true,
-          });
-          return response.data; // Retorna os dados da resposta, caso precise usar
-        } catch (error) {
-          console.error('Erro ao buscar dados do perfil:', error);
-        }
-      };
-
-       
-
-      navigate('/'); // Redireciona para a página principal
+      let log = await login(Email, password)
+      if (log){
+        console.log('Logado com sucesso')
+      }
+      else{
+        console.log('Erro ao fazer LOgin')
+      }
     } catch (error: any) {
       console.error('Erro de autenticação', error);
       if (error.response && error.response.data) {

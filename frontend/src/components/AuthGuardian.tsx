@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';  // Para navegação de redirecionamento
-import { useAuthStore } from '../store/authStore';  // Importando a store de autenticação
+import { useNavigate } from 'react-router-dom';  // Para navegação de redirecionamento
+import { useAuth } from './AuthContext';  // Importando a store de autenticação
+import LoginPage from '@/pages/LoginPage';
 
 interface AuthGuardianProps {
   children: React.ReactNode;  // Componente que será protegido
@@ -8,37 +9,40 @@ interface AuthGuardianProps {
 
 const AuthGuardian: React.FC<AuthGuardianProps> = ({ children }) => {
   const navigate = useNavigate();
-  const { isAuthenticated, initAuth } = useAuthStore();  // Estado de autenticação
-  const token = localStorage.getItem('authToken');
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const { isAuth } = useAuth();  // Estado de autenticação
   const [loading, setLoading] = useState(true);  // Estado para controle de carregamento
 
   // Função que verifica o estado de autenticação ao carregar a página
-  const checkAuth = () => {
-    // Se não estiver autenticado e não tiver token, redireciona para a página de login
-    if (!isAuthenticated && !token) {
-      navigate('/login');
+  const checkAuth = async () => {
+     const auth = await isAuth();
+    if (auth) {
+      setIsAuthenticated(true)
+      setLoading(false);
     } else {
-      setLoading(false);  // Se autenticado, ou se já tiver token, para o carregamento
+      setIsAuthenticated(false)
+      setLoading(false);  // Se autenticado, para o carregamento
     }
   };
 
-  // Verifica se o token é válido quando a página é carregada
   useEffect(() => {
-    initAuth();  // Inicializa o estado de autenticação
-  }, [initAuth]);
+    console.log(isAuthenticated)
+    checkAuth()
 
-  useEffect(() => {
-    checkAuth();  // Verifica a cada mudança de estado
-  }, [isAuthenticated, token, navigate]);
+    const interval = setInterval(() => {
+      checkAuth();
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, navigate]);  // O efeito será re-executado quando `isAuthenticated` ou `navigate` mudar
 
   // Exibe uma mensagem de carregamento enquanto estamos verificando a autenticação
   if (loading) {
-    return <div>Carregando...</div>;  // Isso pode ser um componente de loading mais estilizado
+    return <div>Carregando...</div>;  // Pode substituir por um componente de loading mais estilizado
   }
 
-  // Se não estiver autenticado, redireciona para a página de login
-  if (!isAuthenticated && !token) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticated){
+    return <LoginPage/>
   }
 
   // Caso esteja autenticado, exibe o conteúdo protegido

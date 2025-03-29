@@ -1,7 +1,0 @@
-[submodule "Backend_EcoViva"]
-	path = backend
-	url = https://github.com/ECOVIVA/Backend_EcoViva
-
-[submodule "Frontend_EcoViva"]
-	path = frontend
-	url = https://github.com/ECOVIVA/Frontend_EcoViva
