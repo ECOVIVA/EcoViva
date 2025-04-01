@@ -1,8 +1,6 @@
 from django.db import models
-from django.core.exceptions import ValidationError
 from django.utils import timezone
-from datetime import timedelta
-
+from django.dispatch import receiver
 from apps.users.models import Users
 
 """ 
@@ -46,6 +44,8 @@ class Rank(models.Model):
     def __str__(self):
         return f"{self.name} ({self.difficulty.name})"
     
+
+
 class Bubble(models.Model):
     class Meta:
         verbose_name = "Bubble"
@@ -73,3 +73,27 @@ class CheckIn(models.Model):
     
     def __str__(self):
         return f"Check-In {self.pk}"
+    
+    
+@receiver(models.signals.post_migrate)
+def create_default_ranks(sender, **kwargs):
+    # Verifique se os ranks já existem para evitar a duplicação
+    if not Rank.objects.exists():  # Se não houver nenhum rank, cria os ranks iniciais
+        easy = Difficulty.objects.get_or_create(name='Easy', points_for_activity=50)[0]
+        medium = Difficulty.objects.get_or_create(name='Medium', points_for_activity=30)[0]
+        hard = Difficulty.objects.get_or_create(name='Hard', points_for_activity=10)[0]
+
+        ranks = [
+            ('Iniciante Verde', easy, 100),
+            ('Guardião do Eco', easy, 150),
+            ('Protetor do Planeta', easy, 200),
+            ('Defensor da Natureza', medium, 300),
+            ('Herói Sustentável', medium, 400),
+            ('Sustentável Líder', medium, 500),
+            ('Líder Verde', hard, 700),
+            ('Guardião da Floresta', hard, 800),
+            ('Protetor Global', hard, 1000),
+        ]
+
+        for rank_name, difficulty, points in ranks:
+            Rank.objects.get_or_create(name=rank_name, difficulty=difficulty, points=points)

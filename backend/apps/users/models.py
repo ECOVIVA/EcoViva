@@ -29,6 +29,7 @@ class UsersManager(BaseUserManager):
 
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)  # Define o superusuário como staff
+        extra_fields.setdefault('is_active', True)
         extra_fields.setdefault('is_superuser', True)  # Define o superusuário como superusuário
         return self.create_user(email, password, **extra_fields)
 
