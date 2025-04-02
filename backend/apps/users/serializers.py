@@ -10,77 +10,80 @@ from . import models
     nas APIs.
 
     O serializer `UsersSerializer` é responsável pela validação, criação e manipulação dos dados 
-    relacionados aos usuários da aplicação. Ele converte os dados de entrada (JSON) para os objetos 
-    do modelo de usuário (User) e vice-versa, garantindo que os dados estejam no formato correto 
-    antes de serem armazenados no banco de dados ou retornados na resposta.
+    relacionados aos usuários da aplicação. Ele realiza as seguintes operações:
 
-    A seguir, ele realiza as operações de:
-    - Validação dos campos de entrada (como o telefone e a senha).
-    - Criação de novos usuários, incluindo a definição segura da senha criptografada.
-    - Criação automática de uma bolha associada ao usuário recém-criado.
+    - Validação dos campos de entrada (como telefone e senha).
+    - Criação de novos usuários com senha criptografada.
+    - Criação automática de uma bolha (Bubble) associada ao usuário recém-criado.
 
-    A utilização deste serializer assegura que os dados estejam validados e consistentes antes de 
-    serem persistidos ou utilizados nas APIs, promovendo uma camada de segurança e confiabilidade 
-    no sistema.
+    O uso deste serializer garante que os dados estejam validados e consistentes antes de 
+    serem armazenados no banco de dados ou retornados na API, promovendo segurança e confiabilidade.
 """
 
-
+# Serializer para o modelo de usuário (Users)
 class UsersSerializer(serializers.ModelSerializer):
+    """
+    Serializa os dados do modelo de usuário.
 
-    # Campo para senha, que será usado apenas para escrita (não será retornado nas respostas).
+    - Inclui validações personalizadas para o telefone e a senha.
+    - Define a senha como um campo de escrita apenas (write-only).
+    - Ao criar um usuário, uma bolha (Bubble) associada é automaticamente gerada.
+    """
+    
+    # Campo de senha configurado como write-only (não será retornado na resposta).
     password = serializers.CharField(write_only=True)
 
     class Meta:
-        # Define o modelo de dados com o qual o serializer irá interagir e os campos que serão usados
-        model = models.Users
-        fields = ['id', 'username', 'first_name', 'last_name', 'password', 'email', 'phone', 'photo']
-    
-    # Valida o número de telefone. 
-    # O número de telefone deve ter 11 dígitos ou estar no formato (XX) XXXXX-XXXX.
+        model = models.Users  # Define o modelo associado ao serializer
+        fields = ['id', 'username', 'first_name', 'last_name', 'password', 'email', 'phone', 'photo']  # Campos incluídos na serialização
+
     def validate_phone(self, value):
-        # Verifica se o número está no formato sem formatação (11 dígitos).
-        if re.match(r'^\d{11}$', value):
+        """
+        Valida e formata o número de telefone.
+
+        - O telefone deve ter 11 dígitos ou estar no formato (XX) XXXXX-XXXX.
+        - Se estiver sem formatação, será convertido para o formato correto.
+        - Se estiver mal formatado, um erro de validação será gerado.
+        """
+        if re.match(r'^\d{11}$', value):  # Verifica se contém apenas os 11 dígitos
             formatted_value = f"({value[:2]}) {value[2:7]}-{value[7:]}"
-        # Verifica se o número já está no formato com parênteses e traço.
-        elif re.match(r'^\(\d{2}\) \d{5}-\d{4}$', value):
+        elif re.match(r'^\(\d{2}\) \d{5}-\d{4}$', value):  # Verifica se já está formatado corretamente
             formatted_value = value
         else:
-            # Caso o formato seja inválido, gera um erro.
             raise serializers.ValidationError("Número de telefone inválido. O formato correto é (XX) XXXXX-XXXX ou 119XXXXXXXX.")
-        
-        return formatted_value
-    
-    # Valida a senha de acordo com as regras definidas pelo Django.
-    # Se a senha não atender aos requisitos, um erro será lançado.
-    def validate_password(self, value):
-        try:
-            # Aplica os validadores de senha do Django, como comprimento mínimo, etc.
-            password_validation.validate_password(value)
-        except serializers.ValidationError as e:
-            # Caso a validação falhe, um erro de validação personalizado será retornado.
-            raise serializers.ValidationError({"password": str(e)})
-        return value
-    
-    # Cria o usuário e define sua senha de maneira segura.
-    # Após a criação do usuário, uma bolha (Bubble) é automaticamente criada e associada ao usuário.
-    def create(self, validated_data):
-        # Retira a senha dos dados validados antes de salvar o usuário.
-        password = validated_data.pop('password')
-        
-        # Cria o usuário usando os dados validados, mas sem a senha.
-        user = super().create(validated_data)
-        
-        # Criptografa a senha e associa ao usuário.
-        user.set_password(password)
-        
-        # Salva o usuário no banco de dados.
-        user.save()
 
-        # Cria automaticamente uma bolha (Bubble) associada ao novo usuário.
+        return formatted_value
+
+    def validate_password(self, value):
+        """
+        Valida a senha de acordo com as regras do Django.
+
+        - Verifica se a senha atende aos critérios de segurança.
+        - Se a senha não for válida, um erro personalizado é retornado.
+        """
+        try:
+            password_validation.validate_password(value)  # Valida a senha usando as regras do Django
+        except serializers.ValidationError as e:
+            raise serializers.ValidationError({"password": str(e)})  # Retorna o erro de validação
+        return value
+
+    def create(self, validated_data):
+        """
+        Cria um novo usuário com senha segura e uma bolha associada.
+
+        - Remove a senha do conjunto de dados antes de criar o usuário.
+        - Define a senha de maneira criptografada.
+        - Cria uma bolha (Bubble) automaticamente para o usuário recém-criado.
+        """
+        password = validated_data.pop('password')  # Remove a senha dos dados validados
+
+        user = super().create(validated_data)  # Cria o usuário sem a senha
+        user.set_password(password)  # Define a senha criptografada
+        user.save()  # Salva o usuário no banco de dados
+
+        # Cria uma bolha associada ao novo usuário
         bubble_data = {'user': user}
         bubble_model = Bubble.objects.create(**bubble_data)
-
-        # Salva a bolha no banco de dados.
         bubble_model.save()
-            
+
         return user

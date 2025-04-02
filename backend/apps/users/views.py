@@ -1,13 +1,11 @@
-from django.shortcuts import get_list_or_404, get_object_or_404  # Funções para buscar objetos ou retornar 404 se não encontrados
-from django.http import Http404  # Classe de exceção para erros HTTP 404
-from django.db import transaction  # Para realizar transações atômicas no banco de dados
-from rest_framework_simplejwt.tokens import RefreshToken  # Token de refresh para autenticação JWT
-from rest_framework.views import APIView  # Classe base para views da API
-from rest_framework.response import Response  # Para enviar respostas HTTP
-from rest_framework import status, permissions  # Status HTTP e permissões para as views
-from . import models, serializers  # Importa os modelos e serializers da aplicação
-from .email.send_email import send_confirmation_email  # Função para enviar email de confirmação
-from apps.users.auth import permissions as permissions_news  # Permissões personalizadas para usuários
+from django.shortcuts import get_list_or_404, get_object_or_404  
+from django.http import Http404 
+from django.db import transaction  
+from rest_framework.views import APIView  
+from rest_framework.response import Response  
+from rest_framework import status, permissions  
+from . import models, serializers 
+from .email.send_email import send_confirmation_email 
 
 """
     Este arquivo contém as views relacionadas aos usuários, responsáveis por processar as requisições
