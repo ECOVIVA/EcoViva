@@ -2,16 +2,16 @@ from django.urls import path
 from . import views
 
 """
-    Este arquivo define as rotas (URLs) relacionadas às bolhas da aplicação.
+    Definição das rotas (URLs) para as funcionalidades relacionadas às bolhas.
 
-    - path('', views.BubbleView.as_view()):
-      Rota principal que permite listar todas as bolhas ou criar uma nova bolha.
+    - path('profile/', views.BubbleProfileView.as_view()):
+      Rota para acessar o perfil da bolha.
 
-    - path('check-in/', views.CheckInView.as_view()):
-      Rota para listar ou realizar check-in em uma bolha específica.
+    - path('<str:username>/', views.BubbleUsersView.as_view()):
+      Rota para listar ou criar bolhas associadas a um usuário.
 
-    - path('check-in/<int:checkin_id>/', views.CheckInDetailView.as_view()):
-      Rota para acessar ou atualizar um check-in específico dentro de uma bolha.
+    - path('check-in/create/', views.CheckInCreateView.as_view()):
+      Rota para criar um novo check-in em uma bolha.
 """
 
 app_name = 'bubble'
