@@ -51,13 +51,13 @@ function App() {
         email: formData.email,
         phone: formData.phone,
         password: formData.password,
+        photo: formData.photo
       };
 
       const response = await api.post(routes.user.create, userData, {
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'multipart/form-data',
         },
-        withCredentials: true, // Se você estiver lidando com cookies de sessão
       });
 
       if (response.status === 201) {
