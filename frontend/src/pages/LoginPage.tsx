@@ -32,14 +32,14 @@ const LoginPage: React.FC = () => {
         routes.auth.login,
         { email: Email, password: password },
       );
-
-      const { access_token } = response.data;
-
       
-      authContext.login(access_token, {
-        email: Email, name: 'Nome do Usuário',
-        id: ''
-      });
+      if (response.status === 200){
+        authContext.login()
+      }
+      else{
+        console.error(response.data)
+      }
+      
 
       navigate('/'); // Redireciona para a página principal
     } catch (error: any) {

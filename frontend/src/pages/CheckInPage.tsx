@@ -15,7 +15,7 @@ import {
   Star,
 } from "lucide-react"
 import { useIsMobile } from "../hooks/use-mobile"
-import type { CheckIn, UserProgress } from "../types/types"
+import type { UserProgress } from "../types/types"
 import { ranks } from "./data/ranks"
 import api from "../services/API/axios"
 import routes from "../services/API/routes"
@@ -491,7 +491,6 @@ const SustainableCheckin = () => {
             {ranks.map((rank) => {
               const isCurrentRank = rank.id === userProgress.currentRank
               const isAchieved = userProgress.currentXP >= rank.points
-              const isNext = rank.id === userProgress.currentRank + 1
 
               return (
                 <div
