@@ -27,7 +27,7 @@ export interface CheckIn {
   userId: string;
   id: string;
   comment: string;
-  timestamp: Date;
+  created_at: Date;
   xpEarned: number;
 }
 

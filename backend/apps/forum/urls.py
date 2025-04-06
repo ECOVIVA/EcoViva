@@ -22,8 +22,8 @@ app_name = 'forum'
 
 urlpatterns = [
     # Rotas para Threads
-    path('list/', views.ThreadListView.as_view(), name="list_thread"),  
-    path('create/', views.ThreadCreateView.as_view(), name='create_thread'), 
+    path('thread/list/', views.ThreadListView.as_view(), name="list_thread"),  
+    path('thread/create/', views.ThreadCreateView.as_view(), name='create_thread'), 
     path('thread/<slug:slug>/', views.ThreadDetailView.as_view(), name='detail_thread'), 
     path('thread/<slug:slug>/update/', views.ThreadUpdateView.as_view(), name='update_thread'), 
     path('thread/<slug:slug>/delete/', views.ThreadDeleteView.as_view(), name='delete_thread'), 

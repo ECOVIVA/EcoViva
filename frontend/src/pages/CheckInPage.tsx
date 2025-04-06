@@ -15,9 +15,10 @@ import {
   Star,
 } from "lucide-react"
 import { useIsMobile } from "../hooks/use-mobile"
-import axios from "axios"
 import type { CheckIn, UserProgress } from "../types/types"
 import { ranks } from "./data/ranks"
+import api from "../services/API/axios"
+import routes from "../services/API/routes"
 
 const SustainableCheckin = () => {
   const username = "usuario_logado" // Nome de usuário atual do sistema
@@ -38,10 +39,10 @@ const SustainableCheckin = () => {
 
   // Fetch Bubble data when the component is mounted
   useEffect(() => {
-    const fetchBubbleData = async () => {
+    const fetchBubbleData = async () => { 
       try {
         // Use the correct endpoint from the Django URLs
-        const response = await axios.get(`/api/bubble/${username}/`)
+        const response = await api.get(routes.user.bubble.profile)
         if (response.status === 200) {
           const bubble = response.data
           setUserProgress({
@@ -143,76 +144,11 @@ const SustainableCheckin = () => {
 
     try {
       // Use the correct endpoint from the Django URLs
-      const response = await axios.post(`/api/bubble/check-in/$<username>/`, {
+      const response = await api.post(routes.user.bubble.check_in,{
         comment: comment.trim(),
         xpEarned: getXPForCurrentRank(),
-      })
+      }) 
 
-      if (response.status === 201 || response.status === 200) {
-        // Handle both success responses
-        let newCheckIn: CheckIn
-        let leveledUp = false
-
-        if (response.data.new_rank) {
-          // User leveled up
-          leveledUp = true
-          // Create a check-in object since the API returns a different format on level up
-          newCheckIn = {
-            id: Date.now(), // Temporary ID
-            comment: comment.trim(),
-            timestamp: new Date().toISOString(),
-            xpEarned: getXPForCurrentRank(),
-          }
-        } else {
-          // Normal check-in response
-          newCheckIn = {
-            id: Date.now(), // Use the ID from response if available
-            comment: comment.trim(),
-            timestamp: new Date().toISOString(),
-            xpEarned: getXPForCurrentRank(),
-          }
-        }
-
-        // Update user progress
-        setUserProgress((prev) => {
-          const newXP = prev.currentXP + newCheckIn.xpEarned
-
-          // Check if user leveled up
-          let newRank = prev.currentRank
-
-          if (leveledUp) {
-            // Find the next rank
-            const nextRank = ranks.find((rank) => rank.id === prev.currentRank + 1)
-            if (nextRank) {
-              newRank = nextRank.id
-            }
-
-            setCheckInSuccess(true)
-
-            // Hide success message after 3 seconds
-            setTimeout(() => {
-              setCheckInSuccess(false)
-            }, 3000)
-          }
-
-          return {
-            currentXP: newXP,
-            currentRank: newRank,
-            checkIns: [newCheckIn, ...prev.checkIns],
-          }
-        })
-
-        setComment("")
-
-        // Create multiple ripples for visual feedback
-        for (let i = 0; i < 5; i++) {
-          setTimeout(() => {
-            createRipple()
-          }, i * 300)
-        }
-      } else {
-        console.error("Erro ao realizar check-in.")
-      }
     } catch (error) {
       console.error("Erro ao conectar com a API:", error)
     } finally {
@@ -524,7 +460,7 @@ const SustainableCheckin = () => {
                         <div className="flex items-center justify-between mt-2 text-sm text-gray-600">
                           <span className="flex items-center gap-1">
                             <Clock className="w-4 h-4" />
-                            {formatDate(checkIn.timestamp)}
+                            {formatDate(String(checkIn.created_at))}
                           </span>
                           <span className="flex items-center gap-1 text-green-600 font-medium">
                             <Trophy className="w-4 h-4 text-amber-500" />+{checkIn.xpEarned} XP
