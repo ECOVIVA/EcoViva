@@ -73,17 +73,11 @@ class UsersSerializer(serializers.ModelSerializer):
 
         - Remove a senha do conjunto de dados antes de criar o usuário.
         - Define a senha de maneira criptografada.
-        - Cria uma bolha (Bubble) automaticamente para o usuário recém-criado.
         """
         password = validated_data.pop('password')  # Remove a senha dos dados validados
 
         user = super().create(validated_data)  # Cria o usuário sem a senha
         user.set_password(password)  # Define a senha criptografada
         user.save()  # Salva o usuário no banco de dados
-
-        # Cria uma bolha associada ao novo usuário
-        bubble_data = {'user': user}
-        bubble_model = Bubble.objects.create(**bubble_data)
-        bubble_model.save()
 
         return user

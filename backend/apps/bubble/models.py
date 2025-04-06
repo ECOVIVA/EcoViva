@@ -108,3 +108,28 @@ def create_default_ranks(sender, **kwargs):
         # Criando cada rank na base de dados se ainda não existir
         for rank_name, difficulty, points in ranks:
             Rank.objects.get_or_create(name=rank_name, difficulty=difficulty, points=points)
+
+@receiver(models.signals.pre_save, sender=CheckIn)
+def increment_points_for_bubble(sender, instance, **kwargs):
+    bubble = instance.bubble  
+    difficulty = bubble.rank.difficulty  
+
+    if difficulty:  
+        # Atualiza o progresso da bolha  
+        bubble.progress += difficulty.points_for_activity  
+        bubble.save()  
+
+@receiver(models.signals.post_save, sender=CheckIn)
+def upgrade_rank(sender, instance, **kwargs):
+    bubble = instance.bubble  
+
+    next_rank = Rank.objects.filter(points__lte=bubble.progress).order_by('-points').first()  
+    if next_rank and next_rank != bubble.rank:  
+        bubble.rank = next_rank  
+        bubble.progress = 0  
+        bubble.save()  
+
+@receiver(models.signals.post_save, sender=Users)
+def create_bubble(sender, instance, created, **kwargs):
+    if created:
+        Bubble.objects.get_or_create(user=instance)

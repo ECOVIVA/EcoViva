@@ -75,18 +75,12 @@ class LoginView(APIView):
             samesite='None',
             max_age=30 * 24 * 60 * 60  # Expira em 30 dias
         )
-        response.set_cookie(
-            key='isAuthenticated',
-            value=True,
-            secure=True,
-            httponly=False,
-            samesite='None',
-        )
 
         return response
 
 
 class LogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
     """
     View para logout de usuários.
 

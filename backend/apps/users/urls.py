@@ -20,9 +20,7 @@ app_name = 'users'
 
 urlpatterns = [
     # Rotas para gerenciamento de usuários
-    path('list/', views.UserListView.as_view(), name="user_list"),  
     path('create/', views.UserCreateView.as_view(), name="user_create"),  
-    path('detail/<str:username>/', views.UserDetailView.as_view(), name="user_detail"),  
     path('profile/', views.UserProfileView.as_view(), name="user_profile"), 
     path('profile/update/', views.UserUpdateView.as_view(), name="user_update"), 
     path('profile/delete/', views.UserDeleteView.as_view(), name="user_delete"), 

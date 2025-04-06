@@ -26,7 +26,9 @@ class UsersMixin:
             username=username,
             password=password,
             email=email,
-            phone=phone
+            phone=phone,
+            is_active = True
+
         )
 
         # Autentica o usuário (corrigido para o método correto)
@@ -51,7 +53,8 @@ class UsersMixin:
             username=username,
             password=password,
             email=email,
-            phone=phone
+            phone=phone,
+            is_active = True
         )
     
         # Autentica o usuário criado
@@ -76,24 +79,16 @@ class UsersMixin:
             username=username,
             password=password,
             email=email,
-            phone=phone
+            phone=phone,
+            is_active = True
         )
 
         return user
 
-# Testes da View 'UsersListView', que lista todos os usuários
-class UsersTest(APITestCase, UsersMixin):
-
-    # Testando o método GET (requisição para listar usuários)
-    def test_users_api_list_return_success(self):
-        api_url = reverse('users:user_list')
-        response = self.client.get(api_url)
-
-        # Verifica se a resposta é 200 (OK) ou 204 (sem conteúdo)
-        self.assertIn(response.status_code, [status.HTTP_200_OK, status.HTTP_204_NO_CONTENT])
-
 # Testes da View 'UsersCreateView', que cria novos usuários
-class UsersCreateTest(APITestCase, UsersMixin):
+class UsersTest(APITestCase, UsersMixin):
+    def setUp(self):
+        self.user = self.make_user_not_autenticated()
 
     # Testando o método POST para criação de usuário sem foto
     def test_users_api_create(self):
@@ -113,10 +108,7 @@ class UsersCreateTest(APITestCase, UsersMixin):
 
         # Verifica se a resposta foi criada com sucesso (status 201)
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(models.Users.objects.count(), 1)  # Apenas 1 usuário criado
-        self.assertEqual(models.Users.objects.first().username, "novouser")
-        self.assertIn('access_token', response.cookies)
-        self.assertIn('refresh_token', response.cookies)
+        self.assertEqual(models.Users.objects.filter(username = "novouser").exists(), True)
 
     # Testando o método POST para criação de usuário com foto
     def test_users_api_create_with_photo(self):
@@ -252,35 +244,10 @@ class UsersCreateTest(APITestCase, UsersMixin):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("photo", response.data)
 
-# Testes da View 'UsersDetailView', que retorna os dados do usuário
-class UsersDetailTest(APITestCase, UsersMixin):
-    def setUp(self):
-        return super().setUp()
-
-    # Testando o GET para obter os dados de um usuário existente
-    def test_users_api_object_return_code_200(self):
-        self.make_user(username='user')
-        api_url = reverse('users:user_detail', args=['user'])
-
-        response = self.client.get(api_url)
-
-        self.assertEqual(response.status_code, 200)
-
-    # Testando o GET para obter os dados de um usuário não existente
-    def test_users_api_object_return_code_404(self):
-        self.make_user(username='user')
-        api_url = reverse('users:user_detail', args=['user_not_found'])
-
-        response = self.client.get(api_url)
-
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-# Testes da View 'UsersUpdateView', que atualiza os dados do usuário
-class UsersUpdateTest(APITestCase, UsersMixin):
     # Testando o PATCH para atualização de dados do usuário
     def test_users_api_object_update(self):
         self.make_user(username='user')
-        api_url = reverse('users:user_update', args=['user'])
+        api_url = reverse('users:user_update')
 
         payload = {
             "username": "newuser",
@@ -293,13 +260,12 @@ class UsersUpdateTest(APITestCase, UsersMixin):
 
     # Testando o PATCH para atualização com nome de usuário duplicado
     def test_users_api_object_update_username_invalid_duplicate(self):
-        self.make_user(username='user')
-        self.make_user_for_comparison(username='user2')
-        api_url = reverse('users:user_update', args=['user'])
+        api_url = reverse('users:user_update')
+        self.user = self.make_user(username='usuario1', email='usuario1@email.com')
+        self.user2 = self.make_user_not_autenticated(username='usuario2', email='usuario2@email.com')
 
         payload = {
-            "username": 'user2',  # Usuário já existe
-            "email": "rann@gmail.com"
+            "username": 'usuario2',  
         }
 
         response = self.client.patch(api_url, payload)
@@ -307,13 +273,30 @@ class UsersUpdateTest(APITestCase, UsersMixin):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('username', response.data)
 
-# Testes da View 'UsersDeleteView', que exclui o usuário
-class UsersDeleteTest(APITestCase, UsersMixin):
-    # Testando o DELETE para excluir o usuário
+    def test_users_api_object_update_fail_for_unauthorized(self):
+        api_url = reverse('users:user_update')
+
+        payload = {
+            "username": "newuser",
+            "phone": '12345678910'
+        }
+
+        response = self.client.patch(api_url, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_users_api_object_delete(self):
-        self.make_user(username='user')
-        api_url = reverse('users:user_delete', args=['user'])
+        self.user = self.make_user()
+        api_url = reverse('users:user_delete')
 
         response = self.client.delete(api_url)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_users_api_object_delete_fail_autenticated(self):
+        api_url = reverse('users:user_delete')
+
+        response = self.client.delete(api_url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+    

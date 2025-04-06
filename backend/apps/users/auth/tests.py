@@ -9,7 +9,7 @@ class AuthTest(APITestCase, UsersMixin):
     # Testando o Login
     def test_login_view_success(self):
         """Testa login bem-sucedido"""
-        user = self.make_user(username="testuser", email="testuser@email.com", password="SenhaForte321.")
+        user = self.make_user_not_autenticated(username="testuser", email="testuser@email.com", password="SenhaForte321.")
         api_url = reverse('login')  # Substitua pelo caminho correto
 
         # Dados de login válidos com email
@@ -20,6 +20,7 @@ class AuthTest(APITestCase, UsersMixin):
 
         response = self.client.post(api_url, data=valid_data, format='json')
 
+        print(response.json())
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("access_token", response.cookies)
         self.assertIn("refresh_token", response.cookies)
@@ -54,6 +55,15 @@ class AuthTest(APITestCase, UsersMixin):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.cookies["access_token"].value, "")
         self.assertEqual(response.cookies["refresh_token"].value, "")
+
+    def test_logout_view_fail_for_unauthorized(self):
+        """Testa logout e remoção dos cookies"""
+        self.make_user_not_autenticated()
+        api_url = reverse('logout')  # Substitua pelo caminho correto
+        response = self.client.post(api_url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
 
     # Testando o Refresh
     def test_refresh_view_success(self):
