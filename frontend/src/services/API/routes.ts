@@ -4,7 +4,7 @@ const routes = {
       logout: '/logout/',
       refresh: '/refresh/',
       verify: '/verify/',
-      confirm_email: (uidb64: string, token: string) => `confirm-email/${uidb64}/${token}/`
+      resend_email: '/resend-email/'
     },
     user: {
       create: '/users/create/',
