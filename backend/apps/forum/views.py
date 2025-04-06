@@ -2,6 +2,7 @@ from django.shortcuts import get_list_or_404, get_object_or_404
 from django.http import Http404  
 from rest_framework.views import APIView  
 from rest_framework.response import Response  
+from rest_framework.exceptions import PermissionDenied
 from rest_framework import status, permissions  
 
 from apps.users.auth.permissions import IsPostOwner  
@@ -64,20 +65,21 @@ class ThreadUpdateView(APIView):
     def patch(self, request, slug):  
         data = request.data  
         if not data:  
-            return Response({'detail': 'Nenhum dado foi enviado!'}, status=status.HTTP_400_BAD_REQUEST)  
-
+            return Response({'detail': 'Nenhum dado foi enviado!'}, status=status.HTTP_400_BAD_REQUEST)     
+        
         try:  
-            thread = get_object_or_404(models.Thread, slug=slug)  
-            serializer = serializers.ThreadsSerializer(thread, data=data, partial=True)  
-            if serializer.is_valid():  
-                serializer.save()  
-                return Response({'detail': 'Thread atualizada com sucesso!'}, status=status.HTTP_200_OK)  
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
+            thread = get_object_or_404(models.Thread, slug=slug)
         except Http404:  
-            return Response({'detail': 'Thread não encontrada!'}, status=status.HTTP_404_NOT_FOUND)  
-        except Exception as e:  
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)  
+            return Response({'detail': 'Thread não encontrada!'}, status=status.HTTP_404_NOT_FOUND) 
+        
+        self.check_object_permissions(request, thread)
 
+        serializer = serializers.ThreadsSerializer(thread, data=data, partial=True)  
+
+        if serializer.is_valid():  
+            serializer.save()  
+            return Response({'detail': 'Thread atualizada com sucesso!'}, status=status.HTTP_200_OK)  
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
 
 class ThreadDeleteView(APIView):  
     """ Deleta uma thread. Apenas o dono da thread pode excluir. """  
@@ -85,14 +87,14 @@ class ThreadDeleteView(APIView):
 
     def delete(self, request, slug):  
         try:  
-            thread = get_object_or_404(models.Thread, slug=slug)  
-            thread.delete()  
-            return Response({'detail': 'Thread deletada com sucesso!'}, status=status.HTTP_204_NO_CONTENT)  
+            thread = get_object_or_404(models.Thread, slug=slug)
         except Http404:  
-            return Response({'detail': 'Thread não encontrada!'}, status=status.HTTP_404_NOT_FOUND)  
-        except Exception as e:  
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)  
-
+            return Response({'detail': 'Thread não encontrada!'}, status=status.HTTP_404_NOT_FOUND)
+          
+        self.check_object_permissions(request, thread) 
+        thread.delete()  
+        
+        return Response({'detail': 'Thread deletada com sucesso!'}, status=status.HTTP_204_NO_CONTENT)  
 
 class ThreadDetailView(APIView):  
     """ Retorna detalhes de uma thread específica. """  
@@ -151,18 +153,18 @@ class PostUpdateView(APIView):
         data = request.data  
         if not data:  
             return Response({'detail': 'Nenhum dado foi enviado!'}, status=status.HTTP_400_BAD_REQUEST)  
-
-        try:  
-            post = get_object_or_404(models.Post, id=id_post)  
-            serializer = serializers.PostsSerializer(post, data=data, partial=True)  
-            if serializer.is_valid():  
-                serializer.save()  
-                return Response(serializer.data, status=status.HTTP_200_OK)  
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
+        try:
+            post = get_object_or_404(models.Post, id=id_post)
         except Http404:  
             return Response({'detail': 'Post não encontrado!'}, status=status.HTTP_404_NOT_FOUND)  
-        except Exception as e:  
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)  
+        
+        self.check_object_permissions(request, post)  
+
+        serializer = serializers.PostsSerializer(post, data=data, partial=True)  
+        if serializer.is_valid():
+            serializer.save()  
+            return Response(serializer.data, status=status.HTTP_200_OK)  
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
 
 
 class PostDeleteView(APIView):  
@@ -171,10 +173,10 @@ class PostDeleteView(APIView):
 
     def delete(self, request, id_post):  
         try:  
-            post = get_object_or_404(models.Post, id=id_post)  
-            post.delete()  
-            return Response({'detail': 'Post deletado com sucesso!'}, status=status.HTTP_204_NO_CONTENT)  
+            post = get_object_or_404(models.Post, id=id_post) 
         except Http404:  
             return Response({'detail': 'Post não encontrado!'}, status=status.HTTP_404_NOT_FOUND)  
-        except Exception as e:  
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)  
+        
+        self.check_object_permissions(request, post)
+        post.delete()  
+        return Response({'detail': 'Post deletado com sucesso!'}, status=status.HTTP_204_NO_CONTENT)    

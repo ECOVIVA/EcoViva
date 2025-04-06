@@ -58,6 +58,28 @@ class UsersMixin:
         self.client.force_authenticate(user)
 
         return user
+    
+    def make_user_not_autenticated(
+        self,
+        first_name='user2',
+        last_name='name2',
+        username='username2',
+        password='SenhaMuitoSegura321',
+        email='username2@email.com',
+        phone='(22) 22222-2222',
+        photo=None
+    ):
+        # Cria um usuário para comparação
+        user = models.Users.objects.create_user(
+            first_name=first_name,
+            last_name=last_name,
+            username=username,
+            password=password,
+            email=email,
+            phone=phone
+        )
+
+        return user
 
 # Testes da View 'UsersListView', que lista todos os usuários
 class UsersTest(APITestCase, UsersMixin):

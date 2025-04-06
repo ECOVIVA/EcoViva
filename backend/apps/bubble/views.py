@@ -6,7 +6,7 @@ from rest_framework import status, permissions
 from rest_framework.exceptions import NotFound  
 
 from apps.bubble import models, serializers  
-from apps.users.auth.permissions import IsOwnerOrReadOnly, IsBubbleOwner  
+from apps.users.auth.permissions import IsBubbleOwner  
 
 """
     Este módulo define as views da aplicação "Bubble", responsáveis por processar requisições HTTP 
@@ -60,7 +60,7 @@ class CheckInView(APIView):
     Retorna todos os check-ins registrados na bolha do usuário autenticado.
     Apenas o dono da bolha pode acessar esta rota.
     """
-    permission_classes = [IsOwnerOrReadOnly]  
+    permission_classes = [permissions.IsAuthenticated]  
     
     def get(self, request):  
         try:  

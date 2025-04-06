@@ -79,37 +79,6 @@ class LessonCompletion(models.Model):
     def __str__(self):  
         return f"{self.user.username} completed {self.lesson.title}"  
 
-
-@receiver(models.signals.post_save, sender=LessonCompletion)  
-def check_achievements(sender, instance, created, **kwargs):  
-    """
-    Sinal que verifica e concede conquistas aos usuários quando uma nova lição é concluída.
-    Se a lição não foi recém-criada, o processo é interrompido.
-    """
-    if not created:  
-        return  
-
-    user = instance.user  
-
-    # Conta o total de lições concluídas pelo usuário  
-    total_completed = LessonCompletion.objects.filter(user=user).count()  
-
-    print(f"✅ {user.username} já completou {total_completed} lições.")  # 🛠 Debug  
-
-    # Obtém todas as conquistas que não possuem uma categoria específica  
-    possible_achievements = AchievementRule.objects.filter(category__isnull=True)  
-
-    # Verifica se o usuário atende aos requisitos de alguma conquista  
-    for rule in possible_achievements:  
-        if total_completed >= rule.required_lessons:  
-            achievement = rule.achievement  
-
-            # Concede a conquista se o usuário ainda não a desbloqueou  
-            if not UserAchievement.objects.filter(user=user, achievement=achievement).exists():  
-                UserAchievement.objects.create(user=user, achievement=achievement)  
-                print(f"🎉 {user.username} desbloqueou a conquista: {achievement.name}!")  
-
-
 class Achievement(models.Model):  
     """
     Modelo que representa as conquistas disponíveis no sistema.
@@ -149,3 +118,31 @@ class UserAchievement(models.Model):
 
     def __str__(self):  
         return f"{self.user.username} desbloqueou {self.achievement.name}"  
+
+# Signals
+
+@receiver(models.signals.post_save, sender=LessonCompletion)  
+def check_achievements(sender, instance, created, **kwargs):  
+    """
+    Sinal que verifica e concede conquistas aos usuários quando uma nova lição é concluída.
+    Se a lição não foi recém-criada, o processo é interrompido.
+    """
+    if not created:  
+        return  
+
+    user = instance.user  
+
+    # Conta o total de lições concluídas pelo usuário  
+    total_completed = LessonCompletion.objects.filter(user=user).count()  
+
+    # Obtém todas as conquistas que não possuem uma categoria específica  
+    possible_achievements = AchievementRule.objects.filter(category__isnull=True)  
+
+    # Verifica se o usuário atende aos requisitos de alguma conquista  
+    for rule in possible_achievements:  
+        if total_completed >= rule.required_lessons:  
+            achievement = rule.achievement  
+
+            # Concede a conquista se o usuário ainda não a desbloqueou  
+            if not UserAchievement.objects.filter(user=user, achievement=achievement).exists():  
+                UserAchievement.objects.create(user=user, achievement=achievement)  
