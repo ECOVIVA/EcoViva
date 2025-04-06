@@ -33,7 +33,7 @@ const LoginPage: React.FC = () => {
         { email: Email, password: password },
       );
 
-      const { access_token, refresh_token } = response.data;
+      const { access_token } = response.data;
 
       
       authContext.login(access_token, {

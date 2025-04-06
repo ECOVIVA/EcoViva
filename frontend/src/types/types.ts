@@ -13,8 +13,8 @@ export interface User {
 }
 
 export interface Rank {
-  description: ReactNode;
-  icon: ReactNode;
+  description?: ReactNode;
+  icon?: ReactNode;
   id: number;
   name: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';

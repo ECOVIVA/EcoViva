@@ -22,7 +22,6 @@ import routes from "../services/API/routes"
 
 
 const SustainableCheckin = () => {
-  const username = "usuario_logado" // Nome de usuário atual do sistema
   const isMobile = useIsMobile()
   const bubbleRef = useRef<HTMLDivElement>(null)
   const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([])
@@ -69,7 +68,7 @@ const SustainableCheckin = () => {
     }, 3000)
 
     return () => clearInterval(interval)
-  }, [username])
+  }, [])
 
   // Create ripple effect in the bubble
   const createRipple = () => {
@@ -120,21 +119,14 @@ const SustainableCheckin = () => {
 
   const getCurrentProgressPercentage = () => {
     const currentRank = getCurrentRank()
-    const nextRank = getNextRank()
-
-    if (!nextRank) return 100 // Max level reached
-
-    const xpInCurrentLevel = userProgress.currentXP - currentRank.points
-    const xpNeededForNextLevel = nextRank.points - currentRank.points
-    return Math.min(100, Math.floor((xpInCurrentLevel / xpNeededForNextLevel) * 100))
+    return Math.min(100, Math.floor(((userProgress.currentXP/currentRank.points) * 100)))
   }
 
   const getRemainingXP = () => {
-    const currentRank = getCurrentRank()
     const nextRank = getNextRank()
 
     if (!nextRank) return 0 // Max level reached
-
+    console.log(nextRank, userProgress.currentXP)
     return nextRank.points - userProgress.currentXP
   }
 
