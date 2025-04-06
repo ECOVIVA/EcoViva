@@ -3,7 +3,8 @@ const routes = {
       login: '/login/',
       logout: '/logout/',
       refresh: '/refresh/',
-      verify: '/verify/'
+      verify: '/verify/',
+      confirm_email: (uidb64: string, token: string) => `confirm-email/${uidb64}/${token}/`
     },
     user: {
       create: '/users/create/',
