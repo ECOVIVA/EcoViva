@@ -17,7 +17,7 @@ static/
 
 # Virtual Environment
 venv/
-.env/
+.env
 .env.bak/
 
 # PyCharm

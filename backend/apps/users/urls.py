@@ -1,27 +1,30 @@
-from django.urls import path, include
-from .email.views import EmailConfirmAPIView
-from . import views
+from django.urls import path, include  
+from . import views  
 
 """
     Este arquivo define as rotas (URLs) relacionadas aos usuários da aplicação.
 
-    - path('', views.UserView.as_view()):
-      Rota principal que permite listar todos os usuários ou criar um novo usuário.
+    - Usuários:
+      - list/                 → Lista todos os usuários.
+      - create/               → Cria um novo usuário.
+      - detail/<str:username>/ → Exibe os detalhes de um usuário específico.
+      - profile/              → Exibe o perfil do usuário autenticado.
+      - profile/update/       → Atualiza o perfil do usuário autenticado.
+      - profile/delete/       → Exclui o perfil do usuário autenticado.
 
-    - path('<str:username>/', views.UserDetailView.as_view()):
-      Rota para acessar, atualizar ou excluir um usuário específico, identificado pelo 'username'.
-
-    - path('<str:username>/bubble/', include('apps.bolha.urls')):
-      Rota para acessar as funcionalidades relacionadas às bolhas associadas a um usuário específico.
+    - Bolhas (Bubble):
+      - bubble/               → Redireciona para as funcionalidades relacionadas às bolhas, definidas no aplicativo "bubble".
 """
 
 app_name = 'users'
 
 urlpatterns = [
-    path('list/', views.UserListView.as_view(), name="user_list"),
-    path('create/', views.UserCreateView.as_view(), name="user_create"),
-    path('detail/<str:username>/', views.UserDetailView.as_view(), name="user_detail"),
-    path('update/<str:username>/', views.UserUpdateView.as_view(), name="user_update"),
-    path('delete/<str:username>/', views.UserDeleteView.as_view(), name="user_delete"),
-    path('bubble/', include('apps.bubble.urls')),
+    # Rotas para gerenciamento de usuários
+    path('create/', views.UserCreateView.as_view(), name="user_create"),  
+    path('profile/', views.UserProfileView.as_view(), name="user_profile"), 
+    path('profile/update/', views.UserUpdateView.as_view(), name="user_update"), 
+    path('profile/delete/', views.UserDeleteView.as_view(), name="user_delete"), 
+
+    # Rotas relacionadas às bolhas
+    path('bubble/', include('apps.bubble.urls')),  
 ]

@@ -38,7 +38,16 @@ class TestLessions(APITestCase, UsersMixin):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.data, {"detail": "Este usuario não comletou nenhuma lição."})
+        self.assertEqual(response.data, {"detail": "Este usuário não completou nenhuma lição."})
+
+    def test_get_lesson_completions_unauthorizated(self):
+        self.client.logout()
+        
+        url = reverse("study:lessons_complete")  
+        
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_post_lesson_completion_success(self):
         """Testa a criação de um novo registro de lição concluída"""
@@ -91,9 +100,28 @@ class TestLessions(APITestCase, UsersMixin):
 
         self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_get_achivements_list(self):
-        url = reverse("study:achivements_user")
+    def test_post_unauthorized(self):
+        url = reverse("study:lesson_complete_create")
 
-        response = self.client.get(url, format="json")  # Tentativa duplicada
+        self.client.logout()
+
+        payload = {"lesson": self.lesson.id}
+
+        response = self.client.post(url, data=payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_achivements_list(self):
+        url = reverse("study:achievements_user")
+
+        response = self.client.get(url, format="json")  
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_achivements_list_unauthorized(self):
+        url = reverse("study:achievements_user")
+
+        self.client.logout()
+        response = self.client.get(url, format="json")  
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

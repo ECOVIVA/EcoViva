@@ -14,6 +14,7 @@ class ThreadTests(APITestCase,UsersMixin ):
     def setUp(self):
         # Criação de um usuário para os testes
         self.user = self.make_user()
+        self.user2 = self.make_user_not_autenticated()
         
         # Criação de uma thread para os testes
         self.thread_data = {
@@ -40,7 +41,7 @@ class ThreadTests(APITestCase,UsersMixin ):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.json(), 'Thread criada com sucesso!!!')
+        self.assertEqual(response.json(), {'detail': 'Thread criada com sucesso!'})
 
     def test_create_thread_success_with_tags(self):
         url = reverse('forum:create_thread')
@@ -83,6 +84,21 @@ class ThreadTests(APITestCase,UsersMixin ):
 
         thread.cover.delete()        
     
+    def test_create_thread_fail_for_unauthorized(self):
+        url = reverse('forum:create_thread')
+
+        self.client.logout()
+
+        data = {
+            'title': '',
+            'content': 'Content for new thread',
+            'author': self.user.id
+        }
+
+        response = self.client.post(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_create_thread_fail_for_title_blank(self):
         url = reverse('forum:create_thread')
 
@@ -187,7 +203,7 @@ class ThreadTests(APITestCase,UsersMixin ):
         self.thread.refresh_from_db()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json(), 'Thread criada com sucesso!!!')
+        self.assertEqual(response.json(),  {'detail': 'Thread atualizada com sucesso!'})
         self.assertEqual(self.thread.slug, slugify(data['title']))
 
         tag_names = set(self.thread.tags.values_list("name", flat=True))
@@ -203,7 +219,7 @@ class ThreadTests(APITestCase,UsersMixin ):
         response = self.client.patch(url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.json(), {'detail': 'Thrend não encontrada!!'})
+        self.assertEqual(response.json(), {'detail': 'Thread não encontrada!'})
 
     def test_thread_update_fail_for_invalid_tags(self):
         """Testa a falha ao atualizar uma thread com tags inválidas"""
@@ -218,6 +234,40 @@ class ThreadTests(APITestCase,UsersMixin ):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json(), {'tags': ['Necessário uma lista de itens, mas recebeu tipo "str".']})
 
+    def test_thread_update_fail_for_unauthorized(self):
+        url = reverse('forum:update_thread', args=[self.thread.slug])
+
+        self.client.logout()
+
+        data = {
+            'title': 'New_Title',
+            'tags': ['Updated', 'Thread', 'Test']
+        }
+
+        response = self.client.patch(url, data, format='json')
+
+        self.thread.refresh_from_db()
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_thread_update_fail_for_not_owner(self):
+        url = reverse('forum:update_thread', args=[self.thread.slug])
+
+        self.client.logout()
+        self.client.force_authenticate(self.user2)
+
+        data = {
+            'title': 'New_Title',
+            'tags': ['Updated', 'Thread', 'Test']
+        }
+
+        response = self.client.patch(url, data, format='json')
+
+        self.thread.refresh_from_db()
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.json(), {'detail': 'Você não tem permissão para fazer essa ação no post'})
+
     def test_thread_detail(self):
         url = reverse('forum:detail_thread', args=[self.thread.slug])
         response = self.client.get(url)
@@ -229,15 +279,35 @@ class ThreadTests(APITestCase,UsersMixin ):
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-    def test_thread_delete_fail(self):
+    def test_thread_delete_fail_for_not_found(self):
         url = reverse('forum:delete_thread', args=[999])
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_thread_delete_fail_unauthorized(self):
+        url = reverse('forum:delete_thread', args=[self.thread.slug])
+
+        self.client.logout()
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_thread_delete_fail_for_not_owner(self):
+        url = reverse('forum:delete_thread', args=[self.thread.slug])
+        self.client.logout()
+        self.client.force_authenticate(self.user2)
+
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.json(), {'detail': 'Você não tem permissão para fazer essa ação no post'})
 
 class PostTests(APITestCase, UsersMixin):
     def setUp(self):
         # Criação de um usuário para os testes
         self.user = self.make_user()
+        self.user2 = self.make_user_not_autenticated()
         
         # Criação de uma thread para os testes
         self.thread_data = {
@@ -281,9 +351,22 @@ class PostTests(APITestCase, UsersMixin):
         }
         
         response = self.client.post(url, data)
-        print(response.data)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertContains(response, 'Post criado com sucesso!!!')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data, {'detail': 'Post criado com sucesso!'})
+
+    def test_create_post_unauthorized(self):
+        url = reverse('forum:create_post')
+        self.client.logout()
+
+        data = {
+            'thread': self.thread.pk,
+            'content': 'Content for new post',
+            'author': self.user.pk
+        }
+        
+        response = self.client.post(url, data)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_post_update(self):
         url = reverse('forum:post_update', args=[self.post.pk])
@@ -298,9 +381,29 @@ class PostTests(APITestCase, UsersMixin):
         data = {'content': 'Updated content for post'}
         
         response = self.client.patch(url, data, format='json')
-        print(response.data)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.data['detail'], 'O Post não foi encontrado!!')
+        self.assertEqual(response.data['detail'], 'Post não encontrado!')
+
+    def test_post_update_fail_for_unauthorized(self):
+        url = reverse('forum:post_update', args=[self.post.pk])
+        self.client.logout()
+
+        data = {'content': 'Updated post'}
+        
+        response = self.client.patch(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_post_update_fail_for_not_owner(self):
+        url = reverse('forum:post_update', args=[self.post.pk])
+        self.client.logout()
+        self.client.force_authenticate(self.user2)
+
+        data = {'content': 'Updated post'}
+        
+        response = self.client.patch(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.json(), {'detail': 'Você não tem permissão para fazer essa ação no post'})
+
 
     def test_post_delete(self):
         url = reverse('forum:post_delete', args=[self.post.pk])
@@ -312,3 +415,22 @@ class PostTests(APITestCase, UsersMixin):
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+
+    def test_post_delete_fail_for_unauthorized(self):
+        url = reverse('forum:post_delete', args=[self.post.pk])
+        self.client.logout()
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_post_delete_fail_for_not_owner(self):
+        url = reverse('forum:post_delete', args=[self.post.pk])
+
+        self.client.logout()
+        self.client.force_authenticate(self.user2)
+
+        
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.json(), {'detail': 'Você não tem permissão para fazer essa ação no post'})

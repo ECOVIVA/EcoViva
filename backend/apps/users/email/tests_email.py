@@ -74,7 +74,7 @@ class EmailConfirmTest(APITestCase, UsersMixin):
 
         # Verificar se a resposta foi Bad Request, pois o usuário já está ativo
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual({'detail': 'O Usuario já tem o email autenticado.'} , response.json())
+        self.assertEqual({'detail': 'O usuário já tem o e-mail autenticado.'} , response.json())
 
     def test_resend_email_confirmation(self):
         # Verificar se o e-mail de confirmação pode ser reenviado
@@ -90,7 +90,7 @@ class EmailConfirmTest(APITestCase, UsersMixin):
         response = self.client.post(url, {'email': 'invalid@example.com'})
         
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual({"error": "Email não encontrado."}, response.json())
+        self.assertEqual({'error': 'E-mail não encontrado.'}, response.json())
 
     def test_login_after_email_confirmation(self):
         # Confirmar e-mail

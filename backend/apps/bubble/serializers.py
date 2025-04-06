@@ -5,33 +5,63 @@ from datetime import timedelta
 from . import models
 
 """
-    Este arquivo contém os Serializers responsáveis por converter os dados dos modelos
-    em JSON e vice-versa, para que possam ser usados nas APIs.
+    Serializers responsáveis pela conversão dos dados dos models em JSON e vice-versa.
 
-    Este arquivo é o responsavel por criar os serializers de Bubble e CheckIn, validar seus dados e fazer suas operações
-    com o Banco de Dados.
-
+    Este arquivo contém os serializers para os modelos:
+    - Difficulty: Serializa os níveis de dificuldade.
+    - Rank: Serializa os ranks, incluindo a dificuldade associada.
+    - CheckIn: Valida a criação de check-ins e atribui pontos automaticamente.
+    - Bubble: Serializa as bolhas, incluindo rank e check-ins associados.
 """
+
+# Serializer para o modelo Difficulty
 class DifficultySerializer(serializers.ModelSerializer):
+    """
+    Serializa o modelo Difficulty.
+
+    - Converte os dados do modelo de dificuldade para JSON.
+    - Inclui todos os campos do modelo.
+    """
     class Meta:
         model = models.Difficulty
-        fields = '__all__'
+        fields = '__all__'  # Inclui todos os campos do modelo
 
+# Serializer para o modelo Rank
 class RankSerializer(serializers.ModelSerializer):
-    difficulty = DifficultySerializer()
+    """
+    Serializa o modelo Rank.
+
+    - Inclui os dados da dificuldade associada ao rank.
+    - Converte os dados para JSON, garantindo compatibilidade com a API.
+    """
+    difficulty = DifficultySerializer()  # Serializa a dificuldade dentro do rank
+    
     class Meta:
         model = models.Rank
-        fields = '__all__'
+        fields = '__all__'  # Inclui todos os campos do modelo
 
+# Serializer para o modelo CheckIn
 class CheckInSerializer(serializers.ModelSerializer):
+    """
+    Serializa o modelo CheckIn e implementa validações.
+
+    - Impede que um usuário faça mais de um Check-In dentro de 24 horas.
+    - Atribui automaticamente a quantidade de pontos ao Check-In.
+    """
+    
     class Meta:
         model = models.CheckIn
-        fields = '__all__'
-        read_only_fields = ['created_at', 'xp_earned']
+        fields = '__all__'  # Inclui todos os campos do modelo
+        read_only_fields = ['created_at', 'xp_earned']  # Impede edição da data e do XP
 
     def validate(self, data):
-        """ Valida se o último Check-In foi feito há menos de 24 horas. """
-        bubble = data.get('bubble')  # Obtém a bolha do novo check-in
+        """
+        Valida se o último Check-In foi feito há menos de 24 horas.
+
+        - Obtém o último Check-In da bolha associada.
+        - Se o último Check-In tiver menos de 24 horas, impede a criação de um novo.
+        """
+        bubble = data.get('bubble')  
         ultimo_checkin = models.CheckIn.objects.filter(bubble=bubble).order_by('-created_at').first()
 
         if ultimo_checkin:
@@ -42,22 +72,38 @@ class CheckInSerializer(serializers.ModelSerializer):
         return data
     
     def create(self, validated_data):
-        """ Atribui XP automaticamente ao criar um check-in. """
+        """
+        Atribui automaticamente a quantidade de pontos ao criar um Check-In.
+
+        - Obtém a bolha associada ao Check-In.
+        - Define o XP ganho com base na dificuldade do rank da bolha.
+        """
         bubble = validated_data.get('bubble')
-        # Atribui o XP antes de criar o objeto
         validated_data['xp_earned'] = bubble.rank.difficulty.points_for_activity
         return super().create(validated_data)
-    
+
+# Serializer para o modelo Bubble
 class BubbleSerializer(serializers.ModelSerializer):
-    rank = RankSerializer()
-    check_ins = serializers.SerializerMethodField()
+    """
+    Serializa o modelo Bubble.
+
+    - Inclui a relação com o modelo Rank.
+    - Recupera e exibe os Check-Ins associados à bolha.
+    """
+    rank = RankSerializer()  # Serializa o rank associado
+    check_ins = serializers.SerializerMethodField()  # Campo personalizado para exibir os check-ins da bolha
 
     class Meta:
         model = models.Bubble
-        fields = 'user', 'progress', 'rank', 'check_ins'
-        read_only_fields = ['rank','check_ins']
+        fields = ('user', 'progress', 'rank', 'check_ins')  # Campos incluídos na serialização
+        read_only_fields = ['rank', 'check_ins']  # Define rank e check-ins como somente leitura
 
     def get_check_ins(self, obj):
-        """ Retorna todas as respostas de um post """
+        """
+        Retorna todos os Check-Ins associados à bolha.
+
+        - Obtém os Check-Ins filtrando pelo ID da bolha.
+        - Serializa os Check-Ins e retorna os dados.
+        """
         check_ins = models.CheckIn.objects.filter(bubble=obj)
-        return CheckInSerializer(check_ins, many=True).data
+        return CheckInSerializer(check_ins, many=True).data  # Serializa múltiplos check-ins
