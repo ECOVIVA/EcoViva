@@ -173,6 +173,17 @@ const LoginPage: React.FC = () => {
                   transition={{ duration: 0.2 }}
                 />
               </Link>
+             
+              <Link to="/CreateAccount" className="relative">
+                Crie uma contaECO aqui!
+                <motion.div
+                  className="absolute -bottom-1 left-0 w-full h-0.5 bg-green-600"
+                  initial={{ scaleX: 0 }}
+                  whileHover={{ scaleX: 1 }}
+                  transition={{ duration: 0.2 }}
+                />
+              </Link>
+             
             </motion.button>
           </div>
         </form>

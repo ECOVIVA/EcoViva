@@ -1,6 +1,4 @@
-import { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuthStore } from './store/authStore';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 // Components
 import Navbar from './components/Navbar';
@@ -19,19 +17,14 @@ import ParceriaPage from './pages/ParceriasPage';
 import CreateAccount from './pages/CreateAccount';
 import ECOlições from './pages/ECOstudy';
 import ProfilePage from './pages/ProfilePage';
-import EmailConfirmation from './pages/emailconfirmation'; // Corrigido aqui
+import ResendEmail from './pages/ResendEmail';
 
 const App: React.FC = () => {
-  const { initAuth, isAuthenticated } = useAuthStore(); // Supondo que você tenha a lógica de autenticação
-
-  useEffect(() => {
-    initAuth(); // Inicializa a autenticação ao carregar a página
-  }, [initAuth]);
-
   return (
     <AuthProvider>
       <Router>
         <div className="flex flex-col min-h-screen">
+
           <Navbar />
           <main className="flex-grow pt-20">
             <Routes>
@@ -43,10 +36,11 @@ const App: React.FC = () => {
               <Route path="/CertificatePage" element={<CertificatePage />} />
               <Route path="/ParceriasPage" element={<ParceriaPage />} />
               <Route path="/CreateAccount" element={<CreateAccount />} />
-              <Route path="/ECOlições" element={<ECOlições />} />
-              <Route path="/CheckInPage" element={isAuthenticated ? <CheckInPage /> : <Navigate to="/login" />} />
-              <Route path="/ProfilePage" element={isAuthenticated ? <ProfilePage /> : <Navigate to="/login" />} />
-              <Route path="/confirm-email/:uidb64/:token" element={<EmailConfirmation />} />
+              <Route path="/ECOstudy" element={<ECOlições />} />
+              <Route path="/CheckInPage" element={<CheckInPage />} />
+              <Route path="/ProfilePage" element={<ProfilePage />} />
+              <Route path="/Resendemail" element={<ResendEmail />} />
+              
             </Routes>
           </main>
           <Footer />
@@ -54,6 +48,6 @@ const App: React.FC = () => {
       </Router>
     </AuthProvider>
   );
-};
+}
 
 export default App;

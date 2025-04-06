@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect } from 'react';
 import { Leaf, Mail, Lock, Eye, EyeOff, User, Phone, Upload } from 'lucide-react';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom'; // Import useParams to get URL params
-import { AuthContext } from '../components/AuthContext'; // Mantenha o import do AuthContext
+import { AuthContext } from '../components/AuthContext'; 
 
 function App() {
   const navigator = useNavigate();
