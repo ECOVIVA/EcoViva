@@ -17,9 +17,9 @@ import ImpactPage from './pages/ImpactPage';
 import CertificatePage from './pages/CertificatePage';
 import ParceriaPage from './pages/ParceriasPage';
 import CreateAccount from './pages/CreateAccount';
-import ECOlições from './pages/ECOstudy';
+import ECOstudy from './pages/ECOstudy';
 import ProfilePage from './pages/ProfilePage';
-import EmailConfirmation from './pages/emailconfirmation'; // Corrigido aqui
+
 
 const App: React.FC = () => {
   const { initAuth, isAuthenticated } = useAuthStore(); // Supondo que você tenha a lógica de autenticação
@@ -43,10 +43,10 @@ const App: React.FC = () => {
               <Route path="/CertificatePage" element={<CertificatePage />} />
               <Route path="/ParceriasPage" element={<ParceriaPage />} />
               <Route path="/CreateAccount" element={<CreateAccount />} />
-              <Route path="/ECOlições" element={<ECOlições />} />
+              <Route path="/ECOstudy" element={<ECOstudy />} />
               <Route path="/CheckInPage" element={isAuthenticated ? <CheckInPage /> : <Navigate to="/login" />} />
               <Route path="/ProfilePage" element={isAuthenticated ? <ProfilePage /> : <Navigate to="/login" />} />
-              <Route path="/confirm-email/:uidb64/:token" element={<EmailConfirmation />} />
+              
             </Routes>
           </main>
           <Footer />
