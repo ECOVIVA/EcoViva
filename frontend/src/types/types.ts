@@ -8,27 +8,26 @@ export interface User {
   last_name: string;
   email: string;
   phone: string;
-  avatar: string;
+  photo: string;
   role?: string;
 }
 
 export interface Rank {
-  description: ReactNode;
-  icon: ReactNode;
+  description?: ReactNode;
+  icon?: ReactNode;
   id: number;
   name: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
-  xpRequired: number;
+  points: number;
   color: string;
 }
 
 export interface CheckIn {
-  date: string;
-  userId: string;
-  id: string;
-  comment: string;
-  timestamp: Date;
-  xpEarned: number;
+  bubble: number;
+  id: number;
+  description: string;
+  created_at: string;
+  xp_earned: number;
 }
 
 export interface UserProgress {

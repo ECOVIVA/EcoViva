@@ -191,9 +191,9 @@ const Navbar: React.FC = () => {
                       to="/profile"
                       className="flex items-center space-x-2 group"
                     >
-                      {user?.profile_picture ? (
+                      {user?.photo ? (
                         <img
-                          src={user.profile_picture}
+                          src={`http://localhost:8000/${user.photo}`}
                           alt={user.name}
                           className={`w-10 h-10 rounded-full border-2 ${
                             isScrolled ? 'border-green-600/50 group-hover:border-green-500' : 'border-green-600/30 group-hover:border-green-600'

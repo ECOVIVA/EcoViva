@@ -1,7 +1,16 @@
-import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useContext,
+  ReactNode
+} from 'react';
+import api from '../services/API/axios';
+import routes from '../services/API/routes';
+import { AxiosResponse } from 'axios';
 
 interface User {
-  profile_picture?: string;
+  photo?: string;
   id: string;
   name: string;
   email: string;
@@ -10,8 +19,8 @@ interface User {
 interface AuthContextProps {
   isAuthenticated: boolean;
   user: User | null;
-  login: (token: string, userData: User) => void;
-  logout: () => void;
+  login: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -20,55 +29,80 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
 
-  useEffect(() => {
+  // Renova o token caso esteja expirado
+  const fetchRefresh = async (): Promise<boolean> => {
     try {
-      const token = localStorage.getItem('access_token');
-      const storedUser = localStorage.getItem('user');
+      const response: AxiosResponse = await api.post(routes.auth.refresh);
+      return response.status === 200;
+    } catch (error) {
+      console.error('Erro ao renovar token:', error);
+      return false;
+    }
+  };
 
-      if (token && storedUser) {
+  // Verifica se o token atual é válido
+  const verifyAuthentication = async () => {
+    try {
+      const response: AxiosResponse = await api.get(routes.auth.verify);
+      if (response.status === 200) {
         setIsAuthenticated(true);
-        setUser(JSON.parse(storedUser));
+        await fetchUser(); // garante que o user seja carregado também
+      } else {
+        const refreshed = await fetchRefresh();
+        setIsAuthenticated(refreshed);
       }
     } catch (error) {
-      console.error("Erro ao recuperar usuário do localStorage:", error);
-      localStorage.removeItem('user'); // Corrigir possíveis dados inválidos
+      const refreshed = await fetchRefresh();
+      setIsAuthenticated(refreshed);
     }
-  }, []);
+  };
 
-  useEffect(() => {
-    const handleStorageChange = () => {
-      try {
-        const token = localStorage.getItem('access_token');
-        const storedUser = localStorage.getItem('user');
-
-        setIsAuthenticated(!!token);
-        setUser(storedUser ? JSON.parse(storedUser) : null);
-      } catch (error) {
-        console.error("Erro ao processar mudanças no localStorage:", error);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  const login = (token: string, userData: User) => {
+  // Carrega usuário autenticado
+  const fetchUser = async () => {
     try {
-      localStorage.setItem('access_token', token);
-      localStorage.setItem('user', JSON.stringify(userData));
-      setIsAuthenticated(true);
-      setUser(userData);
+      const response: AxiosResponse = await api.get(routes.user.profile);
+      if (response.status === 200) {
+        const userData: User = {
+          id: response.data.id,
+          name: response.data.username,
+          email: response.data.email,
+          photo: response.data.photo || undefined
+        };
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+      }
     } catch (error) {
-      console.error("Erro ao salvar dados no localStorage:", error);
+      console.error('Erro ao carregar dados do usuário:', error);
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user');
-    setIsAuthenticated(false);
-    setUser(null);
+  const login = async () => {
+    await fetchUser();
+    setIsAuthenticated(true);
   };
+
+  const logout = async () => {
+    try {
+      await api.post(routes.auth.logout);
+      setUser(null);
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+  };
+
+  // Efeito inicial: verifica autenticação ao carregar a app
+  useEffect(() => {
+    verifyAuthentication();
+
+    const intervalId = setInterval(() => {
+      verifyAuthentication()
+    }, 60000)
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, []);
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>

@@ -1,8 +1,9 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { Leaf, Mail, Lock, Eye, EyeOff, User, Phone, Upload } from 'lucide-react';
-import axios from 'axios';
-import { useNavigate, useParams } from 'react-router-dom'; // Import useParams to get URL params
+import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../components/AuthContext'; // Mantenha o import do AuthContext
+import api from '../services/API/axios';
+import routes from '../services/API/routes';
 
 function App() {
   const navigator = useNavigate();
@@ -77,36 +78,16 @@ function App() {
         email: formData.email,
         phone: formData.phone,
         password: formData.password,
+        photo: formData.photo
       };
 
-      const response = await axios.post('http://127.0.0.1:8000/api/users/create/', userData, {
+      const response = await api.post(routes.user.create, userData, {
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'multipart/form-data',
         },
-        withCredentials: true,
       });
 
       if (response.status === 201) {
-        // Se houver uma foto, fazer o upload
-        if (formData.photo) {
-          const formDataToSend = new FormData();
-          formDataToSend.append("photo", formData.photo);
-
-          await axios.post(
-            `http://127.0.0.1:8000/api/users/upload-photo/`,
-            formDataToSend,
-            {
-              headers: { "Content-Type": "multipart/form-data" },
-              withCredentials: true,
-            }
-          );
-        }
-
-        const token = response.data.token;
-        const userDataFromApi = response.data.user;
-
-        authContext.login(token, userDataFromApi);
-
         alert("Usuário cadastrado com sucesso!");
         navigator('/CheckInpage');
       }

@@ -46,7 +46,7 @@ class UserCreateView(APIView):
 class UserProfileView(APIView):
     permission_classes = [permissions.IsAuthenticated]  # Exige autenticação para acessar a view
 
-    def get(self, request, username):
+    def get(self, request,):
         try:
             # Recupera o usuário autenticado pelo username ou retorna erro 404 se não existir.
             user = get_object_or_404(models.Users, username=request.user.username)
