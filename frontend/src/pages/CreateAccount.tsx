@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { Leaf, Mail, Lock, Eye, EyeOff, User, Phone, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../components/AuthContext'; // Mantenha o import do AuthContext
@@ -7,6 +7,7 @@ import routes from '../services/API/routes';
 
 function App() {
   const navigator = useNavigate();
+  const { uidb64, token } = useParams<{ uidb64: string, token: string }>(); // Capture URL params for confirmation
 
   const [formData, setFormData] = useState({
     username: "",
@@ -22,9 +23,35 @@ function App() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [success, setSuccess] = useState(false); // State to track success of email confirmation
 
   // Não redefine o AuthContext, apenas use o contexto
-  const authContext = useContext(AuthContext); // Aqui, apenas utilize useContext(AuthContext)
+  const authContext = useContext(AuthContext);
+
+  // Email confirmation function
+  useEffect(() => {
+    const confirmEmail = async () => {
+      if (!uidb64 || !token) return;
+
+      try {
+        const response = await axios.get(
+          `http://127.0.0.1:8000/api/confirm-email/${uidb64}/${token}/`,
+          { withCredentials: true } // Se precisar de cookies de autenticação
+        );
+
+        if (response.status === 200) {
+          setSuccess(true);
+          alert("Email confirmado com sucesso!");
+        }
+      } catch (err) {
+        setError("Houve um erro ao tentar confirmar o e-mail.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    confirmEmail();
+  }, [uidb64, token]); // Only run when uidb64 or token change
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,7 +104,7 @@ function App() {
       setFormData((prev) => ({ ...prev, photo: e.target.files![0] }));
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
