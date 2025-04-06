@@ -1,8 +1,9 @@
 import React, { useContext, useState } from 'react';
 import { Leaf, Mail, Lock, Eye, EyeOff, User, Phone, Upload } from 'lucide-react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../components/AuthContext'; // Mantenha o import do AuthContext
+import api from '../services/API/axios';
+import routes from '../services/API/routes';
 
 function App() {
   const navigator = useNavigate();
@@ -52,7 +53,7 @@ function App() {
         password: formData.password,
       };
 
-      const response = await axios.post('http://127.0.0.1:8000/api/users/create/', userData, {
+      const response = await api.post(routes.user.create, userData, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -60,28 +61,6 @@ function App() {
       });
 
       if (response.status === 201) {
-        // Se houver uma foto, fazer o upload
-        if (formData.photo) {
-          const formDataToSend = new FormData();
-          formDataToSend.append("photo", formData.photo);
-
-          await axios.post(
-            `http://127.0.0.1:8000/api/users/upload-photo/`, // Usando o ID em vez do username
-            formDataToSend,
-            {
-              headers: { "Content-Type": "multipart/form-data" },
-              withCredentials: true,
-            }
-          );
-        }
-
-        // Supondo que o response contenha o token e os dados do usuário
-        const token = response.data.token; // Ajuste de acordo com a resposta da API
-        const userDataFromApi = response.data.user; // Ajuste de acordo com a resposta da API
-
-        // Chama o login para atualizar o estado do AuthContext
-        authContext.login(token, userDataFromApi); // Atualiza o estado do AuthContext com o usuário e token
-
         alert("Usuário cadastrado com sucesso!");
         navigator('/CheckInpage');
       }
