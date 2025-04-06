@@ -24,7 +24,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           last_name: response.user.last_name,
           email: response.user.email,
           phone: response.user.phone,
-          avatar: response.user.avatar, // Certifique-se de que o avatar seja recebido corretamente
+          photo: response.user.avatar, // Certifique-se de que o avatar seja recebido corretamente
           role: response.user.role,
         };
 console.log('User logged in:', user);

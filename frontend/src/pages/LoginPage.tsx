@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Leaf, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AuthContext } from '../components/AuthContext';
-import axios from 'axios';
+import api from '../services/API/axios';
+import routes from '../services/API/routes';
 
 const LoginPage: React.FC = () => {
   const [Email, setEmail] = useState('');
@@ -27,36 +28,18 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(
-        'http://localhost:8000/api/login/',
+      const response = await api.post(
+        routes.auth.login,
         { email: Email, password: password },
-        { withCredentials: true }
       );
-
-      const { access_token, refresh_token } = response.data;
-
       
-      authContext.login(access_token, {
-        email: Email, name: 'Nome do Usuário',
-        id: ''
-      });
-
-      localStorage.setItem('access_token', access_token);
-      localStorage.setItem('refresh_token', refresh_token);
-
-             // Após o login, verificando o perfil do usuário
-            //const getProfileData = async (username: any) => {
-           //try {
-          //  const response = await axios.get(`http://localhost:8000/api/detail/${username}/`, {
-         //withCredentials: true,
-        //});
-       //  return response.data; // Retorna os dados da resposta, caso precise usar
-     //} catch (error) {
-    //console.error('Erro ao buscar dados do perfil:', error);
-  //}
-//};
-
-       
+      if (response.status === 200){
+        authContext.login()
+      }
+      else{
+        console.error(response.data)
+      }
+      
 
       navigate('/'); // Redireciona para a página principal
     } catch (error: any) {
