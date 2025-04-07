@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Leaf, Send } from 'lucide-react';
-import axios, { AxiosError } from 'axios';
+import { isAxiosError } from 'axios'; 
+import api from '../services/API/axios';
+import routes from '../services/API/routes';
 
 const App = () => {
   const [email, setEmail] = useState('');
@@ -12,8 +14,8 @@ const App = () => {
     setLoading(true);  // Inicia o estado de loading
 
     try {
-      const response = await axios.post(
-        'http://localhost:8000/api/resend-email/',  // Endpoint da API
+      const response = await api.post(
+        routes.auth.resend_email,  // Endpoint da API
         { email }  // Corpo da requisição com o e-mail
       );
 
@@ -21,8 +23,7 @@ const App = () => {
         setMessage('Código de verificação reenviado com sucesso!');
       }
     } catch (error) {
-      // Garantir que o erro seja tratado adequadamente com a tipagem do Axios
-      if (axios.isAxiosError(error)) {
+      if (isAxiosError(error)) {
         if (error.response) {
           if (error.response.status === 404) {
             setMessage('E-mail não encontrado.');
@@ -32,7 +33,6 @@ const App = () => {
             setMessage('Ocorreu um erro ao reenviar o código. Tente novamente.');
           }
         } else {
-          // Caso não haja resposta, talvez o servidor esteja inacessível
           setMessage('Erro de conexão com o servidor. Tente novamente mais tarde.');
         }
       } else {

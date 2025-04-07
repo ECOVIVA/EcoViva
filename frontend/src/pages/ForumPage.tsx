@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useForumStore } from '../store/forumStore';
 import { MessageSquare, Heart, Send, Plus } from 'lucide-react';
-import { useAuthStore } from '../services/API/axios';
+import { useAuthStore } from '../store/authStore'; 
 
 const ForumPage: React.FC = () => {
   const { user, isAuthenticated } = useAuthStore();
@@ -26,9 +26,9 @@ const ForumPage: React.FC = () => {
     }
     
     addPost(
-      user.id,
+      String(user.id),
       user.username,
-      user.avatar,
+      user.photo,
       newPostTitle,
       newPostContent
     );
@@ -54,9 +54,9 @@ const ForumPage: React.FC = () => {
     
     addComment(
       postId,
-      user.id,
+      String(user.id),
       user.username,
-      user.avatar,
+      user.photo,
       content
     );
     
@@ -251,9 +251,9 @@ const ForumPage: React.FC = () => {
                   <div className="border-t border-gray-100 p-4">
                     <form onSubmit={(e) => handleAddComment(post.id, e)}>
                       <div className="flex space-x-3">
-                        {user?.avatar ? (
+                        {user?.photo ? (
                           <img 
-                            src={user.avatar} 
+                            src={user.photo} 
                             alt={user.username} 
                             className="w-8 h-8 rounded-full mt-1"
                           />

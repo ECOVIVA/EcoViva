@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 727188f440f255c81db2a91d1053c0eba2c6b46a
 const routes = {
     auth: {
       login: '/login/',

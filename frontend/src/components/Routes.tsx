@@ -17,6 +17,7 @@ import ParceriaPage from '../pages/ParceriasPage';
 import CreateAccount from '../pages/CreateAccount';
 import ECOstudy from '../pages/ECOstudy';
 import ProfilePage from '../pages/ProfilePage';
+import App from '../pages/ResendEmail';
 
 
 const RouterComponent: React.FC = () => {
@@ -35,6 +36,7 @@ const RouterComponent: React.FC = () => {
               <Route path="/CertificatePage" element={<CertificatePage />} />
               <Route path="/ParceriasPage" element={<ParceriaPage />} />
               <Route path="/CreateAccount" element={<CreateAccount />} />
+              <Route path="/Resendemail" element={<App />} />
               <Route path="/ECOstudy" element={<ECOstudy />} />
               <Route path="/CheckInPage" element={isAuthenticated ? <CheckInPage /> : <Navigate to="/login" />} />
               <Route path="/ProfilePage" element={isAuthenticated ? <ProfilePage /> : <Navigate to="/login" />} />
