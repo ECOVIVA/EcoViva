@@ -5,49 +5,68 @@ import { motion } from 'framer-motion';
 import { AuthContext } from '../components/AuthContext';
 import api from '../services/API/axios';
 import routes from '../services/API/routes';
+import { z } from 'zod';
+
+const loginSchema = z.object({
+  email: z.string().email('Email inválido'),
+  password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres'),
+});
 
 const LoginPage: React.FC = () => {
   const [Email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const authContext = useContext(AuthContext);
 
-  // Verifica se o contexto foi corretamente inicializado
   if (!authContext) {
     return <div>Contexto não encontrado. Verifique se você envolveu o componente com o AuthProvider.</div>;
   }
 
-  
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setErrors({});
     setIsLoading(true);
 
-    try {
-      const response = await api.post(
-        routes.auth.login,
-        { email: Email, password: password },
-      );
-      
-      if (response.status === 200){
-        authContext.login()
-      }
-      else{
-        console.error(response.data)
-      }
-      
+    const validation = loginSchema.safeParse({ email: Email, password });
 
-      navigate('/'); // Redireciona para a página principal
+    if (!validation.success) {
+      const fieldError = validation.error.errors[0];
+      setErrors({ [fieldError.path[0]]: fieldError.message });
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await api.post(routes.auth.login, {
+        email: Email,
+        password: password,
+      });
+
+      if (response.status === 200) {
+        authContext.login();
+        navigate('/');
+      } else {
+        setErrors({ general: 'Erro desconhecido. Tente novamente.' });
+      }
     } catch (error: any) {
       console.error('Erro de autenticação', error);
       if (error.response && error.response.data) {
-        setError(error.response.data.detail || 'Credenciais inválidas. Tente novamente.');
+        const data = error.response.data;
+
+        if (typeof data === 'object' && !Array.isArray(data)) {
+          const firstKey = Object.keys(data)[0];
+          const firstError = data[firstKey][0];
+          setErrors({ general: firstError });
+        } else if (data.detail) {
+          setErrors({ general: data.detail || '.' });
+        } else {
+          setErrors({ general: 'Erro ao fazer login. Verifique os dados e tente novamente.' });
+        }
       } else {
-        setError('Ocorreu um erro inesperado. Tente novamente.');
+        setErrors({ general: 'Ocorreu um erro inesperado. Tente novamente.' });
       }
     } finally {
       setIsLoading(false);
@@ -55,7 +74,7 @@ const LoginPage: React.FC = () => {
   };
 
   const handleSignUpClick = () => {
-    navigate('/CreateAccount'); // Navega diretamente para a página de criação de conta
+    navigate('/CreateAccount');
   };
 
   return (
@@ -69,17 +88,15 @@ const LoginPage: React.FC = () => {
           <p className="mt-2 text-gray-600">Entre para continuar sua jornada sustentável</p>
         </div>
 
-        {error && (
+        {errors.general && (
           <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
-            {error}
+            {errors.general}
           </div>
         )}
 
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="Email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
+            <label htmlFor="Email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Mail className="h-5 w-5 text-gray-400" />
@@ -92,16 +109,17 @@ const LoginPage: React.FC = () => {
                 required
                 value={Email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
-                placeholder="Seu Username"
+                className={`appearance-none block w-full pl-10 pr-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 ${
+                  errors.email ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="Seu Email"
               />
             </div>
+            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Senha
-            </label>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Lock className="h-5 w-5 text-gray-400" />
@@ -114,7 +132,9 @@ const LoginPage: React.FC = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
+                className={`appearance-none block w-full pl-10 pr-10 py-2 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 ${
+                  errors.password ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="••••••••"
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -127,6 +147,7 @@ const LoginPage: React.FC = () => {
                 </button>
               </div>
             </div>
+            {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
           </div>
 
           <div className="space-y-4">
@@ -155,16 +176,17 @@ const LoginPage: React.FC = () => {
                   whileHover={{ scaleX: 1 }}
                   transition={{ duration: 0.2 }}
                 />
-              </Link>           
+              </Link>
             </motion.button>
+
             <motion.button
               type="button"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className="w-full text-center text-green-600 hover:text-green-700 font-medium"
             >
-            <Link to="/Resendemail" className="relative">
-                Authentique sua Conta!
+              <Link to="/Resendemail" className="relative">
+                Autentique sua Conta!
                 <motion.div
                   className="absolute -bottom-1 left-0 w-full h-0.5 bg-green-600"
                   initial={{ scaleX: 0 }}
@@ -172,7 +194,7 @@ const LoginPage: React.FC = () => {
                   transition={{ duration: 0.2 }}
                 />
               </Link>
-              </motion.button>
+            </motion.button>
           </div>
         </form>
       </div>

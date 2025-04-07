@@ -64,7 +64,6 @@ function App() {
       }
     } catch (err: any) {
       if (err.errors) {
-        // Handle Zod validation errors
         const validationErrors: Record<string, string> = {};
         err.errors.forEach((error: any) => {
           if (error.path) {
@@ -72,14 +71,36 @@ function App() {
           }
         });
         setErrors(validationErrors);
-      } else if (err.response?.data?.photo) {
-        setPhotoError(err.response.data.photo[0]);
+      } else if (err.response?.data) {
+        const apiErrors = err.response.data;
+    
+        // Se houver erro no email
+        if (apiErrors.email) {
+          setErrors((prev) => ({
+            ...prev,
+            email: apiErrors.email[0],
+          }));
+        }
+    
+        // Se houver erro no nome de usuário
+        if (apiErrors.username) {
+          setErrors((prev) => ({
+            ...prev,
+            username: apiErrors.username[0],
+          }));
+        }
+    
+        // Se houver erro na foto
+        if (apiErrors.photo) {
+          setPhotoError(apiErrors.photo[0]);
+        }
       } else {
         setErrors({
           submit: "Ocorreu um erro ao criar a conta. Tente novamente."
         });
       }
       console.error(err);
+    
     } finally {
       setIsLoading(false);
     }
