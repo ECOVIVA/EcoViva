@@ -5,6 +5,7 @@ import { AuthContext } from '../components/AuthContext'; // Mantenha o import do
 import api from '../services/API/axios';
 import routes from '../services/API/routes';
 
+
 function App() {
   const navigator = useNavigate();
 

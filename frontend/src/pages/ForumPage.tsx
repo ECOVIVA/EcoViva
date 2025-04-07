@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useAuthStore } from '../store/authStore';
 import { useForumStore } from '../store/forumStore';
 import { MessageSquare, Heart, Send, Plus } from 'lucide-react';
+import { useAuthStore } from '../services/API/axios';
 
 const ForumPage: React.FC = () => {
   const { user, isAuthenticated } = useAuthStore();
