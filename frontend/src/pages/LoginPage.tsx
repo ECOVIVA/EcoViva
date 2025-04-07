@@ -172,10 +172,16 @@ const LoginPage: React.FC = () => {
                   whileHover={{ scaleX: 1 }}
                   transition={{ duration: 0.2 }}
                 />
-              </Link>
-             
-              <Link to="/CreateAccount" className="relative">
-                Crie uma contaECO aqui!
+              </Link>           
+            </motion.button>
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full text-center text-green-600 hover:text-green-700 font-medium"
+            >
+            <Link to="/Resendemail" className="relative">
+                Authentique sua Conta!
                 <motion.div
                   className="absolute -bottom-1 left-0 w-full h-0.5 bg-green-600"
                   initial={{ scaleX: 0 }}
@@ -183,8 +189,7 @@ const LoginPage: React.FC = () => {
                   transition={{ duration: 0.2 }}
                 />
               </Link>
-             
-            </motion.button>
+              </motion.button>
           </div>
         </form>
       </div>

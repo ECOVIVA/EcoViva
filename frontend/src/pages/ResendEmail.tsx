@@ -1,14 +1,46 @@
 import React, { useState } from 'react';
 import { Leaf, Send } from 'lucide-react';
+import axios, { AxiosError } from 'axios';
 
-function App() {
+const App = () => {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setMessage('Código de verificação reenviado com sucesso!');
-    
+    setLoading(true);  // Inicia o estado de loading
+
+    try {
+      const response = await axios.post(
+        'http://localhost:8000/api/resend-email/',  // Endpoint da API
+        { email }  // Corpo da requisição com o e-mail
+      );
+
+      if (response.status === 200) {
+        setMessage('Código de verificação reenviado com sucesso!');
+      }
+    } catch (error) {
+      // Garantir que o erro seja tratado adequadamente com a tipagem do Axios
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          if (error.response.status === 404) {
+            setMessage('E-mail não encontrado.');
+          } else if (error.response.status === 400) {
+            setMessage('Usuário já está ativo.');
+          } else {
+            setMessage('Ocorreu um erro ao reenviar o código. Tente novamente.');
+          }
+        } else {
+          // Caso não haja resposta, talvez o servidor esteja inacessível
+          setMessage('Erro de conexão com o servidor. Tente novamente mais tarde.');
+        }
+      } else {
+        setMessage('Ocorreu um erro desconhecido. Tente novamente.');
+      }
+    } finally {
+      setLoading(false);  // Finaliza o estado de loading
+    }
   };
 
   return (
@@ -46,9 +78,16 @@ function App() {
             type="submit"
             className="w-full bg-emerald-600 text-white py-2 px-4 rounded-lg hover:bg-emerald-700 
                      transition-colors duration-200 flex items-center justify-center gap-2 font-medium"
+            disabled={loading}
           >
-            <Send className="w-4 h-4" />
-            Reenviar Código
+            {loading ? (
+              <span>Carregando...</span>
+            ) : (
+              <>
+                <Send className="w-4 h-4" />
+                Reenviar Código
+              </>
+            )}
           </button>
         </form>
 
