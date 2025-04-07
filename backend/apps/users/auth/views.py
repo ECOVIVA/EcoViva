@@ -4,6 +4,8 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework import permissions, status
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import PermissionDenied
+
 
 from . import serializers
 from apps.users.serializers import UsersSerializer
@@ -51,9 +53,6 @@ class LoginView(APIView):
         # Gera tokens JWT para o usuário
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
-
-        # Serializa os dados do usuário
-        user_data = UsersSerializer(user).data
 
         # Cria resposta de sucesso
         response = Response({"detail": "Login realizado com sucesso."}, status=status.HTTP_200_OK)
