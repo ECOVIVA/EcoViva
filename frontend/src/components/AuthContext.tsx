@@ -69,7 +69,6 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
           photo: response.data.photo || undefined
         };
         setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
       }
     } catch (error) {
       console.error('Erro ao carregar dados do usuário:', error);
