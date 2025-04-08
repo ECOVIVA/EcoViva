@@ -7,8 +7,9 @@ export interface User {
   first_name: string;
   last_name: string;
   email: string;
+  bio?: string
   phone: string;
-  photo: string;
+  photo?: string;
   role?: string;
 }
 
