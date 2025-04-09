@@ -23,7 +23,7 @@ class UsersAdmin(admin.ModelAdmin):
     # Organização dos campos exibidos na página de detalhes do usuário
     fieldsets = (
         (None, {"fields": ("username", "email", "password")}),  # Campos essenciais de identificação e autenticação
-        ("Informações Pessoais", {"fields": ("first_name", "last_name", "phone", "photo")}),  # Informações pessoais do usuário
+        ("Informações Pessoais", {"fields": ("first_name", "last_name", "phone", "photo", 'bio',"interests")}),  # Informações pessoais do usuário
         ("Status", {"fields": ("is_active", "is_staff", "is_superuser")}),  # Status e permissões do usuário
     )
 

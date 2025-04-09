@@ -38,13 +38,11 @@ const ProfileCard = ({ user }: {user: User}) => {
           )}
         <h2 className="text-xl font-bold text-gray-900">{user.first_name} {user.last_name}</h2>
         {/*<p className="text-gray-500">{user.role}</p>*/}
-        <p className="mt-2 text-sm text-gray-600">{user.bio}</p>
       </div>
       <div className="mt-6 space-y-4">
-        {/*<div className="flex items-center text-gray-600">
-          <MapPin className="h-5 w-5 mr-2" />
-          <span className="text-sm">{user.location}</span>
-        </div>*/}
+        <div className="flex items-center text-gray-600">
+          <span className="whitespace-pre-line">{user.bio}</span>
+        </div>
         <div className="flex items-center text-gray-600">
           <Mail className="h-5 w-5 mr-2" />
           <span className="text-sm">{user.email}</span>
@@ -57,16 +55,19 @@ const ProfileCard = ({ user }: {user: User}) => {
       <div className="mt-6">
         <h3 className="font-semibold text-gray-900 mb-2">Expertise</h3>
         <div className="flex flex-wrap gap-2">
+          {user.interests?.map((interest, index) => (
             <span
+              key={index}
               className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm"
             >
-              TESTE
+              {interest}
             </span>
-        </div>
-        </div>
+          ))}
+          </div>
       </div>
+    </div>
   );
-};
+}
 
 function ProfilePage() {
   const [user, setUser] = useState<User>({

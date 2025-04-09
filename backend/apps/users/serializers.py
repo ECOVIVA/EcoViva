@@ -46,7 +46,7 @@ class UsersSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Users  # Define o modelo associado ao serializer
-        fields = ['id', 'username', 'first_name', 'last_name', 'password', 'email','interests' ,'phone', 'photo']  # Campos incluídos na serialização
+        fields = ['id', 'username', 'first_name', 'last_name', 'password', 'email','bio' ,'interests' ,'phone', 'photo']  # Campos incluídos na serialização
     
     def validate_phone(self, value):
         """
@@ -76,6 +76,13 @@ class UsersSerializer(serializers.ModelSerializer):
             password_validation.validate_password(value)  # Valida a senha usando as regras do Django
         except serializers.ValidationError as e:
             raise serializers.ValidationError({"password": str(e)})  # Retorna o erro de validação
+        return value
+    
+    def validate_bio(self, value):
+        max_line_breaks = 5
+        line_breaks = value.count('\n')
+        if line_breaks > max_line_breaks:
+            raise serializers.ValidationError(f'Máximo de {max_line_breaks} quebras de linha permitidas.')
         return value
 
     def create(self, validated_data):

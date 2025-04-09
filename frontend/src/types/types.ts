@@ -10,6 +10,7 @@ export interface User {
   bio?: string
   phone: string;
   photo?: string;
+  interests?: string[];
   role?: string;
 }
 
