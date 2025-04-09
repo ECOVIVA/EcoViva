@@ -157,7 +157,7 @@ const LoginPage: React.FC = () => {
             >
               {isLoading ? 'Entrando...' : 'Entrar'}
             </button>
-            <div className="flex gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <motion.button
                 type="button"
                 onClick={handleSignUpClick}
@@ -165,7 +165,7 @@ const LoginPage: React.FC = () => {
                 whileTap={{ scale: 0.98 }}
                 className="px-4 py-2 text-sm whitespace-nowrap border border-green-600 text-green-600 hover:text-white hover:bg-green-600 rounded-full font-medium transition-all duration-200"
               >
-                <Link to="/CreateAccount" className="relative block">
+                <Link to="/CreateAccount" className="relative block text-center">
                   Crie uma conta ECO aqui!
                   <motion.div
                     className="absolute -bottom-1 left-0 w-full h-0.5 bg-green-600"
@@ -182,7 +182,7 @@ const LoginPage: React.FC = () => {
                 whileTap={{ scale: 0.98 }}
                 className="px-4 py-2 text-sm whitespace-nowrap border border-green-600 text-green-600 hover:text-white hover:bg-green-600 rounded-full font-medium transition-all duration-200"
               >
-                <Link to="/Resendemail" className="relative block">
+                <Link to="/Resendemail" className="relative block text-center">
                   Autentique sua Conta!
                   <motion.div
                     className="absolute -bottom-1 left-0 w-full h-0.5 bg-green-600"
@@ -193,7 +193,6 @@ const LoginPage: React.FC = () => {
                 </Link>
               </motion.button>
             </div>
-
           </div>
         </form>
       </div>
