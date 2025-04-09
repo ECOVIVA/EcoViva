@@ -109,9 +109,8 @@ const LoginPage: React.FC = () => {
                 required
                 value={Email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={`appearance-none block w-full pl-10 pr-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`appearance-none block w-full pl-10 pr-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 ${errors.email ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 placeholder="Seu Email"
               />
             </div>
@@ -132,9 +131,8 @@ const LoginPage: React.FC = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`appearance-none block w-full pl-10 pr-10 py-2 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 ${
-                  errors.password ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`appearance-none block w-full pl-10 pr-10 py-2 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 ${errors.password ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 placeholder="••••••••"
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -154,47 +152,48 @@ const LoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
-                isLoading ? 'opacity-70 cursor-not-allowed' : ''
-              }`}
+              className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''
+                }`}
             >
               {isLoading ? 'Entrando...' : 'Entrar'}
             </button>
+            <div className="flex gap-4 justify-center">
+              <motion.button
+                type="button"
+                onClick={handleSignUpClick}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-4 py-2 text-sm whitespace-nowrap border border-green-600 text-green-600 hover:text-white hover:bg-green-600 rounded-full font-medium transition-all duration-200"
+              >
+                <Link to="/CreateAccount" className="relative block">
+                  Crie uma conta ECO aqui!
+                  <motion.div
+                    className="absolute -bottom-1 left-0 w-full h-0.5 bg-green-600"
+                    initial={{ scaleX: 0 }}
+                    whileHover={{ scaleX: 1 }}
+                    transition={{ duration: 0.2 }}
+                  />
+                </Link>
+              </motion.button>
 
-            <motion.button
-              type="button"
-              onClick={handleSignUpClick}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full text-center text-green-600 hover:text-green-700 font-medium"
-            >
-              <Link to="/CreateAccount" className="relative">
-                Crie uma contaECO aqui!
-                <motion.div
-                  className="absolute -bottom-1 left-0 w-full h-0.5 bg-green-600"
-                  initial={{ scaleX: 0 }}
-                  whileHover={{ scaleX: 1 }}
-                  transition={{ duration: 0.2 }}
-                />
-              </Link>
-            </motion.button>
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-4 py-2 text-sm whitespace-nowrap border border-green-600 text-green-600 hover:text-white hover:bg-green-600 rounded-full font-medium transition-all duration-200"
+              >
+                <Link to="/Resendemail" className="relative block">
+                  Autentique sua Conta!
+                  <motion.div
+                    className="absolute -bottom-1 left-0 w-full h-0.5 bg-green-600"
+                    initial={{ scaleX: 0 }}
+                    whileHover={{ scaleX: 1 }}
+                    transition={{ duration: 0.2 }}
+                  />
+                </Link>
+              </motion.button>
+            </div>
 
-            <motion.button
-              type="button"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full text-center text-green-600 hover:text-green-700 font-medium"
-            >
-              <Link to="/Resendemail" className="relative">
-                Autentique sua Conta!
-                <motion.div
-                  className="absolute -bottom-1 left-0 w-full h-0.5 bg-green-600"
-                  initial={{ scaleX: 0 }}
-                  whileHover={{ scaleX: 1 }}
-                  transition={{ duration: 0.2 }}
-                />
-              </Link>
-            </motion.button>
           </div>
         </form>
       </div>

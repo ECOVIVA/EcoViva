@@ -43,15 +43,15 @@ function App() {
         throw new Error("Contexto de autenticação não encontrado");
       }
 
-      const userData = {
-        username: validatedData.username,
-        first_name: validatedData.firstName,
-        last_name: validatedData.lastName,
-        email: validatedData.email,
-        phone: validatedData.phone,
-        password: validatedData.password,
-        photo: validatedData.photo
-      };
+      const userData = new FormData();
+      userData.append('username', validatedData.username);
+      userData.append('first_name', validatedData.firstName);
+      userData.append('last_name', validatedData.lastName);
+      userData.append('email', validatedData.email);
+      // @ts-ignore
+      userData.append('phone', validatedData.phone);
+      userData.append('password', validatedData.password);
+      if (validatedData.photo) userData.append('photo', validatedData.photo);
 
       const response = await api.post(routes.user.create, userData, {
         headers: {
@@ -73,24 +73,21 @@ function App() {
         setErrors(validationErrors);
       } else if (err.response?.data) {
         const apiErrors = err.response.data;
-    
-        // Se houver erro no email
+
         if (apiErrors.email) {
           setErrors((prev) => ({
             ...prev,
             email: apiErrors.email[0],
           }));
         }
-    
-        // Se houver erro no nome de usuário
+
         if (apiErrors.username) {
           setErrors((prev) => ({
             ...prev,
             username: apiErrors.username[0],
           }));
         }
-    
-        // Se houver erro na foto
+
         if (apiErrors.photo) {
           setPhotoError(apiErrors.photo[0]);
         }
@@ -100,7 +97,6 @@ function App() {
         });
       }
       console.error(err);
-    
     } finally {
       setIsLoading(false);
     }
@@ -114,37 +110,23 @@ function App() {
   return (
     <>
       {showVerification && (
-        <VerificationMessage 
-          email={formData.email} 
-          onClose={handleVerificationClose} 
+        <VerificationMessage
+          email={formData.email}
+          onClose={handleVerificationClose}
         />
       )}
-      
+
       <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
           <div className="flex justify-center mb-8">
             <Leaf className="h-12 w-12 text-green-600" />
           </div>
-          
+
           <h2 className="text-center text-3xl font-extrabold text-gray-900 mb-8">
             Criar conta
           </h2>
 
-          {Object.keys(errors).length > 0 && (
-            <div className="mb-4 space-y-2">
-              {Object.entries(errors).map(([field, message]) => (
-                <div key={field} className="p-3 bg-red-100 text-red-700 rounded-lg text-sm">
-                  {message}
-                </div>
-              ))}
-            </div>
-          )}
 
-          {photoError && (
-            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
-              {photoError}
-            </div>
-          )}
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
@@ -165,6 +147,9 @@ function App() {
                   placeholder="Digite seu nome de usuário"
                 />
               </div>
+              {errors.username && (
+                <p className="mt-1 text-sm text-red-600">{errors.username}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -181,6 +166,9 @@ function App() {
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
                   placeholder="Digite seu nome"
                 />
+                {errors.firstName && (
+                  <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
+                )}
               </div>
 
               <div>
@@ -197,6 +185,9 @@ function App() {
                   placeholder="Digite seu sobrenome"
                 />
               </div>
+              {errors.lastName && (
+                <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
+              )}
             </div>
 
             <div>
@@ -217,6 +208,11 @@ function App() {
                   placeholder="Digite seu email"
                 />
               </div>
+
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              )}
+
             </div>
 
             <div>
@@ -237,6 +233,9 @@ function App() {
                   placeholder="Digite seu telefone"
                 />
               </div>
+              {errors.phone && (
+                <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
+              )}
             </div>
 
             <div>
@@ -268,6 +267,9 @@ function App() {
                   )}
                 </button>
               </div>
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+              )}
             </div>
 
             <div>
@@ -288,6 +290,9 @@ function App() {
                   placeholder="Confirme sua senha"
                 />
               </div>
+              {errors.confirmPassword && (
+                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+              )}
             </div>
 
             <div>
@@ -312,11 +317,15 @@ function App() {
                       />
                     </label>
                   </div>
-                  <p className="text-xs text-gray-500">PNG, JPG até 5MB</p>
+                  <p className="text-xs text-gray-500">PNG, JPG até 10MB</p>
                 </div>
               </div>
             </div>
-
+            {photoError && (
+              <div className="mb-4 p-3 text-red-500 rounded-lg text-sm">
+                {photoError}
+              </div>
+            )}
             <div>
               <button
                 type="submit"
