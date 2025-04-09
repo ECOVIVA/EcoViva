@@ -12,8 +12,19 @@ from utils.image import validate_image_dimensions, validate_image_size
 
     - UsersManager: Gerenciador customizado para criação de usuários e superusuários.
     - Users: Modelo de usuário customizado baseado no AbstractUser do Django.
+    - Interests: Modelo com os campos de interesse que o usuario pode ter
 """
 
+class Interests(models.Model):
+    class Meta:
+        verbose_name = "Interest"  # Nome do modelo no singular no Django Admin
+        verbose_name_plural = "Interests"  # Nome do modelo no plural no Django Admin
+
+    name = models.CharField(max_length=255, unique=True)  # Define o nome como obrigatório e único
+
+    def __str__(self):
+        return f"Interesse por {self.name}"
+    
 class UsersManager(BaseUserManager):
     """
     Gerenciador customizado para o modelo de usuário, responsável por criar usuários e superusuários.
@@ -60,6 +71,7 @@ class Users(AbstractUser):
 
     email = models.EmailField(unique=True, blank=False, null=False)  # Define o e-mail como obrigatório e único
     bio = models.TextField(max_length=256, null=True, default=None)  # Pequena descrição do usuário (opcional)
+    interests = models.ManyToManyField(Interests, blank=True,) # Interesses que o usuario pode ter
     phone = models.CharField(max_length=15, blank=False, null=False)  # Número de telefone obrigatório
     photo = models.ImageField(
         upload_to="users_photos",  # Diretório onde as imagens serão armazenadas
@@ -87,7 +99,7 @@ class Users(AbstractUser):
         return f"User {self.username}"
 
 
-# ----- Sinais para manipulação de imagens -----
+# ----- Sinais -----
 
 @receiver(models.signals.post_delete, sender=Users)
 def deletar_imagem_apos_excluir(sender, instance, **kwargs):
@@ -115,3 +127,36 @@ def delete_old_image(sender, instance, **kwargs):
     if old_instance.photo and old_instance.photo != instance.photo:
         if os.path.isfile(old_instance.photo.path):  # Verifica se a imagem antiga existe
             os.remove(old_instance.photo.path)  # Exclui o arquivo da imagem antiga
+
+@receiver(models.signals.post_migrate)
+def create_interests(sender, **kwargs):
+    """
+    Cria automaticamente alguns temas que podem ser do interesse do usuário
+    """
+
+    sustainability_interests = [
+        "Reciclagem",
+        "Compostagem",
+        "Reflorestamento",
+        "Economia Circular",
+        "Redução de Plástico",
+        "Conservação da Água",
+        "Energias Renováveis",
+        "Consumo Consciente",
+        "Mobilidade Sustentável",
+        "Agricultura Sustentável",
+        "Preservação da Biodiversidade",
+        "Gestão de Resíduos",
+        "Moda Sustentável",
+        "Arquitetura Verde",
+        "Alimentação Sustentável",
+        "Poluição e Controle Ambiental",
+        "Ecoeducação",
+        "Mudanças Climáticas",
+        "Produção Limpa",
+        "Zero Waste (Lixo Zero)"
+    ]
+
+    # Criando cada rank na base de dados se ainda não existir
+    for name in sustainability_interests:
+        Interests.objects.get_or_create(name=name)

@@ -35,3 +35,10 @@ class UsersAdmin(admin.ModelAdmin):
 
     # Configuração de paginação para melhor visualização e desempenho
     list_per_page = 10  # Limita a exibição a 10 usuários por página na listagem
+
+
+@admin.register(models.Interests)
+class InterestsAdmin(admin.ModelAdmin):
+    list_display = ('name',)  # Exibe o campo 'name' na lista
+    search_fields = ('name',)  # Permite buscar pelo nome
+    ordering = ('name',)  # Ordena alfabeticamente
