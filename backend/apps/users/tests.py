@@ -105,10 +105,33 @@ class UsersTest(APITestCase, UsersMixin):
         }
 
         response = self.client.post(api_url, data=valid_data, format='json')
+        # Verifica se a resposta foi criada com sucesso (status 201)
+        self.assertEqual(response.status_code, 201)
+
+        self.assertEqual(models.Users.objects.filter(username = "novouser").exists(), True)
+
+    # Testando o método POST para criação de usuário sem foto
+    def test_users_api_create_with_interests(self):
+        api_url = reverse('users:user_create')
+
+        # Dados válidos para criação de um usuário
+        valid_data = {
+            "first_name": "Novo",
+            "last_name": "Usuário",
+            "username": "novouser",
+            "password": "SenhaCorreta321",
+            "email": "novouser@email.com",
+            "phone": "11987654321",
+            'interests': ['Reciclagem']
+        }
+
+        response = self.client.post(api_url, data=valid_data, format='json')
 
         # Verifica se a resposta foi criada com sucesso (status 201)
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(models.Users.objects.filter(username = "novouser").exists(), True)
+        user = models.Users.objects.filter(username = "novouser").first()
+        interest = user.interests.all()[0]
+        self.assertEqual(interest.name, 'Reciclagem')
 
     # Testando o método POST para criação de usuário com foto
     def test_users_api_create_with_photo(self):
@@ -257,6 +280,23 @@ class UsersTest(APITestCase, UsersMixin):
         response = self.client.patch(api_url, payload)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_users_api_object_update_with_interest(self):
+        self.make_user(username='user')
+        api_url = reverse('users:user_update')
+
+        payload = {
+            "username": "newuser",
+            "phone": '12345678910',
+            'interests': ['Reciclagem']
+        }
+
+        response = self.client.patch(api_url, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user = models.Users.objects.filter(username = "newuser").first()
+        interest = user.interests.all()[0]
+        self.assertEqual(interest.name, 'Reciclagem')
 
     # Testando o PATCH para atualização com nome de usuário duplicado
     def test_users_api_object_update_username_invalid_duplicate(self):

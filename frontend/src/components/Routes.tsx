@@ -38,9 +38,8 @@ const RouterComponent: React.FC = () => {
               <Route path="/CreateAccount" element={<CreateAccount />} />
               <Route path="/Resendemail" element={<App />} />
               <Route path="/ECOstudy" element={<ECOstudy />} />
-              <Route path="/CheckInPage" element={isAuthenticated ? <CheckInPage /> : <Navigate to="/login" />} />
-              <Route path="/ProfilePage" element={isAuthenticated ? <ProfilePage /> : <Navigate to="/login" />} />
-              
+              <Route path="/ProfilePage" element={<ProfilePage />} />
+              <Route path="/CheckInPage" element={isAuthenticated ? <CheckInPage /> : <Navigate to="/login" />} />              
             </Routes>
           </main>
           <Footer />
