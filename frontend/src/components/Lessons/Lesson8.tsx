@@ -1,6 +1,8 @@
 
-import * as useToast from '../hooks/use-toast';
+import api from '../../services/API/axios';
+import * as useToast from '../../hooks/use-toast';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import routes from '../../services/API/routes';
 
 
 // Espécies e seus habitats
@@ -302,7 +304,23 @@ const Index = () => {
     const requiredMatches = gameMode === 'easy' ? 6 : gameMode === 'medium' ? 9 : 12;
     
     if (correctCount >= requiredMatches && !isCompleted && gameStarted) {
-      endGame(true);
+      const completionApi = async() => {
+        try{
+        const response = await api.post(routes.study.lessons_completion.create, {lesson: 8})
+
+        if (response.status === 201){
+          endGame(true);
+        }
+        else{
+          console.error(response.data)
+        }
+        }
+        catch(e){
+          console.error(e)
+        }
+      }
+      
+      completionApi()
     }
   }, [matches, gameMode]);
 

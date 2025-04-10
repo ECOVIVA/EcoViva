@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Check, Info, Zap } from 'lucide-react';
+import api from '@/services/API/axios';
+import routes from '@/services/API/routes';
 
 interface EnergySource {
   id: number;
@@ -133,8 +135,24 @@ export default function Lesson6({ onBack }: Props) {
     );
 
     if (allUsesConnected && !isCompleted) {
-      setIsCompleted(true);
-      localStorage.setItem("lesson6Completed", "true");
+      const completionApi = async() => {
+        try{
+        const response = await api.post(routes.study.lessons_completion.create, {lesson: 2})
+
+        if (response.status === 201){
+          setIsCompleted(true);
+        }
+        else{
+          console.error(response.data)
+        }
+        }
+        catch(e){
+          console.error(e)
+        }
+      }
+      
+      completionApi()
+
       setScore(prev => prev + 50);
       showToast('Parabéns!', 'Você conectou todas as fontes de energia renovável aos seus usos!', true);
       setAnimation('complete');

@@ -33,10 +33,10 @@ const routes = {
     study: {
         lessons_completion:{
             list: '/lessons/complete/',
-            create: '/lessons/complete/create/'
+            create: 'study/lessons/complete/create/'
         },
         achievements: {
-            list: '/achievements/user/'
+            list: 'study/achievements/user/'
         }
     }
     }

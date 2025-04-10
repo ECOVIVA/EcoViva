@@ -4,6 +4,8 @@ import {
   Award, Sparkles, Heart, RotateCcw, Clock, Star, BarChart, 
   BookOpen, Medal, Target
 } from 'lucide-react';
+import api from '../../services/API/axios';
+import routes from '../../services/API/routes';
 
 // Enhanced quiz questions about plastic reduction
 const quizQuestions = [
@@ -386,11 +388,26 @@ const EcoQuiz = () => {
     const finalScore = baseScore + bonusPointsEarned;
     
     setScore(finalScore);
-    setIsCompleted(true);
     setShowResults(true);
     
     if (finalScore >= 70) {
-      localStorage.setItem("ecoQuizCompleted", "true");
+      const completionApi = async() => {
+        try{
+        const response = await api.post(routes.study.lessons_completion.create, {lesson: 5})
+
+        if (response.status === 201){
+          setIsCompleted(true);
+        }
+        else{
+          console.error(response.data)
+        }
+        }
+        catch(e){
+          console.error(e)
+        }
+      }
+      
+      completionApi()
       showToast("Parabéns!", `Você completou o quiz com ${finalScore}% de acertos!`, "success");
     } else {
       showToast("Quase lá!", `Você acertou ${finalScore}% das questões. Tente novamente para melhorar.`, "info");
