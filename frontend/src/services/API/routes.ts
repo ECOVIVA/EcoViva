@@ -18,11 +18,11 @@ const routes = {
     },
     forum: {
         thread: {
-            list: '/thread/list/',
-            create: '/thread/create/',
-            detail: (slug: string) => `/thread/${slug}/`,
-            update: (slug: string) => `/thread/${slug}/update`,
-            delete: (slug: string) => `/thread/${slug}/delete`,
+            list: 'forum/thread/list/',
+            create: 'forum/thread/create/',
+            detail: (slug: string) => `forum/thread/${slug}/`,
+            update: (slug: string) => `forum/thread/${slug}/update`,
+            delete: (slug: string) => `forum/thread/${slug}/delete`,
         },
         post: {
             create: '/post/create',

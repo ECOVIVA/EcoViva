@@ -45,20 +45,20 @@ export interface Bubble {
 }
 
 
-export interface ForumPost {
-  tags: any;
+export interface Threads {
   id: string;
-  userId: string;
-  userName: string;
-  userAvatar?: string;
+  slug: string;
+  author: User;
   title: string;
   content: string;
-  date: string;
+  created_at: string;
+  updated_at: string
   likes: number;
-  comments: Comment[];
+  tags?: string[];
+  posts?: Posts[];
 }
 
-export interface Comment {
+export interface Posts {
   id: string;
   userId: string;
   userName: string;

@@ -3,7 +3,6 @@ import {
   Leaf, TreePine, Settings, Bell, BarChart3, Calendar,
   Users,  Recycle, Heart,
   Mail, Phone, Clock,
-  ChevronRight,
   User as UserIcon
 } from 'lucide-react';
 import api from '../services/API/axios';

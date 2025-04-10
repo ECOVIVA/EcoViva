@@ -30,7 +30,7 @@ const RouterComponent: React.FC = () => {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/forum" element={<ForumPage />} />
+              <Route path="/Forum" element={<ForumPage />} />
               <Route path="/HistorySection" element={<HistorySection />} />
               <Route path="/ImpactPage" element={<ImpactPage />} />
               <Route path="/CertificatePage" element={<CertificatePage />} />
