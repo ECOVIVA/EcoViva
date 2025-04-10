@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { MessageSquare, Heart, Send, Plus } from 'lucide-react';
-import { useAuth } from '../components/AuthContext';
+import { useAuth } from '../components/Auth/AuthContext';
 import api from '../services/API/axios';
 import routes from '../services/API/routes';
 import { Threads } from '../types/types';
