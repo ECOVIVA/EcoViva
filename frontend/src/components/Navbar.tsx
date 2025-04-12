@@ -188,7 +188,7 @@ const Navbar: React.FC = () => {
                 {isAuthenticated ? (
                   <>
                     <Link
-                      to="/profile"
+                      to="/ProfilePage"
                       className="flex items-center space-x-2 group"
                     >
                       {user?.photo ? (
@@ -311,7 +311,7 @@ const Navbar: React.FC = () => {
             {isAuthenticated ? (
               <div className="space-y-3">
                 <Link
-                  to="/profile"
+                  to="/ProfilePage"
                   className={`flex items-center space-x-3 py-2 ${
                     isScrolled ? 'text-green-200 hover:text-green-100' : 'text-gray-800 hover:text-green-600'
                   } transition-colors`}
