@@ -137,7 +137,7 @@ export default function Lesson6({ onBack }: Props) {
     if (allUsesConnected && !isCompleted) {
       const completionApi = async() => {
         try{
-        const response = await api.post(routes.study.lessons_completion.create, {lesson: 2})
+        const response = await api.post(routes.study.lessons_completion.create, {lesson: 6})
 
         if (response.status === 201){
           setIsCompleted(true);

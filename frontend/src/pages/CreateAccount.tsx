@@ -97,6 +97,7 @@ function App() {
         });
       }
       console.error(err);
+      
     } finally {
       setIsLoading(false);
     }
@@ -184,11 +185,11 @@ function App() {
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
                   placeholder="Digite seu sobrenome"
                 />
-              </div>
               {errors.lastName && (
                 <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
               )}
             </div>
+              </div>
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
