@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Leaf, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { AuthContext } from '../components/AuthContext';
+import { AuthContext } from '../components/Auth/AuthContext';
 import api from '../services/API/axios';
 import routes from '../services/API/routes';
 import { z } from 'zod';

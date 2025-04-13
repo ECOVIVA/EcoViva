@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Check, Leaf, Info } from 'lucide-react';
+import api from '../../services/API/axios';
+import routes from '../../services/API/routes';
 
 interface MemoryItem {
   id: number;
@@ -45,8 +47,23 @@ export default function Lesson2({ onBack }: Props) {
   useEffect(() => {
     const totalPairs = memoryItems.length / 2;
     if (matchedPairs === totalPairs && !isCompleted) {
-      setIsCompleted(true);
-      localStorage.setItem("lesson2Completed", "true");
+      const completionApi = async() => {
+        try{
+        const response = await api.post(routes.study.lessons_completion.create, {lesson: 2})
+
+        if (response.status === 201){
+          setIsCompleted(true);
+        }
+        else{
+          console.error(response.data)
+        }
+        }
+        catch(e){
+          console.error(e)
+        }
+      }
+      
+      completionApi()
     }
   }, [matchedPairs, isCompleted]);
 

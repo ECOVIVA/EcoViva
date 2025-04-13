@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, Info, ShoppingCart, Star, Trash2, Leaf, Droplet, Zap, BarChart2, RefreshCw } from 'lucide-react';
-import { Product, Category, LessonState, EnvironmentalImpact } from '../types/lesson';
+import { Product, Category, LessonState, EnvironmentalImpact } from '../../types/types';
+import routes from '../../services/API/routes';
+import api from '../../services/API/axios';
 
 // Products for the conscious consumption lesson
 const products: Product[] = [
@@ -437,13 +439,6 @@ export default function Lesson7() {
   const completeLesson = () => {
     // Calculate final score based on sustainability and budget usage
     const finalScore = Math.round(state.sustainabilityScore * 10) + Math.floor(state.remainingBudget / 10);
-    
-    setState(prev => ({
-      ...prev,
-      isCompleted: true,
-      score: finalScore
-    }));
-    
     // Show success toast
     showToast('🎉 Parabéns!', 'Você completou as compras de forma consciente e sustentável!', 'success');
     
@@ -451,8 +446,27 @@ export default function Lesson7() {
     setVisibleConfetti(true);
     setAnimation('complete');
     
-    // Store completion in localStorage
-    localStorage.setItem("lesson7Completed", "true");
+    const completionApi = async() => {
+      try{
+      const response = await api.post(routes.study.lessons_completion.create, {lesson: 7})
+
+      if (response.status === 201){
+        setState(prev => ({
+          ...prev,
+          isCompleted: true,
+          score: finalScore
+        }));
+      }
+      else{
+        console.error(response.data)
+      }
+      }
+      catch(e){
+        console.error(e)
+      }
+    }
+    
+    completionApi()
   };
 
   // Add product to cart

@@ -56,6 +56,7 @@ class Thread(models.Model):
     title = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=False)
     content = models.TextField()
+    likes = models.PositiveIntegerField(default=0, blank=True)
     tags = models.ManyToManyField(Tags, blank=True)  # Relacionamento muitos-para-muitos com Tags
     author = models.ForeignKey(Users, on_delete=models.CASCADE)  # Relaciona a thread a um usuário
     created_at = models.DateTimeField(default=timezone.now)  # Define a data de criação automaticamente

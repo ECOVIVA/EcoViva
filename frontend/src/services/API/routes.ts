@@ -18,11 +18,11 @@ const routes = {
     },
     forum: {
         thread: {
-            list: '/thread/list/',
-            create: '/thread/create/',
-            detail: (slug: string) => `/thread/${slug}/`,
-            update: (slug: string) => `/thread/${slug}/update`,
-            delete: (slug: string) => `/thread/${slug}/delete`,
+            list: 'forum/thread/list/',
+            create: 'forum/thread/create/',
+            detail: (slug: string) => `forum/thread/${slug}/`,
+            update: (slug: string) => `forum/thread/${slug}/update`,
+            delete: (slug: string) => `forum/thread/${slug}/delete`,
         },
         post: {
             create: '/post/create',
@@ -33,10 +33,10 @@ const routes = {
     study: {
         lessons_completion:{
             list: '/lessons/complete/',
-            create: '/lessons/complete/create/'
+            create: 'study/lessons/complete/create/'
         },
         achievements: {
-            list: '/achievements/user/'
+            list: 'study/achievements/user/'
         }
     }
     }

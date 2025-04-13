@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';  // Para navegação de redirecionamento
-import { useAuth } from './AuthContext';  // Importando a store de autenticação
+import { useAuth } from './Auth/AuthContext';  // Importando a store de autenticação
 import LoginPage from '@/pages/LoginPage';
 
 interface AuthGuardianProps {

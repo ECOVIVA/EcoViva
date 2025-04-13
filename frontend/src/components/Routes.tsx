@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 // Components
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import {useAuth } from '../components/AuthContext';
+import {useAuth } from './Auth/AuthContext';
 
 // Pages
 import HomePage from '../pages/HomePage';
@@ -30,7 +30,7 @@ const RouterComponent: React.FC = () => {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/forum" element={<ForumPage />} />
+              <Route path="/Forum" element={<ForumPage />} />
               <Route path="/HistorySection" element={<HistorySection />} />
               <Route path="/ImpactPage" element={<ImpactPage />} />
               <Route path="/CertificatePage" element={<CertificatePage />} />
