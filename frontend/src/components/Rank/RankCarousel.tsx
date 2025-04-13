@@ -4,7 +4,7 @@ import { Pagination, Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
-import { Rank } from '../types/types';
+import { Rank } from '../../types/types';
 
 interface RankCarouselProps {
   ranks: Rank[];
@@ -70,7 +70,7 @@ export const RankCarousel: React.FC<RankCarouselProps> = ({
 
               <div className="space-y-2">
                 <div className="text-sm text-gray-600">
-                  XP Necessário: {rank.xpRequired}
+                  XP Necessário: {rank.points}
                 </div>
                 {rank.id === currentRank && (
                   <div>

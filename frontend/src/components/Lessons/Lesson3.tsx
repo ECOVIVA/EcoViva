@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Check, Leaf, Info, X } from 'lucide-react';
+import api from '../../services/API/axios';
+import routes from '../../services/API/routes';
 
 // Itens para compostagem
 const compostItems = [
@@ -105,8 +107,23 @@ export default function Lesson3({ onBack }: Props) {
   useEffect(() => {
     if (stage === 3 && compostHealth >= 70) {
       if (!isCompleted) {
-        setIsCompleted(true);
-        localStorage.setItem("lesson3Completed", "true");
+        const completionApi = async() => {
+          try{
+          const response = await api.post(routes.study.lessons_completion.create, {lesson: 3})
+  
+          if (response.status === 201){
+            setIsCompleted(true);
+          }
+          else{
+            console.error(response.data)
+          }
+          }
+          catch(e){
+            console.error(e)
+          }
+        }
+        
+        completionApi()
       }
     }
   }, [stage, compostHealth, isCompleted]);

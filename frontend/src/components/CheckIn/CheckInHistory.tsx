@@ -1,6 +1,6 @@
 import React from 'react';
 import { Clock, Trophy, MessageSquare } from 'lucide-react';
-import { CheckIn } from '../types/types';
+import { CheckIn } from '../../types/types';
 
 interface CheckInHistoryProps {
   checkIns: CheckIn[];

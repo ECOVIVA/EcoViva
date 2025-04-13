@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Info, Check, Award, AlertTriangle, Droplets, BarChart3, Timer } from 'lucide-react';
+import api from '../../services/API/axios';
+import routes from '../../services/API/routes';
 
 // Enhanced puzzle pieces with additional properties
 const puzzlePieces = [
@@ -123,9 +125,26 @@ export default function Lesson4({ onBack }: Props) {
 
   useEffect(() => {
     if (waterSaved >= targetSaving && !isCompleted) {
-      setIsCompleted(true);
-      setPuzzleComplete(true);
-      localStorage.setItem("lesson4Completed", "true");
+      const completionApi = async() => {
+        try{
+        const response = await api.post(routes.study.lessons_completion.create, {lesson: 4})
+
+        if (response.status === 201){
+          setIsCompleted(true);
+          setPuzzleComplete(true);
+        }
+        else{
+          console.error(response.data)
+        }
+        }
+        catch(e){
+          console.error(e)
+        }
+      }
+      
+      completionApi()
+
+
       setScore((prev) => prev + calculateBonus());
       setShowCelebration(true);
       checkAchievements();

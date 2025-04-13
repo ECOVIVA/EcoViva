@@ -3,17 +3,14 @@ import { z } from 'zod';
 export const userSchema = z.object({
   username: z.string()
     .min(3, 'Nome de usuário deve ter no mínimo 3 caracteres')
-    .max(10, 'Nome de usuário deve ter no máximo 10 caracteres'),
+    .max(50, 'Nome de usuário deve ter no máximo 50 caracteres'),
   firstName: z.string()
-    .min(2, 'Nome deve ter no mínimo 2 caracteres')
-    .max(12, 'Nome deve ter no máximo 12 caracteres'),
+    .min(2, 'Nome deve ter no mínimo 2 caracteres'),
   lastName: z.string()
-    .min(2, 'Sobrenome deve ter no mínimo 2 caracteres')
-    .max(12, 'Sobrenome deve ter no máximo 12 caracteres'),
+    .min(2, 'Sobrenome deve ter no mínimo 2 caracteres'),
   email: z.string()
     .email('Email inválido')
-    .min(5, 'Email deve ter no mínimo 5 caracteres')
-    .max(25, 'Email deve ter no máximo 25 caracteres'),
+    .min(5, 'Email deve ter no mínimo 5 caracteres'),
     phone: z.string()
     .min(10, "O número de telefone deve ter pelo menos 10 dígitos.")
     .regex(/^\d+$/, "Somente números são permitidos."),
