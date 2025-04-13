@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Check, Info, Zap } from 'lucide-react';
 import api from '../../services/API/axios';
 import routes from '../../services/API/routes';
@@ -9,6 +9,7 @@ interface EnergySource {
   icon: string;
   description: string;
   efficiency: number;
+  color: string;
 }
 
 interface EnergyUse {
@@ -136,8 +137,7 @@ export default function Lesson6({ onBack }: Props) {
     if (allUsesConnected && !isCompleted) {
       const completionApi = async() => {
         try{
-        const response = await api.post(routes.study.lessons_completion.create, {lesson: 2})
-
+        const response = await api.post(routes.study.lessons_completion.create, {lesson: 6})
         if (response.status === 201){
           setIsCompleted(true);
         }

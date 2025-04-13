@@ -1,4 +1,14 @@
+<<<<<<< HEAD
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
+=======
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useContext,
+  ReactNode
+} from 'react';
+>>>>>>> 75b64d3cb53a0a561786d83d7274becff5ef3b28
 import api from '../../services/API/axios';
 import routes from '../../services/API/routes';
 import { AxiosResponse } from 'axios';
@@ -75,7 +85,7 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
           photo: response.data.photo || undefined,
         };
         setUser(userData);
-      }
+       }
     } catch (error) {
       console.error('Erro ao carregar dados do usuário:', error);
     }

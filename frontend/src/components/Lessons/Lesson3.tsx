@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Check, Leaf, Info, X } from 'lucide-react';
 import api from '../../services/API/axios';
 import routes from '../../services/API/routes';

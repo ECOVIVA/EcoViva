@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from apps.users.serializers import UsersSerializer
 from . import models
 
 """
@@ -12,6 +13,7 @@ from . import models
 """
 
 class PostsSerializer(serializers.ModelSerializer):
+    author = UsersSerializer()
     replies = serializers.SerializerMethodField()  # Campo para armazenar as respostas do post
 
     class Meta:
@@ -30,6 +32,7 @@ class PostsSerializer(serializers.ModelSerializer):
 
 
 class ThreadsSerializer(serializers.ModelSerializer):
+    author = UsersSerializer()
     tags = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)  # Permite enviar tags como lista no request
     tags_data = serializers.SerializerMethodField()  # Campo somente leitura para exibir tags associadas
 
