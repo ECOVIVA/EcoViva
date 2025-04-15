@@ -4,23 +4,11 @@ from django.urls import path, include
 from django.conf.urls.static import static
 
 from apps.users.auth.views import LoginView,LogoutView,RefreshView, VerifyView
-from apps.users.email.views import EmailConfirmAPIView, PasswordResetConfirmView, PasswordResetRequestView
+from apps.users.email.views import EmailConfirmAPIView, ResendConfirmationEmailView
 
 
 urlpatterns = [
-
-    #URL da pagina de administrativa
     path('admin/', admin.site.urls),
-
-    # URLs da API
-    #
-    # Estas são as rotas principais da API:
-    # 
-    # - api/posts/: Endpoints para gerenciar os posts.
-    # - api/users/: Endpoints para gerenciar os usuários.
-    # 
-    # Cada aplicação tem suas próprias rotas, organizadas aqui.
-
     path('api/forum/', include("apps.forum.urls")),
     path('api/users/', include("apps.users.urls")),
     path('api/study/', include("apps.study.urls")),
@@ -28,9 +16,9 @@ urlpatterns = [
     path('api/logout/', LogoutView.as_view(), name="logout"),
     path('api/refresh/', RefreshView.as_view(), name="refresh"),
     path('api/verify/', VerifyView.as_view(), name="verify"),
-    path('api/request_reset_password/', PasswordResetRequestView.as_view(), name='request_password'),
-    path('api/confirm-reset-password/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='confirm_password'),
     path('api/confirm-email/<uidb64>/<token>/', EmailConfirmAPIView.as_view(), name='confirm_email'),
+    path('api/resend-email/', ResendConfirmationEmailView.as_view(), name='resend_email'),
 ]
+
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

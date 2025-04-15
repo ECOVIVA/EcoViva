@@ -1,7 +1,6 @@
 from django.contrib.auth.backends import BaseBackend  
 from django.contrib.auth import get_user_model  
 from rest_framework.exceptions import PermissionDenied
-from apps.users.email.send_email import send_confirmation_email
 
 User = get_user_model()  # Obtém o modelo de usuário utilizado no projeto, seja o padrão ou customizado
 
@@ -45,5 +44,4 @@ class EmailBackend(BaseBackend):
         if user.is_active:
             return True
         else:
-            send_confirmation_email(user)
-            raise PermissionDenied({'detail': "Email de confirmação reenviado. Autentique seu email para conseguir o acesso!!"})
+            raise PermissionDenied({'detail': "Autentique seu email para conseguir o acesso!!"})
