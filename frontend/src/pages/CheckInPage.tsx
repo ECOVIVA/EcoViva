@@ -253,7 +253,7 @@ const SustainableCheckin = () => {
                 <div>
                   <span className="text-sm text-green-600 font-medium block mb-1">Seu Nível Atual</span>
                   <h3 className="text-xl font-bold text-gray-800 flex items-center">
-                    <span className="mr-2">{getCurrentRank().icon}</span>
+                    <span className="w-20 h-20 flex items-center justify-center rounded-full">{getCurrentRank().icon}</span>
                     {getCurrentRank().name}
                   </h3>
                 </div>

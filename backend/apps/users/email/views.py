@@ -6,10 +6,13 @@ from django.core.mail import send_mail
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
+from django.utils.http import urlsafe_base64_decode
+from django.contrib.auth.tokens import default_token_generator
 
 from ..models import Users
+from ..serializers import UsersSerializer
 from .tokens import email_confirmation_token
-from .send_email import send_confirmation_email
+from .send_email import send_reset_password
 
 """
     Este arquivo contém as views responsáveis pela confirmação e reenvio de e-mails de ativação de conta.
@@ -58,13 +61,13 @@ class EmailConfirmAPIView(APIView):
                 user.save()  # Salva a alteração no banco de dados
                 return Response({"message": "E-mail confirmado com sucesso!"}, status=status.HTTP_200_OK)
             else:
-                return Response({"error": "Token inválido ou expirado."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"detail": "Token inválido ou expirado."}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             # Em caso de erro inesperado, retorna uma mensagem genérica
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
 
-
-class ResetPasswordView(APIView):
+class PasswordResetRequestView(APIView):
     """
     View para reenvio do e-mail de ativação.
 
@@ -89,11 +92,29 @@ class ResetPasswordView(APIView):
             user = Users.objects.get(email=email)
 
             # Se o usuário já estiver ativo, não envia o e-mail novamente
-            if user.is_active:
-                return Response({"message": "Usuário já está ativo."}, status=status.HTTP_400_BAD_REQUEST)
+            if not user.is_active:
+                return Response({"detail": "Autentique o email para poder fazer essa ação."}, status=status.HTTP_400_BAD_REQUEST)
 
             # Envia o e-mail de ativação novamente
-            send_confirmation_email(user)
-            return Response({"message": "E-mail de confirmação reenviado com sucesso."}, status=status.HTTP_200_OK)
+            send_reset_password(user)
+            return Response({"detail": "E-mail de confirmação reenviado com sucesso."}, status=status.HTTP_200_OK)
         except Users.DoesNotExist:
-            return Response({"error": "E-mail não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "E-mail não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+class PasswordResetConfirmView(APIView):
+    def post(self, request, uidb64, token):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = Users.objects.get(pk=uid)
+        except Exception as e:
+            return Response({"detail": str(e)}, status = status.HTTP_400_BAD_REQUEST)
+
+        if email_confirmation_token.check_token(user, token):
+
+            serializer = UsersSerializer(user, data = request.data, partial = True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({"detail": "Senha redefinida com sucesso!"}, status = status.HTTP_200_OK)
+            
+            return Response({"detail": serializer.errors}, status = status.HTTP_400_BAD_REQUEST)
+        return Response({"detail": "Token inválido"}, status = status.HTTP_400_BAD_REQUEST)

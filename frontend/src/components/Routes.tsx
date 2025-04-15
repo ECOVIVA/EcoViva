@@ -17,7 +17,9 @@ import ParceriaPage from '../pages/ParceriasPage';
 import CreateAccount from '../pages/CreateAccount';
 import ECOstudy from '../pages/ECOstudy';
 import ProfilePage from '../pages/ProfilePage';
-import App from '../pages/ResendEmail';
+import ConfirmEmail from '../pages/ConfirmEmail';
+import RequestPassword from '../pages/RequestPasswordReset';
+import ResetPassword from '../pages/ResetPassword';
 
 
 const RouterComponent: React.FC = () => {
@@ -36,10 +38,13 @@ const RouterComponent: React.FC = () => {
               <Route path="/CertificatePage" element={<CertificatePage />} />
               <Route path="/ParceriasPage" element={<ParceriaPage />} />
               <Route path="/CreateAccount" element={<CreateAccount />} />
-              <Route path="/Resendemail" element={<App />} />
+              <Route path="/RequestPassword" element={<RequestPassword />} />
               <Route path="/ECOstudy" element={<ECOstudy />} />
               <Route path="/ProfilePage" element={<ProfilePage />} />
-              <Route path="/CheckInPage" element={isAuthenticated ? <CheckInPage /> : <Navigate to="/login" />} />              
+              <Route path="/CheckInPage" element={isAuthenticated ? <CheckInPage /> : <Navigate to="/login" />} />
+              <Route path="/ConfirmEmail/:uidb64/:token" element={<ConfirmEmail />}/>     
+              <Route path="/ResetPassword/:uidb64/:token" element={<ResetPassword />}/>         
+    
             </Routes>
           </main>
           <Footer />
