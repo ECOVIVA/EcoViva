@@ -1,17 +1,9 @@
-<<<<<<< HEAD
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Leaf, Edit2, Save, Award, Camera, Image, Trophy, Star } from 'lucide-react';
 import { z } from 'zod';
 import api from '../services/API/axios';
 import routes from '../services/API/routes';
-=======
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Leaf, Edit2, Save, Award, Trophy, Star, Camera, Image } from 'lucide-react';
-import { z } from 'zod';
-import { useState } from 'react';
->>>>>>> 75b64d3cb53a0a561786d83d7274becff5ef3b28
 
 const profileSchema = z.object({
   bio: z.string().min(10, "Bio deve ter pelo menos 10 caracteres"),
@@ -22,7 +14,6 @@ const profileSchema = z.object({
 
 function App() {
   const [isEditing, setIsEditing] = useState(false);
-<<<<<<< HEAD
   const [bio, setBio] = useState('');
   const [description, setDescription] = useState('');
   const [profileImage, setProfileImage] = useState(localStorage.getItem('profileImage') || 'https://via.placeholder.com/150');
@@ -141,50 +132,13 @@ function App() {
         console.error("Erro ao salvar perfil:", err);
         setError('Erro ao salvar as alterações.');
       }
-=======
-  const [bio, setBio] = useState("Amante da natureza e defensor do meio ambiente. Sempre buscando maneiras de contribuir para um mundo mais sustentável.");
-  const [description, setDescription] = useState("Trabalho com projetos de sustentabilidade há 5 anos, focando em iniciativas de reciclagem e educação ambiental.");
-  const [profileImage, setProfileImage] = useState("https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&h=200&fit=crop");
-  const [backgroundImage, setBackgroundImage] = useState("https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2560&auto=format");
-  const [error, setError] = useState("");
-  
-  const ecoProgress = 75;
-  const rank = {
-    title: "Guardião da Natureza",
-    level: "Ouro",
-    points: 7500,
-    nextLevel: 10000
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'background') => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      if (type === 'profile') {
-        setProfileImage(imageUrl);
-      } else {
-        setBackgroundImage(imageUrl);
-      }
-    }
-  };
-
-  const handleSave = () => {
-    try {
-      profileSchema.parse({ bio, description, profileImage, backgroundImage });
-      setIsEditing(false);
-      setError("");
->>>>>>> 75b64d3cb53a0a561786d83d7274becff5ef3b28
     } catch (err) {
       if (err instanceof z.ZodError) {
         setError(err.errors[0].message);
       }
     }
   };
-<<<<<<< HEAD
-=======
 
-
->>>>>>> 75b64d3cb53a0a561786d83d7274becff5ef3b28
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-emerald-100 p-8">
       <motion.div
@@ -263,11 +217,8 @@ function App() {
                 animate={{ opacity: 1 }}
                 className="text-3xl font-bold text-gray-800 flex items-center gap-2"
               >
-<<<<<<< HEAD
                 {userName} <Leaf className="text-green-500" />
-=======
-                Maria Silva <Leaf className="text-green-500" />
->>>>>>> 75b64d3cb53a0a561786d83d7274becff5ef3b28
+
               </motion.h1>
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -290,10 +241,6 @@ function App() {
               {isEditing ? 'Salvar' : 'Editar'}
             </button>
           </div>
-<<<<<<< HEAD
-
-=======
->>>>>>> 75b64d3cb53a0a561786d83d7274becff5ef3b28
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -354,16 +301,11 @@ function App() {
                   onChange={(e) => setBio(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   rows={3}
-<<<<<<< HEAD
                   placeholder="Digite sua bio"
                 />
               ) : (
                 <p className="text-gray-600">{bio || 'Nenhuma bio definida'}</p>
-=======
-                />
-              ) : (
-                <p className="text-gray-600">{bio}</p>
->>>>>>> 75b64d3cb53a0a561786d83d7274becff5ef3b28
+
               )}
             </motion.div>
 
@@ -381,16 +323,10 @@ function App() {
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   rows={4}
-<<<<<<< HEAD
                   placeholder="Digite sua descrição"
                 />
               ) : (
                 <p className="text-gray-600">{description || 'Nenhuma descrição definida'}</p>
-=======
-                />
-              ) : (
-                <p className="text-gray-600">{description}</p>
->>>>>>> 75b64d3cb53a0a561786d83d7274becff5ef3b28
               )}
             </motion.div>
 
@@ -439,8 +375,3 @@ function App() {
 }
 
 export default App;
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 75b64d3cb53a0a561786d83d7274becff5ef3b28

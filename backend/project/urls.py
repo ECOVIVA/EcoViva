@@ -8,19 +8,7 @@ from apps.users.email.views import EmailConfirmAPIView, ResendConfirmationEmailV
 
 
 urlpatterns = [
-
-    #URL da pagina de administrativa
     path('admin/', admin.site.urls),
-
-    # URLs da API
-    #
-    # Estas são as rotas principais da API:
-    # 
-    # - api/posts/: Endpoints para gerenciar os posts.
-    # - api/users/: Endpoints para gerenciar os usuários.
-    # 
-    # Cada aplicação tem suas próprias rotas, organizadas aqui.
-
     path('api/forum/', include("apps.forum.urls")),
     path('api/users/', include("apps.users.urls")),
     path('api/study/', include("apps.study.urls")),
@@ -31,5 +19,6 @@ urlpatterns = [
     path('api/confirm-email/<uidb64>/<token>/', EmailConfirmAPIView.as_view(), name='confirm_email'),
     path('api/resend-email/', ResendConfirmationEmailView.as_view(), name='resend_email'),
 ]
+
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
