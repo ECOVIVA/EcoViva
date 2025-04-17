@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { MessageSquare, Heart, Send, Plus } from 'lucide-react';
+import { Heart, Plus } from 'lucide-react';
 import { useAuth } from '../components/Auth/AuthContext';
 import api from '../services/API/axios';
 import routes from '../services/API/routes';
 import { Threads } from '../types/types';
+import { Link, useNavigate } from 'react-router-dom';
+import LikeButton from '../components/LikeButton';
 
 const ForumPage: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -11,20 +13,22 @@ const ForumPage: React.FC = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
 
-  useEffect(() => {
-    const threadsApi = async () => {
-      try {
-        const response = await api.get(routes.forum.thread.list);
-        if (response.status === 200) {
-          setThreads(response.data);
-        } else {
-          console.error(response.data);
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    };
+  const navigate = useNavigate()
 
+  const threadsApi = async () => {
+    try {
+      const response = await api.get(routes.forum.thread.list);
+      if (response.status === 200) {
+        setThreads(response.data);
+      } else {
+        console.error(response.data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
     threadsApi();
   }, []);
 
@@ -38,6 +42,19 @@ const ForumPage: React.FC = () => {
       minute: '2-digit',
     }).format(date);
   };
+
+  const HandleSubmit = async () => {
+    try {
+      const response = await api.post(routes.forum.thread.create, {title: title, content: content});
+      if (response.status === 201) {
+        threadsApi()
+      } else {
+        console.error(response.data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white py-12">
@@ -64,7 +81,7 @@ const ForumPage: React.FC = () => {
             <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
               <h2 className="text-xl font-semibold text-green-800 mb-4">Criar Nova Publicação</h2>
 
-              <form>
+              <form onSubmit={(e) => {e.preventDefault(); HandleSubmit()}}>
                 <div className="mb-4">
                   <label htmlFor="postTitle" className="block text-sm font-medium text-gray-700 mb-1">
                     Título
@@ -114,38 +131,36 @@ const ForumPage: React.FC = () => {
 
           {/* Lista de publicações */}
           <div className="space-y-8">
-            {threads.map((post) => (
-              <div key={post.id} className="bg-white rounded-xl shadow-lg overflow-hidden">
+            {threads.map((thread) => (
+              <div key={thread.id} className="bg-white rounded-xl shadow-lg overflow-hidden">
                 <div className="p-6">
                   <div className="flex items-start space-x-3 mb-4">
-                    {post.author.photo ? (
+                    {thread.author.photo ? (
                       <img
-                        src={`http://localhost:8000/${post.author.photo}`}
-                        alt={post.author.username}
+                        src={`http://localhost:8000/${thread.author.photo}`}
+                        alt={thread.author.username}
                         className="w-10 h-10 rounded-full"
                       />
                     ) : (
                       <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
                         <span className="text-green-800 font-semibold">
-                          {post.author.username.charAt(0)}
+                          {thread.author.username.charAt(0)}
                         </span>
                       </div>
                     )}
 
                     <div>
-                      <h3 className="font-semibold text-gray-800">{post.author.username}</h3>
-                      <p className="text-sm text-gray-500">{formatDate(post.created_at)}</p>
+                      <h3 className="font-semibold text-gray-800">{thread.author.username}</h3>
+                      <p className="text-sm text-gray-500">{formatDate(thread.created_at)}</p>
                     </div>
                   </div>
 
-                  <h2 className="text-xl font-bold text-green-800 mb-3">{post.title}</h2>
-                  <p className="text-gray-700 mb-4 whitespace-pre-wrap">{post.content}</p>
+                  <h2 className="text-xl font-bold text-green-800 mb-3"><Link to={`/forum/${thread.slug}`}>{thread.title}</Link></h2>
+                  <p className="text-gray-700 mb-4 whitespace-pre-wrap">{thread.content}</p>
 
                   <div className="flex items-center space-x-4">
-                    <button className="flex items-center space-x-1 text-gray-500 hover:text-green-600">
-                      <Heart className="h-5 w-5" />
-                      <span>{post.likes}</span>
-                    </button>
+                    {/*@ts-ignore */}
+                    <LikeButton threadSlug={thread.slug} liked={thread.liked} likesCount={thread.likes}/>
                   </div>
                 </div>
               </div>
