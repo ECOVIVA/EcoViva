@@ -16,7 +16,7 @@ const RequestPassword = () => {
     try {
       const response = await api.post(
         routes.auth.request_reset_password,  
-        { email }  
+        {email }  
       );
 
       if (response.status === 200) {
