@@ -47,7 +47,7 @@ const LoginPage: React.FC = () => {
 
       if (response.status === 200) {
         authContext.login();
-        navigate('/');
+        navigate('/CheckInPage');
       } else {
         setErrors({ general: 'Erro desconhecido. Tente novamente.' });
       }

@@ -36,3 +36,4 @@ export const CheckInHistory: React.FC<CheckInHistoryProps> = ({ checkIns }) => {
     </div>
   );
 };
+export default HistorySection

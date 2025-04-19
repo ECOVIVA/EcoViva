@@ -31,7 +31,7 @@ const ComingSoon: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen text-center px-6 relative z-10">
+    <div className="flex flex-col items-center justify-center h-screen text-center px-6 relative z-10 pt-[-50]">
       <div className={`mb-8 transition-all duration-300 ${glitchActive ? 'translate-x-[2px] skew-x-1' : ''}`}>
         <Logo />
       </div>
