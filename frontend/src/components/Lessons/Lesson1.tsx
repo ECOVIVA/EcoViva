@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Check, Leaf, Trash, Trash2, Recycle, Droplet, Zap } from 'lucide-react';
+import api from '../../services/API/axios';
+import routes from '../../services/API/routes';
 
 interface WasteItem {
   id: number;
@@ -47,8 +49,23 @@ export default function Lesson1({ onBack }: Props) {
   useEffect(() => {
     const allItemsCorrect = wasteItems.length > 0 && correctItems.length === wasteItems.length;
     if (allItemsCorrect && !isCompleted) {
-      setIsCompleted(true);
-      localStorage.setItem("lesson1Completed", "true");
+      const completionApi = async() => {
+        try{
+        const response = await api.post(routes.study.lessons_completion.create, {lesson: 1})
+
+        if (response.status === 201){
+          setIsCompleted(true);
+        }
+        else{
+          console.error(response.data)
+        }
+        }
+        catch(e){
+          console.error(e)
+        }
+      }
+      
+      completionApi()
     }
   }, [correctItems.length, isCompleted]);
 

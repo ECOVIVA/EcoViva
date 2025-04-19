@@ -1,241 +1,499 @@
-import { useEffect, useState } from 'react';
-import {
-  Leaf, TreePine, Settings, Bell, BarChart3, Calendar,
-  Users,  Recycle, Heart,
-  Mail, Phone, Clock,
-  ChevronRight,
-  User as UserIcon
-} from 'lucide-react';
-import api from '../services/API/axios';
-import routes from '../services/API/routes';
-import { User } from '../types/types';
+"use client"
 
+import type React from "react"
+import { useEffect, useState } from "react"
+import { Leaf, Edit2, Save, Camera, ImageIcon, Heart, Plus } from "lucide-react"
+import { z } from "zod"
+import api from "../services/API/axios"
+import routes from "../services/API/routes"
 
-const StatsCard = ({ icon, value, label }: {icon: any, value:any, label:any}) => (
-  <div className="bg-white rounded-lg shadow p-4">
-    <div className="flex items-center justify-center mb-2 text-green-500">{icon}</div>
-    <h3 className="text-center text-2xl font-bold text-gray-900">{value}</h3>
-    <p className="text-center text-sm text-gray-500">{label}</p>
-  </div>
-);
+// Enhanced schema with more specific validations
+const profileSchema = z.object({
+  bio: z.string().min(10, "Bio deve ter pelo menos 10 caracteres").max(500, "Bio não pode exceder 500 caracteres"),
+  profileImage: z
+    .instanceof(File)
+    .refine((file) => file.size <= 5 * 1024 * 1024, "Imagem de perfil não pode exceder 5MB")
+    .optional()
+    .or(z.string()),
+  backgroundImage: z
+    .instanceof(File)
+    .refine((file) => file.size <= 5 * 1024 * 1024, "Imagem de fundo não pode exceder 5MB")
+    .optional()
+    .or(z.string()),
+  interests: z.array(z.string()).max(10, "Você pode selecionar no máximo 10 interesses"),
+})
 
-const ProfileCard = ({ user }: {user: User}) => {
-  if (!user) return null;
+const availableInterests = [
+  "Agricultura Sustentável",
+  "Alimentação Sustentável",
+  "Arquitetura Verde",
+  "Compostagem",
+  "Conservação da Água",
+  "Consumo Consciente",
+  "Ecoeducação",
+  "Economia Circular",
+  "Energias Renováveis",
+  "Gestão de Resíduos",
+  "Mobilidade Sustentável",
+  "Moda Sustentável",
+  "Mudanças Climáticas",
+  "Poluição e Controle Ambiental",
+  "Preservação da Biodiversidade",
+  "Produção Limpa",
+  "Reciclagem",
+  "Redução de Plástico",
+  "Reflorestamento",
+  "Zero Waste (Lixo Zero)",
+]
 
-  return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="text-center">
-      {user?.photo ? (
-            <img
-              src={`http://localhost:8000/${user.photo}`}
-              alt={user.username}
-              className={"w-24 h-24 rounded-full mx-auto mb-4 border-4 border-green-100"}
-            />
-          ) : (
-            <div className={"w-24 h-24 flex justify-center items-center rounded-full mx-auto mb-4 border-4 border-green-100"}>
-              <UserIcon className="h-16 w-16" />
-            </div>
-          )}
-        <h2 className="text-xl font-bold text-gray-900">{user.first_name} {user.last_name}</h2>
-        {/*<p className="text-gray-500">{user.role}</p>*/}
-      </div>
-      <div className="mt-6 space-y-4">
-        <div className="flex items-center text-gray-600">
-          <span className="whitespace-pre-line">{user.bio}</span>
-        </div>
-        <div className="flex items-center text-gray-600">
-          <Mail className="h-5 w-5 mr-2" />
-          <span className="text-sm">{user.email}</span>
-        </div>
-        <div className="flex items-center text-gray-600">
-          <Phone className="h-5 w-5 mr-2" />
-          <span className="text-sm">{user.phone}</span>
-        </div>
-      </div>
-      <div className="mt-6">
-        <h3 className="font-semibold text-gray-900 mb-2">Expertise</h3>
-        <div className="flex flex-wrap gap-2">
-          {user.interests?.map((interest, index) => (
-            <span
-              key={index}
-              className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm"
-            >
-              {interest}
-            </span>
-          ))}
-          </div>
-      </div>
-    </div>
-  );
-}
-
-function ProfilePage() {
-  const [user, setUser] = useState<User>({
-    id: 0,
-    username: '',
-    first_name: '',
-    last_name: '',
-    email: '',
-    phone: ''
-  });
-  const [loading, setLoading] = useState(true);
+function App() {
+  const [isEditing, setIsEditing] = useState(false)
+  const [bio, setBio] = useState("")
+  const [profileImage, setProfileImage] = useState("https://via.placeholder.com/150")
+  const [backgroundImage, setBackgroundImage] = useState(
+    "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2560&auto=format",
+  )
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [userName, setUserName] = useState("")
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([])
+  const [showInterestSelector, setShowInterestSelector] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    async function fetchProfile() {
       try {
-        const response = await api.get(routes.user.profile);
-        if (response.status === 200) {
-          setUser(response.data);
-        } else if (response.status === 401) {
-          console.error("Usuário não autenticado.");
+        setIsLoading(true)
+        const response = await api.get(routes.user.profile)
+        const data = response.data
+
+        setUserName(data.username || "Usuário")
+        setBio(data.bio || "")
+        setSelectedInterests(data.interests || [])
+
+        if (data.photo) {
+          const fullProfileUrl = `http://localhost:8000${data.photo}`
+          setProfileImage(fullProfileUrl)
+          localStorage.setItem("profileImage", fullProfileUrl)
+        } else {
+          const storedProfileImage = localStorage.getItem("profileImage")
+          if (storedProfileImage) setProfileImage(storedProfileImage)
         }
-      } catch (error) {
-        console.error("Erro ao buscar perfil:", error);
+
+        if (data.backgroundImage) {
+          const fullBgUrl = `http://localhost:8000${data.backgroundImage}`
+          setBackgroundImage(fullBgUrl)
+          localStorage.setItem("backgroundImage", fullBgUrl)
+        } else {
+          const storedBackgroundImage = localStorage.getItem("backgroundImage")
+          if (storedBackgroundImage) setBackgroundImage(storedBackgroundImage)
+        }
+      } catch (err) {
+        console.error("Erro ao carregar perfil:", err)
+        setErrors({ general: "Não foi possível carregar o perfil." })
       } finally {
-        setLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
-    fetchProfile();
-  }, []);
+    fetchProfile()
+  }, [])
 
-  if (loading) {
-    return <div className="p-6 text-center text-gray-500">Carregando perfil...</div>;
+  const validateImageDimensions = (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.onload = () => {
+        URL.revokeObjectURL(img.src)
+        resolve(img.width <= 1200 && img.height <= 1200)
+      }
+      img.src = URL.createObjectURL(file)
+    })
   }
 
-  const stats = [
-    { icon: <TreePine />, label: 'Árvores Plantadas', value: '1,234' },
-    { icon: <Users />, label: 'Voluntários', value: '456' },
-    { icon: <BarChart3 />, label: 'Projetos Ativos', value: '12' },
-    { icon: <Calendar />, label: 'Eventos do Mês', value: '8' }
-  ];
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "profile" | "background") => {
+    const file = e.target.files?.[0]
+    if (!file) return
 
-  const ecoGoals = [
-    { title: 'Reciclagem Semanal', progress: 70, icon: <Recycle className="h-6 w-6" /> },
-    { title: 'Reduzir Consumo de Água', progress: 40, icon: <Leaf className="h-6 w-6" /> },
-    { title: 'Mobilidade Sustentável', progress: 80, icon: <Heart className="h-6 w-6" /> }
-  ];
+    try {
+      // Validate file size
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors({
+          ...errors,
+          [type]: `Imagem de ${type === "profile" ? "perfil" : "fundo"} não pode exceder 5MB`,
+        })
+        return
+      }
 
-  const recentPosts = [
-    {
-      title: 'Como reduzir o uso de plástico no dia a dia',
-      date: '05/04/2025',
-      excerpt: 'Dicas práticas para diminuir o uso de plásticos descartáveis.'
-    },
-    {
-      title: 'Energia solar: vale a pena?',
-      date: '02/04/2025',
-      excerpt: 'Analisamos os prós e contras do uso de painéis solares.'
+      // Validate image dimensions
+      const validDimensions = await validateImageDimensions(file)
+      if (!validDimensions) {
+        setErrors({
+          ...errors,
+          [type]: `Imagem de ${type === "profile" ? "perfil" : "fundo"} não pode exceder 1200x1200 pixels`,
+        })
+        return
+      }
+
+      // Clear previous errors for this field
+      const newErrors = { ...errors }
+      delete newErrors[type]
+      setErrors(newErrors)
+
+      const imageUrl = URL.createObjectURL(file)
+
+      if (type === "profile") {
+        setProfileImage(imageUrl)
+      } else {
+        setBackgroundImage(imageUrl)
+      }
+
+      const uploadedPhotoUrl = await uploadPhotoToServer(file, type)
+      if (uploadedPhotoUrl) {
+        if (type === "profile") {
+          setProfileImage(uploadedPhotoUrl)
+          localStorage.setItem("profileImage", uploadedPhotoUrl)
+        } else {
+          setBackgroundImage(uploadedPhotoUrl)
+          localStorage.setItem("backgroundImage", uploadedPhotoUrl)
+        }
+      }
+    } catch (err) {
+      console.error(`Erro ao processar imagem de ${type}:`, err)
+      setErrors({
+        ...errors,
+        [type]: `Erro ao processar imagem de ${type === "profile" ? "perfil" : "fundo"}`,
+      })
     }
-  ];
+  }
 
-  const upcomingEvents = [
-    {
-      name: 'Caminhada Ecológica',
-      date: '12/04/2025',
-      time: '08:00',
-      location: 'Parque Central'
-    },
-    {
-      name: 'Oficina de Compostagem',
-      date: '20/04/2025',
-      time: '14:00',
-      location: 'Centro Cultural'
+  async function uploadPhotoToServer(photo: File, type: "profile" | "background") {
+    try {
+      setIsLoading(true)
+      const formData = new FormData()
+      if (type === "profile") {
+        formData.append("photo", photo)
+      } else {
+        formData.append("backgroundImage", photo)
+      }
+
+      const response = await api.patch(routes.user.update, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+
+      const key = type === "profile" ? "photo" : "backgroundImage"
+      const serverPath = response.data[key]
+      if (!serverPath) throw new Error("Caminho de imagem inválido no retorno")
+
+      return `http://localhost:8000${serverPath}`
+    } catch (err: any) {
+      console.error("Erro ao enviar foto:", err)
+
+      // Handle specific API errors
+      if (err.response?.data?.message) {
+        setErrors({
+          ...errors,
+          [type]: err.response.data.message,
+        })
+      } else {
+        setErrors({
+          ...errors,
+          [type]: `Erro ao enviar ${type === "profile" ? "foto de perfil" : "imagem de fundo"} para o servidor.`,
+        })
+      }
+      return null
+    } finally {
+      setIsLoading(false)
     }
-  ];
+  }
 
+  const toggleInterest = (interest: string) => {
+    setSelectedInterests((prev) => {
+      const newInterests = prev.includes(interest) ? prev.filter((i) => i !== interest) : [...prev, interest]
+
+      // Validate interests count
+      if (newInterests.length > 10) {
+        setErrors({
+          ...errors,
+          interests: "Você pode selecionar no máximo 10 interesses",
+        })
+        return prev
+      }
+
+      // Clear interests error if it exists
+      if (errors.interests) {
+        const newErrors = { ...errors }
+        delete newErrors.interests
+        setErrors(newErrors)
+      }
+
+      return newInterests
+    })
+  }
+
+  const handleSave = async () => {
+    try {
+      setIsLoading(true)
+      setErrors({})
+  
+      profileSchema.parse({
+        bio,
+        profileImage,
+        backgroundImage,
+        interests: selectedInterests,
+      })
+  
+      await api.patch(routes.user.update, {
+        bio,
+        interests: selectedInterests,
+      })
+  
+      setIsEditing(false)
+    } catch (err: unknown) {
+      if (err instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {}
+        err.errors.forEach((error) => {
+          const field = error.path[0].toString()
+          newErrors[field] = error.message
+        })
+        setErrors(newErrors)
+      } else if (
+        typeof err === 'object' &&
+        err !== null &&
+        'response' in err &&
+        typeof (err as any).response === 'object' &&
+        (err as any).response?.data
+      ) {
+        const response = (err as any).response
+  
+        if (response.data.errors) {
+          setErrors(response.data.errors)
+        } else if (response.data.message) {
+          setErrors({ general: response.data.message })
+        }
+      } else {
+        console.error("Erro ao salvar perfil:", err)
+        setErrors({ general: "Erro ao salvar as alterações." })
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top Navigation */}
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <button className="p-2 rounded-full hover:bg-gray-100">
-                <Bell className="h-6 w-6 text-gray-600" />
-              </button>
-              <button className="p-2 rounded-full hover:bg-gray-100">
-                <Settings className="h-6 w-6 text-gray-600" />
-              </button>
+    <div className="min-h-screen bg-gradient-to-b from-green-50 to-emerald-100 p-2 sm:p-4 md:p-8">
+      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div className="relative">
+          <div className="relative h-32 sm:h-40 md:h-48 bg-gradient-to-r from-emerald-500 to-green-400 overflow-hidden group">
+            <div
+              className="absolute inset-0 bg-cover bg-center opacity-20"
+              style={{ backgroundImage: `url(${backgroundImage})` }}
+            />
+            {isEditing && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex flex-col items-center gap-2">
+                  <ImageIcon className="text-white" size={24} />
+                  <label className="cursor-pointer px-3 py-1 bg-white/90 rounded text-sm hover:bg-white/100 transition-colors">
+                    Escolher Imagem de Fundo
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageChange(e, "background")}
+                      className="hidden"
+                      disabled={isLoading}
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="absolute -bottom-12 sm:-bottom-14 md:-bottom-16 left-4 sm:left-6 md:left-8 z-10">
+            <div className="relative group">
+              <img
+                src={profileImage || "/placeholder.svg"}
+                alt="Profile"
+                className="w-28 h-28 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full border-4 border-white shadow-lg object-cover bg-white"
+              />
+              {isEditing && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                  <div className="flex flex-col items-center gap-2">
+                    <Camera className="text-white" size={20} />
+                    <label className="cursor-pointer px-2 py-1 bg-white/90 rounded text-xs sm:text-sm hover:bg-white/100 transition-colors">
+                      Escolher Foto
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageChange(e, "profile")}
+                        className="hidden"
+                        disabled={isLoading}
+                      />
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
-      </nav>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Coluna Esquerda */}
-          <div className="lg:col-span-1 space-y-8">
-            <ProfileCard user={user} />
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900">Postagens Recentes</h3>
-              <ul className="space-y-4">
-                {recentPosts.map((post, index) => (
-                  <li key={index}>
-                    <h4 className="font-medium text-gray-800">{post.title}</h4>
-                    <p className="text-sm text-gray-500">{post.date}</p>
-                    <p className="text-sm text-gray-600">{post.excerpt}</p>
-                  </li>
-                ))}
-              </ul>
+        <div className="pt-16 sm:pt-18 md:pt-20 px-4 sm:px-6 md:px-8 pb-6 md:pb-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 md:mb-6 gap-3">
+            <div className="flex flex-col">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center gap-2">
+                {userName} <Leaf className="text-green-500" />
+              </h1>
             </div>
+            <button
+              onClick={() => (isEditing ? handleSave() : setIsEditing(true))}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Processando...
+                </span>
+              ) : (
+                <>
+                  {isEditing ? <Save size={20} /> : <Edit2 size={20} />}
+                  {isEditing ? "Salvar" : "Editar"}
+                </>
+              )}
+            </button>
           </div>
 
-          {/* Coluna Direita */}
-          <div className="lg:col-span-2 space-y-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {stats.map((stat, index) => (
-                <StatsCard key={index} {...stat} />
-              ))}
+          {errors.background && (
+            <div className="text-red-500 text-sm mb-4 bg-red-50 p-3 rounded-lg border border-red-100">
+              {errors.background}
             </div>
+          )}
 
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900">Metas Ecológicas</h3>
-              <div className="space-y-4">
-                {ecoGoals.map((goal, index) => (
-                  <div key={index}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        {goal.icon}
-                        <span className="text-sm font-medium text-gray-800">{goal.title}</span>
-                      </div>
-                      <span className="text-sm font-semibold text-green-600">{goal.progress}%</span>
-                    </div>
-                    <div className="h-2 bg-green-100 rounded-full mt-1">
-                      <div
-                        className="h-2 bg-green-500 rounded-full transition-all duration-500"
-                        style={{ width: `${goal.progress}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
+          {errors.profile && (
+            <div className="text-red-500 text-sm mb-4 bg-red-50 p-3 rounded-lg border border-red-100">
+              {errors.profile}
+            </div>
+          )}
+
+          <div className="relative mb-6">
+            {isEditing ? (
+              <div className="relative">
+                <textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  rows={3}
+                  className={`w-full p-4 border-2 rounded-lg focus:outline-none focus:ring-2 transition-all bg-emerald-50/50 ${
+                    errors.bio ? "border-red-300 focus:ring-red-500" : "border-emerald-100 focus:ring-emerald-500"
+                  }`}
+                  placeholder="Compartilhe um pouco sobre você..."
+                  disabled={isLoading}
+                />
+                <div
+                  className={`absolute bottom-3 right-3 text-sm font-medium ${
+                    bio.length > 500 ? "text-red-500" : "text-emerald-600"
+                  }`}
+                >
+                  {bio.length} / 500
+                </div>
               </div>
+            ) : (
+              <div className="bg-gradient-to-r from-emerald-50 to-green-50 p-4 rounded-lg border border-emerald-100">
+                <p className="text-gray-700 leading-relaxed">{bio || "Bio não atualizada"}</p>
+              </div>
+            )}
+            {errors.bio && <p className="text-red-500 text-sm mt-1">{errors.bio}</p>}
+          </div>
+
+          {errors.general && (
+            <div className="text-red-500 text-sm mb-4 bg-red-50 p-3 rounded-lg border border-red-100">
+              {errors.general}
+            </div>
+          )}
+
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Heart className="text-emerald-500" size={20} />
+                <h3 className="text-xl font-bold text-gray-800">Interesses</h3>
+              </div>
+              {isEditing && (
+                <button
+                  onClick={() => setShowInterestSelector(!showInterestSelector)}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isLoading}
+                >
+                  <Plus size={16} />
+                  {showInterestSelector ? "Fechar" : "Adicionar"}
+                </button>
+              )}
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900">Próximos Eventos</h3>
-              <ul className="divide-y divide-gray-200">
-                {upcomingEvents.map((event, index) => (
-                  <li key={index} className="py-2">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h4 className="font-medium text-gray-800">{event.name}</h4>
-                        <p className="text-sm text-gray-500">
-                          {event.date} às {event.time} - {event.location}
-                        </p>
-                      </div>
-                      <Clock className="h-5 w-5 text-gray-400" />
+            {errors.interests && (
+              <div className="text-red-500 text-sm mb-4 bg-red-50 p-3 rounded-lg border border-red-100">
+                {errors.interests}
+              </div>
+            )}
+
+            {!isEditing && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {selectedInterests.length > 0 ? (
+                  selectedInterests.map((interest) => (
+                    <div
+                      key={interest}
+                      className="p-3 rounded-lg bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-100 shadow-sm"
+                    >
+                      <p className="text-sm font-medium text-emerald-800">{interest}</p>
                     </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 italic col-span-full">Nenhum interesse selecionado</p>
+                )}
+              </div>
+            )}
+
+            {isEditing && showInterestSelector && (
+              <div className="overflow-hidden">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 p-4 bg-emerald-50 rounded-lg border border-emerald-100">
+                  {availableInterests.map((interest) => (
+                    <button
+                      key={interest}
+                      onClick={() => toggleInterest(interest)}
+                      disabled={isLoading || (selectedInterests.length >= 10 && !selectedInterests.includes(interest))}
+                      className={`p-2 rounded-lg text-sm font-medium transition-all ${
+                        selectedInterests.includes(interest)
+                          ? "bg-emerald-500 text-white shadow-md"
+                          : selectedInterests.length >= 10
+                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : "bg-white text-gray-600 hover:bg-emerald-100 hover:text-emerald-700"
+                      }`}
+                    >
+                      {interest}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default ProfilePage;
+export default App

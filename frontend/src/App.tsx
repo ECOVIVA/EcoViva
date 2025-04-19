@@ -1,4 +1,4 @@
-import { AuthProvider } from './components/AuthContext';
+import { AuthProvider } from './components/Auth/AuthContext';
 import RouterComponent from './components/Routes';
 
 
