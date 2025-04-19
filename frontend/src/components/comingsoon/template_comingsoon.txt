@@ -37,3 +37,14 @@ function App() {
 }
 
 export default App;
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+**template para reultilizar em paginas que ainda estará sendo feita, entao se caso nas versões posteriores tivemos que atualizar uma pagina ou add 
+uma pag nova ultilizaremos esse tamplate para melhor versionamento do nosso codigo. *(dry)**
