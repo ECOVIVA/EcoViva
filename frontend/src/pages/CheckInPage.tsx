@@ -1,6 +1,4 @@
-"use client"
-
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, AwaitedReactNode, JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal } from "react"
 import {
   Send,
   Clock,
@@ -16,13 +14,13 @@ import {
 } from "lucide-react"
 import { useIsMobile } from "../hooks/use-mobile"
 import type { UserProgress } from "../types/types"
-import { ranks } from "./data/ranks"
+import { ranks } from "../pages/data/ranks"
 import api from "../services/API/axios"
 import routes from "../services/API/routes"
-
+import ErrorMessage from "../components/Errosmensagem/Errormenssage"
+import { checkInSchema, parseApiError } from "../schemas/checkinSchemas"
 
 const SustainableCheckin = () => {
-  const isMobile = useIsMobile()
   const bubbleRef = useRef<HTMLDivElement>(null)
   const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([])
   const [rippleCount, setRippleCount] = useState(0)
@@ -36,6 +34,7 @@ const SustainableCheckin = () => {
   const [comment, setComment] = useState("")
   const [isCheckingIn, setIsCheckingIn] = useState(false)
   const [checkInSuccess, setCheckInSuccess] = useState(false)
+  const [error, setError] = useState<string>("")
 
   const fetchBubbleData = async () => {
     try {
@@ -103,11 +102,11 @@ const SustainableCheckin = () => {
   }
 
   const getCurrentRank = () => {
-    return ranks.find((rank) => rank.id === userProgress.currentRank) || ranks[0]
+    return ranks.find((rank: { id: number }) => rank.id === userProgress.currentRank) || ranks[0]
   }
 
   const getNextRank = () => {
-    return ranks.find((rank) => rank.id === userProgress.currentRank + 1)
+    return ranks.find((rank: { id: number }) => rank.id === userProgress.currentRank + 1)
   }
 
   const getXPForCurrentRank = () => {
@@ -126,12 +125,21 @@ const SustainableCheckin = () => {
     const nextRank = getNextRank()
 
     if (!nextRank) return 0 // Max level reached
-    console.log(nextRank, userProgress.currentXP)
     return nextRank.points - userProgress.currentXP
   }
 
   const handleCheckIn = async () => {
-    if (!comment.trim()) return
+    // Reset any existing error and success messages
+    setError("")
+    setCheckInSuccess(false)
+
+    // Validate the input with Zod
+    const validationResult = checkInSchema.safeParse({ description: comment });
+    if (!validationResult.success) {
+      const errorMessage = validationResult.error.errors[0]?.message || "Por favor, preencha corretamente o formulário";
+      setError(errorMessage);
+      return;
+    }
 
     setIsCheckingIn(true)
 
@@ -143,12 +151,20 @@ const SustainableCheckin = () => {
       })
 
       if (response.status === 201 || response.status === 200) {
-          await fetchBubbleData()
-        }
-        else {
+        await fetchBubbleData()
+        setCheckInSuccess(true)
+        setComment("") // Clear the form on success
+      } else {
         console.error("Erro ao realizar check-in.")
+        setError("Erro ao realizar check-in. Tente novamente mais tarde.")
       }
     } catch (error) {
+      // Parse API error using our helper
+      const parsedError = parseApiError(error)
+      
+      // Set the error message
+      setError(parsedError.message)
+      
       console.error("Erro ao conectar com a API:", error)
     } finally {
       setIsCheckingIn(false)
@@ -390,11 +406,17 @@ const SustainableCheckin = () => {
                 </div>
                 <textarea
                   value={comment}
-                  onChange={(e) => setComment(e.target.value)}
+                  onChange={(e) => {
+                    setComment(e.target.value);
+                    if (error) setError(""); // Clear error when user starts typing
+                  }}
                   placeholder="Descreva sua ação sustentável..."
-                  className="w-full h-32 p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300 resize-none bg-white/70 backdrop-blur-sm"
+                  className={`w-full h-32 p-4 border ${error ? 'border-red-300 focus:ring-red-500' : 'border-gray-200 focus:ring-green-500'} rounded-lg focus:ring-2 focus:border-transparent transition-all duration-300 resize-none bg-white/70 backdrop-blur-sm`}
                 />
               </div>
+
+              {/* Display error message if there is one */}
+              {error && <ErrorMessage message={error} />}
 
               <div className="flex justify-end">
                 <button
@@ -421,8 +443,10 @@ const SustainableCheckin = () => {
                 <div className="mt-4 p-3 bg-green-100 border border-green-200 text-green-800 rounded-lg flex items-center animate-fade-in">
                   <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
                   <div>
-                    <p className="font-medium">Parabéns! Você alcançou um novo nível!</p>
-                    <p className="text-sm">Você agora é um {getCurrentRank().name}!</p>
+                    <p className="font-medium">Check-in realizado com sucesso!</p>
+                    {getCurrentRank().id > userProgress.currentRank && (
+                      <p className="text-sm">Parabéns! Você alcançou um novo nível!</p>
+                    )}
                   </div>
                 </div>
               )}
@@ -488,7 +512,8 @@ const SustainableCheckin = () => {
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {ranks.map((rank) => {
+            
+            {ranks.map((rank: { id: Key | null | undefined; points: number; color: any; icon: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; name: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; description: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; difficulty: string }) => {
               const isCurrentRank = rank.id === userProgress.currentRank
               const isAchieved = userProgress.currentXP >= rank.points
 
@@ -634,4 +659,3 @@ const SustainableCheckin = () => {
 }
 
 export default SustainableCheckin
-
