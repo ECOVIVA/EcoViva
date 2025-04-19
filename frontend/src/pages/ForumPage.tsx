@@ -24,7 +24,7 @@ function App() {
   }, []);
   
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#042211] to-[#073321] text-white overflow-hidden relative">
+    <div className=" bg-gradient-to-b from-[#042211] to-[#073321] text-white overflow-hidden relative">
       <Stars />
       
       {/* Radial glow effects */}

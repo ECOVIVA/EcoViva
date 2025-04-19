@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 // Components
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import Navbar from './dry/Navbar';
+import Footer from './dry/Footer';
 import {useAuth } from '../components/Auth/AuthContext';
 
 // Pages
