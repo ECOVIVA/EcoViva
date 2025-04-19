@@ -7,8 +7,7 @@ import Lesson4 from '../components/Lessons/Lesson4';
 import Lesson5 from '../components/Lessons/Lesson5';
 import Lesson6 from '../components/Lessons/Lesson6';
 import Lesson7 from '../components/Lessons/Lesson7';
-import Lesson8 from '../components/Lessons/Lesson8';
-
+import Lesson8 from '../components//Lessons/Lesson8';
 
 
 const App = () => {
