@@ -54,17 +54,18 @@ export interface Threads {
   created_at: string;
   updated_at: string
   likes: number;
+  liked: boolean;
   tags?: string[];
   posts?: Posts[];
 }
 
 export interface Posts {
   id: string;
-  userId: string;
-  userName: string;
-  userAvatar?: string;
-  content: string;
-  date: string;
+  thread: number;
+  content: string
+  author: User;
+  created_at: string;
+  updated_at: string;
 }
 
 

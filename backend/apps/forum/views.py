@@ -26,18 +26,17 @@ from . import models, serializers
 
 class ThreadListView(APIView):  
     """ Retorna uma lista com todas as threads cadastradas. """  
-    permission_classes = [permissions.AllowAny]  
+    permission_classes = [permissions.IsAuthenticated]  
 
     def get(self, request):  
         try:  
             threads = get_list_or_404(models.Thread)  
-            serializer = serializers.ThreadsSerializer(threads, many=True)  
+            serializer = serializers.ThreadsSerializer(threads, many=True, context = {'request': request})  
             return Response(serializer.data, status=status.HTTP_200_OK)  
         except Http404:  
             return Response({'detail': 'Não há Threads cadastradas'}, status=status.HTTP_404_NOT_FOUND)  
         except Exception as e:  
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)  
-
 
 class ThreadCreateView(APIView):  
     """ Cria uma nova thread. Apenas usuários autenticados podem acessar. """  
@@ -47,6 +46,8 @@ class ThreadCreateView(APIView):
         data = request.data  
         if not data:  
             return Response({'detail': 'Nenhum dado foi enviado!'}, status=status.HTTP_400_BAD_REQUEST)  
+        
+        data["author"] = request.user.pk
 
         try:  
             serializer = serializers.ThreadsSerializer(data=data)  
@@ -80,6 +81,24 @@ class ThreadUpdateView(APIView):
             serializer.save()  
             return Response({'detail': 'Thread atualizada com sucesso!'}, status=status.HTTP_200_OK)  
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
+    
+class ThreadLikeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, slug):     
+        try:  
+            thread = get_object_or_404(models.Thread, slug=slug)
+        except Http404:  
+            return Response({'detail': 'Thread não encontrada!'}, status=status.HTTP_404_NOT_FOUND) 
+        
+        user = request.user
+
+        if thread.likes.filter(id=user.id).exists():
+            thread.likes.remove(user)
+            return Response({'liked': False}, status=status.HTTP_200_OK)
+        else:
+            thread.likes.add(user)
+            return Response({'liked': True}, status=status.HTTP_200_OK)
 
 class ThreadDeleteView(APIView):  
     """ Deleta uma thread. Apenas o dono da thread pode excluir. """  
@@ -103,7 +122,7 @@ class ThreadDetailView(APIView):
     def get(self, request, slug):  
         try:  
             thread = get_object_or_404(models.Thread, slug=slug)  
-            serializer = serializers.ThreadsSerializer(thread)  
+            serializer = serializers.ThreadsSerializer(thread, context={'request': request})  
             return Response(serializer.data, status=status.HTTP_200_OK)  
         except Http404:  
             return Response({'detail': 'Thread não encontrada!'}, status=status.HTTP_404_NOT_FOUND)  
@@ -134,6 +153,8 @@ class PostCreateView(APIView):
         data = request.data  
         if not data:  
             return Response({'detail': 'Nenhum dado foi enviado!'}, status=status.HTTP_400_BAD_REQUEST)  
+        
+        data['author'] = request.user.pk
 
         try:  
             serializer = serializers.PostsSerializer(data=data)  

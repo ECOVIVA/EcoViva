@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from apps.users.serializers import UsersSerializer
+from apps.users.models import Users
 from . import models
 
 """
@@ -13,34 +14,64 @@ from . import models
 """
 
 class PostsSerializer(serializers.ModelSerializer):
-    author = UsersSerializer()
-    replies = serializers.SerializerMethodField()  # Campo para armazenar as respostas do post
+    author = serializers.PrimaryKeyRelatedField(
+        queryset=Users.objects.all(), write_only=True
+    )
+    thread = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=models.Thread.objects.all()
+    )
 
     class Meta:
         model = models.Post
-        fields = ['id', 'thread', 'content', 'author', 'created_at', 'updated_at', 'parent_post', 'replies']
+        fields = ['id', 'thread', 'content', 'author', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']  # Campos que não podem ser alterados manualmente
 
-    def get_replies(self, obj):
-        """ 
-        Retorna todas as respostas de um post específico.
-        
-        Filtra os posts que têm o post atual como 'parent_post' e serializa esses dados.
+    def to_representation(self, instance):
         """
-        replies = models.Post.objects.filter(parent_post=obj)
-        return PostsSerializer(replies, many=True).data  # Serializa todas as respostas
-
+        Exibe o autor como objeto completo na resposta (GET).
+        """
+        rep = super().to_representation(instance)
+        rep['author'] = UsersSerializer(instance.author).data
+        return rep
 
 class ThreadsSerializer(serializers.ModelSerializer):
-    author = UsersSerializer()
-    tags = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)  # Permite enviar tags como lista no request
-    tags_data = serializers.SerializerMethodField()  # Campo somente leitura para exibir tags associadas
+    author = serializers.PrimaryKeyRelatedField(queryset=Users.objects.all())
+    tags = serializers.SlugRelatedField(
+        many=True,
+        slug_field='name',  
+        queryset=models.Tags.objects.all() 
+    )
+    posts = serializers.SerializerMethodField()
+    liked = serializers.SerializerMethodField()
+    likes = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Thread
-        fields = ['id', 'cover', 'title', 'content', 'tags', 'tags_data', 'author', 'slug', 'created_at', 'updated_at']
-        read_only_fields = ['slug', 'tags_data', 'created_at', 'updated_at']  # Slug e timestamps não podem ser alterados manualmente
+        fields = ['id', 'cover', 'title', 'content','likes', 'liked', 'tags', 'author', 'slug','posts', 'created_at', 'updated_at']
+        read_only_fields = ['slug','posts', 'likes', 'liked','created_at', 'updated_at']  # Slug e timestamps não podem ser alterados manualmente
 
+    def to_representation(self, instance):
+        """
+        Altera a representação da resposta (GET) para incluir o autor detalhado.
+        """
+        rep = super().to_representation(instance)
+        rep['author'] = UsersSerializer(instance.author).data  # substitui o id pelo objeto serializado
+        return rep
+    
+    def get_posts(self, instance): 
+        posts = instance.posts.all() 
+        return PostsSerializer(posts, many=True).data
+    
+    def get_liked(self, obj):
+        request = self.context.get('request')
+        user = request.user
+        
+        return user in obj.likes.all()
+
+    def get_likes(self, obj):
+        return obj.likes.count()
+    
     def validate_tags(self, value):
         """ 
         Valida e normaliza as tags recebidas. 
@@ -103,15 +134,3 @@ class ThreadsSerializer(serializers.ModelSerializer):
         for tag_name in tag_names:
             tag, _ = models.Tags.objects.get_or_create(name=tag_name)  # Busca ou cria a tag
             thread.tags.add(tag)  # Associa a tag à Thread
-
-    def get_tags_data(self, obj):
-        """ 
-        Retorna as tags da Thread formatadas para exibição. 
-        
-        Exemplo de saída:
-        [
-            {"id": 1, "name": "python"},
-            {"id": 2, "name": "django"}
-        ]
-        """
-        return [{"id": tag.id, "name": tag.name} for tag in obj.tags.all()]

@@ -32,7 +32,7 @@ class ThreadAdmin(admin.ModelAdmin):
             'fields': ('title', 'content', 'tags', 'author', 'slug', 'cover')  # Campos principais da thread
         }),
         ('Datas', {
-            'fields': ('created_at',),  # Exibe a data de criação da thread
+            'fields': ('created_at', "likes"),  # Exibe a data de criação da thread
             'classes': ('collapse',)  # Oculta essa seção por padrão para um layout mais limpo
         }),
     )
@@ -48,17 +48,17 @@ class PostAdmin(admin.ModelAdmin):
     - Adiciona filtros para facilitar a navegação.
     - Melhora a performance com list_select_related.
     """
-    list_display = ('id', 'content', 'author', 'thread', 'parent_post', 'created_at', 'updated_at')  # Lista de posts
+    list_display = ('id', 'content', 'author', 'thread', 'created_at', 'updated_at')  # Lista de posts
     search_fields = ('content',)  # Habilita pesquisa pelo conteúdo do post
-    list_filter = ('created_at', 'author', 'thread', 'parent_post')  # Filtros laterais para organização dos posts
+    list_filter = ('created_at', 'author', 'thread', )  # Filtros laterais para organização dos posts
     list_select_related = ('author', 'thread')  # Otimiza consultas carregando os relacionamentos antecipadamente
 
     fieldsets = (
         (None, {
-            'fields': ('content', 'author', 'thread', 'parent_post')  # Campos principais do post
+            'fields': ('content', 'author', 'thread', )  # Campos principais do post
         }),
         ('Datas', {
-            'fields': ('created_at', 'updated_at'),  # Exibe datas do post
+            'fields': ('created_at', ),  # Exibe datas do post
             'classes': ('collapse',)  # Oculta essa seção por padrão
         }),
     )

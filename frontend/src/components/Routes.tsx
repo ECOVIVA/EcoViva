@@ -20,6 +20,7 @@ import ProfilePage from '../pages/ProfilePage';
 import ConfirmEmail from '../pages/ConfirmEmail';
 import RequestPassword from '../pages/RequestPasswordReset';
 import ResetPassword from '../pages/ResetPassword';
+import ThreadDetailPage from '../pages/ThreadPage';
 
 
 const RouterComponent: React.FC = () => {
@@ -44,7 +45,7 @@ const RouterComponent: React.FC = () => {
               <Route path="/CheckInPage" element={isAuthenticated ? <CheckInPage /> : <Navigate to="/login" />} />
               <Route path="/ConfirmEmail/:uidb64/:token" element={<ConfirmEmail />}/>     
               <Route path="/ResetPassword/:uidb64/:token" element={<ResetPassword />}/>         
-    
+              <Route path="/forum/:slug" element={<ThreadDetailPage />} />
             </Routes>
           </main>
           <Footer />
