@@ -36,11 +36,11 @@ const LayoutWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   return (
     <div className="flex flex-col min-h-screen">
-      {!shouldHideLayout && <Navbar />}
+      <Navbar />
       <main className={`flex-grow pt-20 ${shouldHideLayout ? 'pt-0' : ''}`}>
         {children}
       </main>
-      {!shouldHideLayout && <Footer />}
+      <Footer />
     </div>
   )
 }
@@ -60,7 +60,12 @@ const RouterComponent: React.FC = () => {
           <Route path="/CreateAccount" element={<CreateAccount />} />
           <Route path="/RequestPassword" element={<RequestPassword />} />
           <Route path="/ECOstudy" element={<ECOstudy />} />
-          <Route path="/ProfilePage" element={<ProfilePage />} />
+          <Route path="/ProfilePage"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            } />
 
           <Route
             path="/CheckInPage"
