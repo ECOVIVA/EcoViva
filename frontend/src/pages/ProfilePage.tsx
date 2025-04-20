@@ -2,8 +2,9 @@
 
 import type React from "react"
 import { useEffect, useState } from "react"
-import { Leaf, Edit2, Save, Camera, ImageIcon, Heart, Plus } from "lucide-react"
+import { Leaf, Edit2, Save, Camera, ImageIcon, Heart, Plus, Sparkles, CloudRain, Sun, Wind } from "lucide-react"
 import { z } from "zod"
+import {motion} from "framer-motion"
 import api from "../services/API/axios"
 import routes from "../services/API/routes"
 
@@ -288,6 +289,47 @@ function App() {
               className="absolute inset-0 bg-cover bg-center opacity-20"
               style={{ backgroundImage: `url(${backgroundImage})` }}
             />
+
+            {/* Animated nature elements */}
+            <motion.div className="absolute inset-0 overflow-hidden">
+              {Array.from({ length: 15 }).map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute text-white/20"
+                  initial={{
+                    x: Math.random() * 100 + "%",
+                    y: Math.random() * 100 + "%",
+                    opacity: 0,
+                  }}
+                  animate={{
+                    y: [Math.random() * 100 + "%", Math.random() * 100 + "%"],
+                    opacity: [0.1, 0.3, 0.1],
+                    rotate: [0, 360],
+                  }}
+                  transition={{
+                    duration: 15 + Math.random() * 20,
+                    repeat: Number.POSITIVE_INFINITY,
+                    delay: Math.random() * 5,
+                  }}
+                >
+                  {i % 5 === 0 ? (
+                    <Leaf size={i % 2 === 0 ? 24 : 16} />
+                  ) : i % 5 === 1 ? (
+                    <Wind size={i % 2 === 0 ? 24 : 16} />
+                  ) : i % 5 === 2 ? (
+                    <Sun size={i % 2 === 0 ? 24 : 16} />
+                  ) : i % 5 === 3 ? (
+                    <CloudRain size={i % 2 === 0 ? 24 : 16} />
+                  ) : (
+                    <Sparkles size={i % 2 === 0 ? 24 : 16} />
+                  )}
+                </motion.div>
+              ))}
+            </motion.div>
+
+            {/* Overlay gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+
             {isEditing && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
                 <div className="flex flex-col items-center gap-2">
@@ -496,4 +538,4 @@ function App() {
   )
 }
 
-export default App
+export default App;

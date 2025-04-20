@@ -56,6 +56,7 @@ class Thread(models.Model):
     title = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=False)
     content = models.TextField()
+    likes = models.ManyToManyField(Users, related_name='liked_threads', blank=True)
     tags = models.ManyToManyField(Tags, blank=True)  # Relacionamento muitos-para-muitos com Tags
     author = models.ForeignKey(Users, on_delete=models.CASCADE)  # Relaciona a thread a um usuário
     created_at = models.DateTimeField(default=timezone.now)  # Define a data de criação automaticamente
@@ -131,7 +132,6 @@ class Post(models.Model):
     author = models.ForeignKey(Users, on_delete=models.CASCADE)  # Relaciona o post a um usuário
     created_at = models.DateTimeField(default=timezone.now)  # Define a data de criação automaticamente
     updated_at = models.DateTimeField(auto_now=True)  # Atualiza a data toda vez que o post for alterado
-    parent_post = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE)  # Permite respostas a posts
 
     def __str__(self):
         """

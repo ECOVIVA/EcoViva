@@ -47,7 +47,7 @@ const LoginPage: React.FC = () => {
 
       if (response.status === 200) {
         authContext.login();
-        navigate('/');
+        navigate('/CheckInPage');
       } else {
         setErrors({ general: 'Erro desconhecido. Tente novamente.' });
       }
@@ -58,7 +58,7 @@ const LoginPage: React.FC = () => {
 
         if (typeof data === 'object' && !Array.isArray(data)) {
           const firstKey = Object.keys(data)[0];
-          const firstError = data[firstKey][0];
+          const firstError = data[firstKey];
           setErrors({ general: firstError });
         } else if (data.detail) {
           setErrors({ general: data.detail || '.' });
@@ -182,8 +182,8 @@ const LoginPage: React.FC = () => {
                 whileTap={{ scale: 0.98 }}
                 className="px-4 py-2 text-sm whitespace-nowrap border border-green-600 text-green-600 hover:text-white hover:bg-green-600 rounded-full font-medium transition-all duration-200"
               >
-                <Link to="/Resendemail" className="relative block text-center">
-                  Autentique sua Conta!
+                <Link to="/RequestPassword" className="relative block text-center">
+                  Esqueceu sua senha??
                   <motion.div
                     className="absolute -bottom-1 left-0 w-full h-0.5 bg-green-600"
                     initial={{ scaleX: 0 }}
@@ -192,6 +192,7 @@ const LoginPage: React.FC = () => {
                   />
                 </Link>
               </motion.button>
+              
             </div>
           </div>
         </form>

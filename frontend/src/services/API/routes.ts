@@ -4,7 +4,9 @@ const routes = {
       logout: '/logout/',
       refresh: '/refresh/',
       verify: '/verify/',
-      resend_email: '/resend-email/'
+      request_reset_password: '/request_reset_password/',
+      confirm_password: (uidb64: string, token: string) => (`/confirm-reset-password/${uidb64}/${token}/`),
+      confirm_email: (uidb64: string, token: string) => (`/confirm-email/${uidb64}/${token}/`)
     },
     user: {
       create: '/users/create/',
@@ -18,25 +20,26 @@ const routes = {
     },
     forum: {
         thread: {
-            list: '/thread/list/',
-            create: '/thread/create/',
-            detail: (slug: string) => `/thread/${slug}/`,
-            update: (slug: string) => `/thread/${slug}/update`,
-            delete: (slug: string) => `/thread/${slug}/delete`,
+            list: 'forum/thread/list/',
+            create: 'forum/thread/create/',
+            detail: (slug: string) => `forum/thread/${slug}/`,
+            like: (slug: string) => `forum/thread/${slug}/like/`,
+            update: (slug: string) => `forum/thread/${slug}/update/`,
+            delete: (slug: string) => `forum/thread/${slug}/delete/`,
         },
         post: {
-            create: '/post/create',
-            update: (id_post: number) => `/post/${id_post}/update`,
-            delete: (id_post: number) => `/post/${id_post}/delete`, 
+            create: 'forum/post/create/',
+            update: (id_post: number) => `forum/post/${id_post}/update/`,
+            delete: (id_post: number) => `forum/post/${id_post}/delete/`, 
         },
     },
     study: {
         lessons_completion:{
             list: '/lessons/complete/',
-            create: '/lessons/complete/create/'
+            create: 'study/lessons/complete/create/'
         },
         achievements: {
-            list: '/achievements/user/'
+            list: 'study/achievements/user/'
         }
     }
     }

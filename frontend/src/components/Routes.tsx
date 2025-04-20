@@ -1,8 +1,13 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 // Components
+<<<<<<< HEAD
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+=======
+import Navbar from './dry/Navbar';
+import Footer from './dry/Footer';
+>>>>>>> c70ecb60ca7acf5444194fa1bf90008b7a51cf7a
 import {useAuth } from '../components/Auth/AuthContext';
 
 // Pages
@@ -17,7 +22,10 @@ import ParceriaPage from '../pages/ParceriasPage';
 import CreateAccount from '../pages/CreateAccount';
 import ECOstudy from '../pages/ECOstudy';
 import ProfilePage from '../pages/ProfilePage';
-import App from '../pages/ResendEmail';
+import ConfirmEmail from '../pages/ConfirmEmail';
+import RequestPassword from '../pages/RequestPasswordReset';
+import ResetPassword from '../pages/ResetPassword';
+import ThreadDetailPage from '../pages/ThreadPage';
 
 
 const RouterComponent: React.FC = () => {
@@ -30,16 +38,19 @@ const RouterComponent: React.FC = () => {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/forum" element={<ForumPage />} />
+              <Route path="/Forum" element={<ForumPage />} />
               <Route path="/HistorySection" element={<HistorySection />} />
               <Route path="/ImpactPage" element={<ImpactPage />} />
               <Route path="/CertificatePage" element={<CertificatePage />} />
               <Route path="/ParceriasPage" element={<ParceriaPage />} />
               <Route path="/CreateAccount" element={<CreateAccount />} />
-              <Route path="/Resendemail" element={<App />} />
+              <Route path="/RequestPassword" element={<RequestPassword />} />
               <Route path="/ECOstudy" element={<ECOstudy />} />
               <Route path="/ProfilePage" element={<ProfilePage />} />
-              <Route path="/CheckInPage" element={isAuthenticated ? <CheckInPage /> : <Navigate to="/login" />} />              
+              <Route path="/CheckInPage" element={isAuthenticated ? <CheckInPage /> : <Navigate to="/login" />} />
+              <Route path="/ConfirmEmail/:uidb64/:token" element={<ConfirmEmail />}/>     
+              <Route path="/ResetPassword/:uidb64/:token" element={<ResetPassword />}/>         
+              <Route path="/forum/:slug" element={<ThreadDetailPage />} />
             </Routes>
           </main>
           <Footer />

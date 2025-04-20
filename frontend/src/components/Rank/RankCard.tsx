@@ -1,5 +1,5 @@
 import React from 'react';
-import { Rank } from '../types/types';
+import { Rank } from '../../types/types';
 
 interface RankCardProps {
   rank: Rank;
