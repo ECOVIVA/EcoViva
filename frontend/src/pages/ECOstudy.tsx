@@ -381,7 +381,7 @@ const App = () => {
                   Acreditamos que a educação ambiental é o primeiro passo para um mundo mais sustentável. Explore nossas
                   lições e comece sua jornada ecológica hoje.
                 </p>
-                <Link to="/login">
+                <Link to="/CheckInPage">
                   <button className="bg-white text-green-700 hover:bg-green-100 px-8 py-4 rounded-full text-lg font-bold transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1">
                     Começar Agora
                   </button>
