@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';  // Para navegação de redirecionamento
-import { useAuth } from './Auth/AuthContext';  // Importando a store de autenticação
-import LoginPage from '@/pages/LoginPage';
+import { isAuth } from './AuthContext';  // Importando a store de autenticação
+import CheckInPage from '../../pages/CheckInPage';
+
 
 interface AuthGuardianProps {
   children: React.ReactNode;  // Componente que será protegido
@@ -10,7 +11,6 @@ interface AuthGuardianProps {
 const AuthGuardian: React.FC<AuthGuardianProps> = ({ children }) => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const { isAuth } = useAuth();  // Estado de autenticação
   const [loading, setLoading] = useState(true);  // Estado para controle de carregamento
 
   // Função que verifica o estado de autenticação ao carregar a página
@@ -42,7 +42,7 @@ const AuthGuardian: React.FC<AuthGuardianProps> = ({ children }) => {
   }
 
   if (!isAuthenticated){
-    return <LoginPage/>
+    return <CheckInPage/>
   }
 
   // Caso esteja autenticado, exibe o conteúdo protegido
