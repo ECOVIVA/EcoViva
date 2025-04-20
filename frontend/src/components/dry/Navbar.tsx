@@ -1,11 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Leaf, User, LogOut, LogIn, ChevronDown, Globe, Award, Users, Menu, X } from 'lucide-react';
-<<<<<<< HEAD:frontend/src/components/Navbar.tsx
 import { useAuth } from '../components/Auth/AuthContext';
-=======
-import { useAuth } from '../Auth/AuthContext';
->>>>>>> c70ecb60ca7acf5444194fa1bf90008b7a51cf7a:frontend/src/components/dry/Navbar.tsx
 
 const Navbar: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth();
