@@ -1,13 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 // Components
-<<<<<<< HEAD
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-=======
 import Navbar from './dry/Navbar';
 import Footer from './dry/Footer';
->>>>>>> c70ecb60ca7acf5444194fa1bf90008b7a51cf7a
 import {useAuth } from '../components/Auth/AuthContext';
 
 // Pages
