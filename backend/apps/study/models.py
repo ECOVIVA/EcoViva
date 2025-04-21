@@ -28,7 +28,6 @@ class Category(models.Model):
     def __str__(self):  
         return self.name  
 
-
 class Lesson(models.Model):  
     """
     Modelo que representa uma lição disponível para os usuários concluírem.
@@ -46,28 +45,19 @@ class Lesson(models.Model):
     def __str__(self):  
         return self.title  
 
-
-class LessonCompletion(models.Model):  
+class LessonLog(models.Model):  
     """
     Modelo que registra as lições concluídas pelos usuários.
     Um usuário só pode registrar uma conclusão por lição.
     """
     class Meta:  
-        verbose_name = "LessonCompletion"  
-        verbose_name_plural = "LessonsCompletion"  
+        verbose_name = "LessonLog"  
+        verbose_name_plural = "LessonsLog"  
         unique_together = ('user', 'lesson')  # Garante que um usuário não conclua a mesma lição mais de uma vez  
 
     user = models.ForeignKey(Users, on_delete=models.CASCADE)  # Usuário que concluiu a lição  
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)  # Lição concluída  
     completed_at = models.DateTimeField(auto_now_add=True)  # Data da conclusão  
-
-    def clean(self):  
-        """
-        Valida se a lição já foi concluída pelo usuário antes de salvar.
-        Impede a duplicação de registros de conclusão.
-        """
-        if LessonCompletion.objects.filter(user=self.user, lesson=self.lesson).exists():  
-            raise ValidationError("Você já completou essa lição.")  
 
     def save(self, *args, **kwargs):  
         """
@@ -79,70 +69,31 @@ class LessonCompletion(models.Model):
     def __str__(self):  
         return f"{self.user.username} completed {self.lesson.title}"  
 
-class Achievement(models.Model):  
-    """
-    Modelo que representa as conquistas disponíveis no sistema.
-    Os usuários podem desbloqueá-las ao completar certas condições.
-    """
-    name = models.CharField(max_length=255)  # Nome da conquista  
-    description = models.TextField()  # Descrição da conquista  
+class Achievement(models.Model):
+    class Meta:
+        verbose_name = 'Achievement'
+        verbose_name_plural = "Achievements"
 
-    def __str__(self):  
-        return self.name  
+    name = models.CharField(max_length=100, unique=True)
+    icon = models.ImageField(upload_to='achievements/', null=True, blank=True)
+    category = models.CharField(max_length=50)
+    condition = models.CharField(max_length=100)
+    description = models.TextField()
 
+    def __str__(self):
+        return f"Conquista: {self.name}"
 
-class AchievementRule(models.Model):  
-    """
-    Modelo que define as regras para desbloquear conquistas.
-    As conquistas podem estar associadas a uma categoria específica ou serem gerais.
-    """
-    achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE)  # Conquista associada  
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)  # Categoria opcional  
-    required_lessons = models.PositiveIntegerField(default=0)  # Número mínimo de lições concluídas para desbloqueio  
+class AchievementLog(models.Model):
+    class Meta:
+        verbose_name = 'Achievement Log'
+        verbose_name_plural = "Achievement Logs"
+        
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE)
+    date_awarded = models.DateField(auto_now_add=True)
 
-    def __str__(self):  
-        return f"Regra para {self.achievement.name}: {self.required_lessons} lições de {self.category}"  
+    class Meta:
+        unique_together = ('user', 'achievement')
 
-
-class UserAchievement(models.Model):  
-    """
-    Modelo que registra as conquistas desbloqueadas pelos usuários.
-    Um usuário pode desbloquear cada conquista apenas uma vez.
-    """
-    user = models.ForeignKey(Users, on_delete=models.CASCADE)  # Usuário que desbloqueou a conquista  
-    achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE)  # Conquista desbloqueada  
-    unlocked_at = models.DateTimeField(auto_now_add=True)  # Data do desbloqueio  
-
-    class Meta:  
-        unique_together = ("user", "achievement")  # Garante que cada conquista seja única por usuário  
-
-    def __str__(self):  
-        return f"{self.user.username} desbloqueou {self.achievement.name}"  
-
-# Signals
-
-@receiver(models.signals.post_save, sender=LessonCompletion)  
-def check_achievements(sender, instance, created, **kwargs):  
-    """
-    Sinal que verifica e concede conquistas aos usuários quando uma nova lição é concluída.
-    Se a lição não foi recém-criada, o processo é interrompido.
-    """
-    if not created:  
-        return  
-
-    user = instance.user  
-
-    # Conta o total de lições concluídas pelo usuário  
-    total_completed = LessonCompletion.objects.filter(user=user).count()  
-
-    # Obtém todas as conquistas que não possuem uma categoria específica  
-    possible_achievements = AchievementRule.objects.filter(category__isnull=True)  
-
-    # Verifica se o usuário atende aos requisitos de alguma conquista  
-    for rule in possible_achievements:  
-        if total_completed >= rule.required_lessons:  
-            achievement = rule.achievement  
-
-            # Concede a conquista se o usuário ainda não a desbloqueou  
-            if not UserAchievement.objects.filter(user=user, achievement=achievement).exists():  
-                UserAchievement.objects.create(user=user, achievement=achievement)  
+    def __str__(self):
+        return f"Conquista de {self.user.username}" 

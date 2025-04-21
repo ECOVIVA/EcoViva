@@ -72,7 +72,7 @@ function App() {
         setSelectedInterests(data.interests || [])
 
         if (data.photo) {
-          const fullProfileUrl = `http://localhost:8000${data.photo}`
+          const fullProfileUrl = `${data.photo}`
           setProfileImage(fullProfileUrl)
           localStorage.setItem("profileImage", fullProfileUrl)
         } else {
