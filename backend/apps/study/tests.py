@@ -9,58 +9,62 @@ from apps.bubble.models import Bubble, CheckIn
 class TestLessions(APITestCase, UsersMixin):
     def setUp(self):
         self.user = self.make_user()
-        self.client.force_authenticate(user=self.user)  
 
         self.lesson = Lesson.objects.create(title="Lição Teste")
         self.lesson2 = Lesson.objects.create(title="Lição Teste 2")
 
-        self.lesson_completion = LessonLog.objects.create(user=self.user, lesson=self.lesson)
+        self.lesson_log = LessonLog.objects.create(user=self.user, lesson=self.lesson)
 
-        self.achievement = Achievement.objects.create(name = "Conquista")
+        self.badge = Achievement.objects.create(**{
+            'name': 'Teste',
+            'category': 'Lesson',
+            'condition': 'lesson_initial',
+            'description': 'Teste'
+        })
 
-    def test_get_lesson_completions_success(self):
+    def test_get_lesson_log(self):
         """Testa se retorna corretamente as lições concluídas do usuário autenticado"""
         url = reverse("study:lessons_complete")  # Ajuste conforme sua URL
         
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)  # Deve retornar um item
-        self.assertEqual(response.data[0]["lesson"], self.lesson.id)
+        self.assertEqual(response.json()[0].get('lesson'), self.lesson.id)
 
-    def test_get_lesson_completions_no_lessons(self):
+    def test_get_lesson_log_fail_for_404(self):
         """Testa se retorna 404 caso o usuário não tenha concluído nenhuma lição"""
-        self.lesson_completion.delete()  # Remove a conclusão para testar esse cenário
-        
-        url = reverse("study:lessons_complete")  
+        url = reverse("study:lessons_complete") 
+
+        self.lesson_log.delete()
         
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.data, {"detail": "Este usuário não completou nenhuma lição."})
+        self.assertEqual(response.json().get('detail'), "Este usuário não completou nenhuma lição.")
 
-    def test_get_lesson_completions_fail_for_unauthorizated(self):
+    def test_get_lesson_log_fail_for_unauthorizated(self):
+        url = reverse("study:lessons_complete") 
+
         self.client.logout()
-        
-        url = reverse("study:lessons_complete")  
         
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_post_lesson_completion_success(self):
+    def test_post_lesson_log(self):
         """Testa a criação de um novo registro de lição concluída"""
         url = reverse("study:lesson_complete_create")  # Ajuste conforme sua URL
 
-        self.lesson_completion.delete() 
+        self.lesson_log.delete() 
+
         payload = {"lesson": self.lesson.pk}  # Informando a lição concluída
         
         response = self.client.post(url, data=payload, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data, "A lição foi registrada como completada!!")
+        self.assertEqual(response.json(), "A lição foi registrada como completada!!")
 
-    def test_post_lesson_completion_without_lesson(self):
+    def test_post_lesson_log_fail_for_blank(self):
         """Testa a tentativa de criar um registro sem informar a lição"""
         url = reverse("study:lesson_complete_create")
 
@@ -69,7 +73,7 @@ class TestLessions(APITestCase, UsersMixin):
         response = self.client.post(url, data=payload, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, {"detail": "Informe qual foi a lição completada."})
+        self.assertEqual(response.json().get('detail'), "Informe qual foi a lição completada.")
 
     def test_post_duplicate_lesson_completion(self):
         """Testa se impede a criação duplicada de uma conclusão para a mesma lição"""
@@ -81,6 +85,7 @@ class TestLessions(APITestCase, UsersMixin):
         response2 = self.client.post(url, data=payload, format="json")  # Tentativa duplicada
 
         self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response2.json().get('non_field_errors')[0], 'Os campos user, lesson devem criar um set único.')
 
     def test_post_unauthorized(self):
         url = reverse("study:lesson_complete_create")
@@ -92,6 +97,8 @@ class TestLessions(APITestCase, UsersMixin):
         response = self.client.post(url, data=payload, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.json().get('detail'), 'As credenciais de autenticação não foram fornecidas.')
+
 
     def test_get_achivements_list(self):
         url = reverse("study:achievements_user")
@@ -107,3 +114,4 @@ class TestLessions(APITestCase, UsersMixin):
         response = self.client.get(url, format="json")  
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.json().get('detail'), 'As credenciais de autenticação não foram fornecidas.')

@@ -5,7 +5,9 @@ from django.http import Http404
 from rest_framework.response import Response  
 from rest_framework import status, permissions  
 
+from apps.study.serializers import AchievementSerializer
 from apps.bubble import models, serializers  
+from utils.check_achievement import CheckAchievementsCheckIn
 
 """
     Este módulo define as views da aplicação "Bubble", responsáveis por processar requisições HTTP 
@@ -52,7 +54,12 @@ class CheckInCreateView(GenericAPIView, CreateModelMixin):
         try:  
             return get_object_or_404(models.Bubble, user=self.request.user.id)  
         except Http404:  
-            return Response('A Bolha não foi encontrada', status=status.HTTP_404_NOT_FOUND)  
+            return Response('A Bolha não foi encontrada', status=status.HTTP_404_NOT_FOUND) 
+
+    def get_badge(self):
+        check_badge = CheckAchievementsCheckIn()
+        unlocked = check_badge.check_achievements_for_user(user = self.request.user)
+        return AchievementSerializer(unlocked, many=True).data
     
     def post(self, request, *args, **kwargs):  
         return self.create(request, *args, **kwargs)
@@ -67,4 +74,10 @@ class CheckInCreateView(GenericAPIView, CreateModelMixin):
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-        return Response("Check-in criado com sucesso!!", status=status.HTTP_201_CREATED)    
+
+        new_badges = self.get_badge()
+        
+        return Response(
+            {"detail": "Check-in criado com sucesso!", "new_badges": new_badges}, status=status.HTTP_201_CREATED
+            )
+  

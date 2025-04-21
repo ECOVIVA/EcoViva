@@ -3,6 +3,7 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 from apps.users.tests import UsersMixin
 from apps.users.models import Users  
+from apps.study.models import Achievement, AchievementLog
 from apps.bubble.models import Bubble,CheckIn
 
 """
@@ -46,10 +47,16 @@ class CheckInViewTest(APITestCase, UsersMixin):
         # Criando uma bolha associada ao usuário
         self.bubble = Bubble.objects.filter(user = self.user.pk).first()
 
+        self.badge = Achievement.objects.create(**{
+            'name': 'Teste',
+            'category': 'Check-In',
+            'condition': 'checkin_initial',
+            'description': 'Teste'
+        })
+
     def test_post_checkin(self):
         url = reverse('users:bubble:check_in_create')
 
-        self.client.force_authenticate(self.user)
         payload = {
             "description": "ALGO ACONTECEU",
         }
@@ -57,7 +64,9 @@ class CheckInViewTest(APITestCase, UsersMixin):
         response = self.client.post(url, data=payload, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.json(), 'Check-in criado com sucesso!!')
+        self.assertEqual(response.json().get('detail'), 'Check-in criado com sucesso!')
+        self.assertEqual(response.json().get('new_badges')[0].get('name'), 'Teste')
+
 
     def test_post_checkin_fail_for_unauthorized(self):
         url = reverse('users:bubble:check_in_create')

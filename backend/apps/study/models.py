@@ -70,14 +70,18 @@ class LessonLog(models.Model):
         return f"{self.user.username} completed {self.lesson.title}"  
 
 class Achievement(models.Model):
+    class CategoryChoices(models.TextChoices):
+        CHECKIN = 'checkin', 'Check-in'
+        LESSON = 'lesson', 'Lição'
+
     class Meta:
         verbose_name = 'Achievement'
         verbose_name_plural = "Achievements"
 
     name = models.CharField(max_length=100, unique=True)
     icon = models.ImageField(upload_to='achievements/', null=True, blank=True)
-    category = models.CharField(max_length=50)
-    condition = models.CharField(max_length=100)
+    category = models.CharField(max_length=50, choices=CategoryChoices.choices)
+    condition = models.SlugField(max_length=100, unique=True)
     description = models.TextField()
 
     def __str__(self):

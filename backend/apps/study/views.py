@@ -40,7 +40,6 @@ class LessonCompletionCreateView(mixins.CreateModelMixin, generics.GenericAPIVie
         if serializer.is_valid():
             serializer.save()
             return Response("A lição foi registrada como completada!!", status=status.HTTP_201_CREATED)
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
