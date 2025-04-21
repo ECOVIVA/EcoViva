@@ -457,6 +457,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Estilos globais para animações */}
+      {/* @ts-ignore */}
       <style jsx global>{`
         @keyframes bounce-slow {
           0%, 100% { transform: translateY(0); }
