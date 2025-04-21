@@ -22,21 +22,7 @@ const HomePage: React.FC = () => {
   const impactRef = useRef<HTMLDivElement>(null)
   const ctaRef = useRef<HTMLDivElement>(null)
 
-  // Frases motivacionais sobre reciclagem
-  const motivationalPhrases = [
-    "Cada reciclagem é um passo para um planeta mais verde.",
-    "Transforme hábitos, transforme o mundo.",
-    "Pequenas ações diárias, grandes impactos globais.",
-    "Reciclar hoje para respirar melhor amanhã.",
-    "Seja a mudança que o planeta precisa.",
-    "Um futuro sustentável começa com sua ação hoje.",
-    "Junte-se à revolução verde. Recicle.",
-    "Sua reciclagem de hoje é o ar puro de amanhã.",
-    "Cada material reciclado é uma nova chance para a natureza.",
-    "Plante sustentabilidade, colha um mundo melhor.",
-  ]
-
-  // Controla o efeito de scroll
+// Controla o efeito de scroll
   useEffect(() => {
     const handleScroll = () => {
       setScrollY(window.scrollY)
@@ -206,20 +192,7 @@ const HomePage: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {/* Frase motivacional */}
-        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 bg-white/10 backdrop-blur-md px-6 py-3 rounded-full border border-white/30 w-auto max-w-md">
-          <div className="flex items-center">
-            <div className="bg-green-500/20 p-2 rounded-full mr-3">
-              <Leaf className="h-5 w-5 text-green-300" />
-            </div>
-            <p className="text-white text-center text-sm sm:text-base font-medium animate-fade-phrase">
-              {motivationalPhrase}
-            </p>
-          </div>
-        </div>
-      </section>
-
+        
       {/* Features Section com cards animados */}
       <section
         ref={featuresRef}
