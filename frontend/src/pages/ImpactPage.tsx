@@ -802,9 +802,6 @@ const FutureImpactPage: React.FC = () => {
             Cada gesto de reciclagem hoje é um passo em direção a um 2035 mais verde e sustentável. Não é apenas sobre
             preservar o planeta para nós, mas garantir um lar saudável para as próximas gerações.
           </p>
-          <button className="px-8 py-4 text-lg font-semibold rounded-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-500 hover:scale-105">
-            Comece Sua Jornada Sustentável Agora
-          </button>
         </div>
       </section>
 
