@@ -1,5 +1,3 @@
-"use client"
-
 import React from "react"
 import { useEffect, useState, useRef } from "react"
 import {
@@ -27,12 +25,13 @@ import {
   RecycleIcon,
 } from "lucide-react"
 import CreateAccount from "./CreateAccount"
+import { Link } from "react-router-dom"
 
 const FutureImpactPage: React.FC = () => {
   const [scrollY, setScrollY] = useState(0)
   const [isVisible, setIsVisible] = useState<{ [key: string]: boolean }>({})
-  const [pledgeCount, setPledgeCount] = useState(1458) // Starting pledge count
-  const [hasPledged, setHasPledged] = useState(false)
+  const [pledgeCount] = useState(1458) // Starting pledge count
+  const [hasPledged] = useState(false)
   const [activeTab, setActiveTab] = useState("plastic")
   const [activeVision, setActiveVision] = useState(0)
   const heroRef = useRef<HTMLDivElement>(null)
@@ -274,14 +273,9 @@ const FutureImpactPage: React.FC = () => {
     }
   }
 
-  const confirmPledge = () => {
-    setPledgeCount((prev) => prev + 1)
-    setHasPledged(true)
-    setShowAccountModal(false)
-  }
 
   const VideoIntro: React.FC = () => {
-    return <video src="/video/reciclagem.mp4" autoPlay loop muted playsInline className="w-full h-auto object-cover" />
+    return <video src="../../public/EcoVivavideo.mp4" autoPlay loop muted playsInline className="w-full h-auto object-cover" />
   }
 
   return (
@@ -789,9 +783,11 @@ const FutureImpactPage: React.FC = () => {
                     <span>Simulador de impacto ambiental</span>
                   </li>
                 </ul>
-                <button className="w-full px-4 py-2 bg-white border-2 border-amber-600 text-amber-600 rounded-full hover:bg-amber-50 transition-all duration-300 transform hover:scale-105">
+                <Link to="/ECOstudy">
+                <button className="  w-full px-4 py-2 bg-white border-2 border-amber-600 text-amber-600 rounded-full hover:bg-amber-50 transition-all duration-300 transform hover:scale-105">
                   Explorar Ferramentas
                 </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -845,7 +841,7 @@ const FutureImpactPage: React.FC = () => {
             <div className="p-6 md:p-8">
               <div className="relative aspect-video bg-green-900/10 rounded-xl overflow-hidden shadow-inner mb-6">
                 <video controls autoPlay className="w-full h-full rounded-xl">
-                  <source src="/video/reciclagem.mp4" type="video/mp4" />
+                  <source src="../../public/EcoVivavideo.mp4" type="video/mp4" />
                   Seu navegador não suporta o elemento de vídeo.
                 </video>
               </div>
@@ -853,7 +849,7 @@ const FutureImpactPage: React.FC = () => {
               {/* Mensagem de ajuda para o vídeo */}
               <div className="text-center mb-4">
                 <a
-                  href="https://youtu.be/lEJ7yfH7HJs"
+                  href="https://www.youtube.com/watch?v=7k2G6gbqpzo"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:text-blue-800 transition-colors flex items-center justify-center gap-2"
@@ -1114,7 +1110,7 @@ const FutureImpactPage: React.FC = () => {
       )}
 
       {/* Add custom styles for animations */}
-      <style jsx global>{`
+      <style>{`
         @keyframes fadeInUp {
           from {
             opacity: 0;
