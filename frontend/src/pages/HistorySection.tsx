@@ -1,6 +1,3 @@
-"use client"
-
-
 import { useEffect, useRef, useState } from "react"
 import {
   Leaf,
@@ -28,7 +25,6 @@ export default function Home() {
 
 
   // Parallax effects
-  const heroImageY = useTransform(scrollY, [0, 500], [0, 150])
   const heroTextY = useTransform(scrollY, [0, 500], [0, -50])
   const heroOpacity = useTransform(scrollY, [0, 300], [1, 0])
 
@@ -81,14 +77,14 @@ export default function Home() {
   }
 
   const scrollToNextSection = () => {
-    const sections = ["hero", "history", "mission", "impact", "team", "contact"]
+    const sections = ["hero", "history", "mission", "team", "contact"]
     const currentIndex = sections.indexOf(activeSection)
     const nextIndex = (currentIndex + 1) % sections.length
     scrollToSection(sections[nextIndex])
   }
 
   const scrollToPrevSection = () => {
-    const sections = ["hero", "history", "mission", "impact", "team", "contact"]
+    const sections = ["hero", "history", "mission", "team", "contact"]
     const currentIndex = sections.indexOf(activeSection)
     const prevIndex = (currentIndex - 1 + sections.length) % sections.length
     scrollToSection(sections[prevIndex])
@@ -152,13 +148,8 @@ export default function Home() {
         animate={{ opacity: isLoaded ? 1 : 0 }}
         transition={{ duration: 1 }}
       >
-        <motion.div
-          className="absolute inset-0 z-0"
-          style={{
-            clipPath: "polygon(0% 0%, 100% 0, 100% 84%, 30% 94%, 0 57%)",
-            y: heroImageY,
-          }}
-        >
+        
+           
           <motion.div
             className="absolute inset-0 transform scale-110"
             style={{
@@ -177,8 +168,7 @@ export default function Home() {
             animate={{ opacity: 1 }}
             transition={{ duration: 2, delay: 0.5 }}
           />
-        </motion.div>
-
+     
         <motion.div className="relative z-10 text-center px-4" style={{ y: heroTextY, opacity: heroOpacity }}>
           <motion.h1
             className="text-7xl font-bold text-green-400 mb-6"
