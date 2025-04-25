@@ -1,4 +1,3 @@
-"use client"
 
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
@@ -8,8 +7,6 @@ import { Leaf, Recycle, Users, ArrowRight, BarChart } from "lucide-react"
 const HomePage: React.FC = () => {
   const [scrollY, setScrollY] = useState(0)
   const [isLoaded, setIsLoaded] = useState(false)
-
-  const [motivationalPhrase, setMotivationalPhrase] = useState("")
   const [calculatorValues, setCalculatorValues] = useState({
     plastic: 0,
     paper: 0,
@@ -22,7 +19,7 @@ const HomePage: React.FC = () => {
   const impactRef = useRef<HTMLDivElement>(null)
   const ctaRef = useRef<HTMLDivElement>(null)
 
-// Controla o efeito de scroll
+  // Controla o efeito de scroll
   useEffect(() => {
     const handleScroll = () => {
       setScrollY(window.scrollY)
@@ -35,19 +32,9 @@ const HomePage: React.FC = () => {
       setIsLoaded(true)
     }, 5000) // 5 segundos
 
-    // Atualiza a frase motivacional a cada 5 segundos
-    const phraseInterval = setInterval(() => {
-      const randomIndex = Math.floor(Math.random() * motivationalPhrases.length)
-      setMotivationalPhrase(motivationalPhrases[randomIndex])
-    }, 5000)
-
-    // Define a primeira frase imediatamente
-    setMotivationalPhrase(motivationalPhrases[Math.floor(Math.random() * motivationalPhrases.length)])
-
     return () => {
       window.removeEventListener("scroll", handleScroll)
       clearTimeout(timer)
-      clearInterval(phraseInterval)
     }
   }, [])
 
@@ -95,8 +82,6 @@ const HomePage: React.FC = () => {
   }
 
   const impact = calculateImpact()
-
-  // Dados para as estatísticas
 
   return (
     <div className="min-h-screen bg-white overflow-hidden">
@@ -192,7 +177,8 @@ const HomePage: React.FC = () => {
             </div>
           </div>
         </div>
-        
+      </section>
+
       {/* Features Section com cards animados */}
       <section
         ref={featuresRef}
@@ -277,12 +263,12 @@ const HomePage: React.FC = () => {
               <img
                 src="https://cdn.pixabay.com/photo/2020/05/30/17/18/wind-power-plant-5239642_1280.jpg"
                 alt="EcoViva Team"
-                className="rounded-lg shadow-2xl transform group-hover:scale-105 transition-transform duration-500 relative z-10"
+                className=" rounded-3xl shadow-2xl transform group-hover:scale-105 transition-transform duration-500 relative z-10"
               />
 
               {/* Elementos decorativos */}
-              <div className="absolute -top-5 -left-5 w-20 h-20 border-t-4 border-l-4 border-green-400 rounded-tl-lg opacity-0 group-hover:opacity-100 transition-all duration-500 delay-100"></div>
-              <div className="absolute -bottom-5 -right-5 w-20 h-20 border-b-4 border-r-4 border-green-400 rounded-br-lg opacity-0 group-hover:opacity-100 transition-all duration-500 delay-100"></div>
+              <div className=" rounded-3xl absolute -top-10 -left-12 w-20 h-20 border-t-4 border-l-4 border-green-400 rounded-tl-lg opacity-0 group-hover:opacity-100 transition-all duration-500 delay-100"></div>
+              <div className=" rounded-3xl absolute -bottom-10 -right-12 w-20 h-20 border-b-4 border-r-4 border-green-400 rounded-br-lg opacity-0 group-hover:opacity-100 transition-all duration-500 delay-100"></div>
             </div>
 
             <div className="md:w-1/2 transform transition-all duration-700">
@@ -430,7 +416,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Estilos globais para animações */}
-      <style jsx global>{`
+      <style>{`
         @keyframes bounce-slow {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-10px); }
@@ -480,25 +466,6 @@ const HomePage: React.FC = () => {
           100% {
             opacity: 1;
             transform: translateY(0);
-          }
-        }
-        
-        @keyframes fade-phrase {
-          0% {
-            opacity: 0;
-            transform: translateY(5px);
-          }
-          10% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-          90% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-          100% {
-            opacity: 0;
-            transform: translateY(-5px);
           }
         }
         
@@ -556,10 +523,6 @@ const HomePage: React.FC = () => {
         
         .animate-pulse-slow {
           animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        
-        .animate-fade-phrase {
-          animation: fade-phrase 10s ease-in-out infinite;
         }
       `}</style>
     </div>
