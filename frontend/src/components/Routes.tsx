@@ -26,6 +26,8 @@ import ConfirmEmail from '../pages/ConfirmEmail'
 import RequestPassword from '../pages/RequestPasswordReset'
 import ResetPassword from '../pages/ResetPassword'
 import ThreadDetailPage from '../pages/ThreadPage'
+import TermosDeUso from '../pages/Documents/TermosDeUso'
+import PolíticadeUsodeCookies from '../pages/Documents/PolíticadeUsodeCookies'
 
 const HideLayoutRoutes = ['/login', '/CreateAccount', '/RequestPassword']
 
@@ -79,6 +81,8 @@ const RouterComponent: React.FC = () => {
           <Route path="/ConfirmEmail/:uidb64/:token" element={<ConfirmEmail />} />
           <Route path="/ResetPassword/:uidb64/:token" element={<ResetPassword />} />
           <Route path="/forum/:slug" element={<ThreadDetailPage />} />
+          <Route path="/TermosDeUso" element={<TermosDeUso />} />
+          <Route path="/PolíticadeUsodeCookies" element={<PolíticadeUsodeCookies />} />
         </Routes>
       </LayoutWrapper>
     </Router>
