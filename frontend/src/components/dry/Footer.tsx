@@ -1,5 +1,5 @@
 import React from 'react';
-import { Leaf, Mail, Phone, MapPin, Facebook, Instagram, Twitter } from 'lucide-react';
+import { Leaf, Mail,} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
@@ -15,17 +15,6 @@ const Footer: React.FC = () => {
             <p className="text-green-100 mb-4">
               Transformando o mundo através da reciclagem e sustentabilidade, um check-in de cada vez.
             </p>
-            <div className="flex space-x-4">
-              <a href="#" className="text-green-300 hover:text-white transition-colors">
-                <Facebook className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-green-300 hover:text-white transition-colors">
-                <Instagram className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-green-300 hover:text-white transition-colors">
-                <Twitter className="h-5 w-5" />
-              </a>
-            </div>
           </div>
           
           <div>
@@ -57,17 +46,9 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4 text-green-300">Contato</h3>
             <ul className="space-y-3">
-              <li className="flex items-start space-x-3">
-                <MapPin className="h-5 w-5 text-green-300 mt-0.5" />
-                <span className="text-green-100">Av. Verde, 123, Jardim Ecológico, São Paulo - SP</span>
-              </li>
-              <li className="flex items-center space-x-3">
-                <Phone className="h-5 w-5 text-green-300" />
-                <span className="text-green-100">(11) 9876-5432</span>
-              </li>
               <li className="flex items-center space-x-3">
                 <Mail className="h-5 w-5 text-green-300" />
-                <span className="text-green-100">contato@ecoviva.com.br</span>
+                <span className="text-green-100">ecoviva200@gmail.com</span>
               </li>
             </ul>
           </div>
