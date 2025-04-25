@@ -1,6 +1,4 @@
-"use client"
-
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { Book, Leaf, TreePine, Recycle, Wind, Sprout, Fish, ArrowDownCircle } from "lucide-react"
 import Lesson1 from "../components/Lessons/Lesson1"
 import Lesson2 from "../components/Lessons/Lesson2"
@@ -13,11 +11,14 @@ import Lesson8 from "../components//Lessons/Lesson8"
 import ParticleBackground from "../components/particle-background"
 import { Link } from 'react-router-dom';
 import { motion } from "framer-motion"
+import ComingSoonModal from "../components/ComingSoonModal/ComingsoonModal"
 
 const App = () => {
   const [selectedLesson, setSelectedLesson] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [animatedItems, setAnimatedItems] = useState<number[]>([])
+  const [showComingSoonModal, setShowComingSoonModal] = useState(false)
+  const [comingSoonLesson, setComingSoonLesson] = useState<any>(null)
 
   useEffect(() => {
     // Simulating loading state
@@ -53,7 +54,7 @@ const App = () => {
       description:
         "Aprenda os fundamentos da separação de resíduos e como implementar um sistema eficiente em sua casa. Descubra o impacto positivo que pequenas mudanças podem trazer ao meio ambiente.",
       difficulty: "Iniciante",
-      duration: "20 min",
+      duration: "1 min",
       background: "from-green-400 to-emerald-600",
       topics: ["Separação", "Redução", "Reuso"],
     },
@@ -64,7 +65,7 @@ const App = () => {
       description:
         "Teste sua memória enquanto aprende sobre os diferentes materiais recicláveis e seus processos. Esta atividade interativa combina diversão com conhecimento ambiental.",
       difficulty: "Iniciante",
-      duration: "15 min",
+      duration: "5 min",
       background: "from-blue-400 to-cyan-600",
       topics: ["Materiais", "Jogos", "Aprendizado"],
     },
@@ -97,7 +98,7 @@ const App = () => {
       description:
         "Práticas agrícolas eco-friendly que preservam o solo e reduzem o impacto ambiental. Aprenda sobre permacultura, agroflorestas e técnicas de cultivo orgânico.",
       difficulty: "Avançado",
-      duration: "35 min",
+      duration: "5 min",
       background: "from-lime-400 to-green-600",
       topics: ["Permacultura", "Orgânicos", "Regeneração"],
     },
@@ -130,7 +131,7 @@ const App = () => {
       description:
         "Monitoramento e preservação do ar que respiramos. Compreenda as fontes de poluição atmosférica e as soluções para melhorar a qualidade do ar em ambientes urbanos.",
       difficulty: "Intermediário",
-      duration: "25 min",
+      duration: "5 min",
       background: "from-cyan-400 to-sky-600",
       topics: ["Poluição", "Saúde", "Urbano"],
     },
@@ -141,7 +142,7 @@ const App = () => {
       description:
         "Introdução ao mundo das plantas e sua diversidade fascinante. Aprenda sobre os diferentes tipos de plantas, suas estruturas e funções ecológicas.",
       difficulty: "Iniciante",
-      duration: "20 min",
+      duration: "5 min",
       background: "from-teal-400 to-emerald-600",
       topics: ["Plantas", "Fotossíntese", "Taxonomia"],
     },
@@ -157,6 +158,22 @@ const App = () => {
       topics: ["Livros", "Autores", "Filosofia"],
     },
   ]
+
+  const handleLessonClick = (lesson: any) => {
+    const isComingSoon = lesson.id >= 5 && lesson.id <= 10;
+    
+    if (isComingSoon) {
+      setComingSoonLesson(lesson);
+      setShowComingSoonModal(true);
+    } else {
+      setSelectedLesson(lesson.id);
+    }
+  };
+
+  const closeComingSoonModal = () => {
+    setShowComingSoonModal(false);
+    setComingSoonLesson(null);
+  };
 
   if (selectedLesson === 1) {
     return <Lesson1 onBack={() => setSelectedLesson(null)} />
@@ -262,13 +279,13 @@ const App = () => {
                 como pequenas ações podem gerar um grande impacto positivo para nosso planeta.
               </p>
               <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 1, delay: 1.5 }}
-            whileHover={{ scale: 1.2 }}
-          >
-            <ArrowDownCircle className="w-12 h-52 text-green-400 mx-auto cursor-pointer" />
-          </motion.div>
+                initial={{ y: 100, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 1, delay: 1.5 }}
+                whileHover={{ scale: 1.2 }}
+              >
+                <ArrowDownCircle className="w-12 h-52 text-green-400 mx-auto cursor-pointer" />
+              </motion.div>
             </div>
           </header>
 
@@ -283,14 +300,15 @@ const App = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {lessons.map((lesson, index) => {
-                const isComingSoon = lesson.id === 9 || lesson.id === 10
+                const isComingSoon = lesson.id >= 5;
 
                 return (
                   <div
                     key={lesson.id}
-                    onClick={() => !isComingSoon && setSelectedLesson(lesson.id)}
-                    className={`group relative overflow-hidden rounded-3xl shadow-xl transition-all duration-500 hover:scale-105 hover:shadow-2xl ${isComingSoon ? "cursor-default" : "cursor-pointer"
-                      } ${animatedItems.includes(index) ? "animate-fade-in opacity-100" : "opacity-0"}`}
+                    onClick={() => handleLessonClick(lesson)}
+                    className={`group relative overflow-hidden rounded-3xl shadow-xl transition-all duration-500 hover:scale-105 hover:shadow-2xl cursor-pointer ${
+                      animatedItems.includes(index) ? "animate-fade-in opacity-100" : "opacity-0"
+                    }`}
                     style={{
                       transitionDelay: `${index * 100}ms`,
                     }}
@@ -305,7 +323,7 @@ const App = () => {
                     {/* Blur overlay for coming soon lessons */}
                     {isComingSoon && (
                       <div className="absolute inset-0 backdrop-blur-sm bg-black/20 z-10 flex flex-col items-center justify-center">
-                        <div className="bg-white/20 px-6 py-3 rounded-full backdrop-blur-sm text-white font-bold text-lg shadow-lg">
+                        <div className="bg-white/20 px-6 py-3 rounded-full backdrop-blur-sm text-white font-bold text-lg shadow-lg animate-pulse">
                           Em breve
                         </div>
                       </div>
@@ -343,7 +361,7 @@ const App = () => {
 
                         <div className="flex items-center justify-between">
                           <div className="bg-white/20 px-4 py-2 rounded-full backdrop-blur-sm text-sm shadow-md">
-                            {lesson.id <= 8 ? "Disponível" : "Em breve"}
+                            {lesson.id <= 4 ? "Disponível" : "Em breve"}
                           </div>
 
                           <div className="w-10 h-10 flex items-center justify-center bg-white/20 rounded-full group-hover:bg-white/30 transition-all duration-300 shadow-md">
@@ -389,6 +407,11 @@ const App = () => {
               </div>
             </div>
           </section>
+
+          {/* Coming Soon Modal */}
+          {showComingSoonModal && comingSoonLesson && (
+            <ComingSoonModal lesson={comingSoonLesson} onClose={closeComingSoonModal} />
+          )}
         </>
       )}
     </div>
