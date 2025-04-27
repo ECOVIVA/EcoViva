@@ -193,7 +193,7 @@ const Navbar: React.FC = () => {
                     >
                       {user?.photo ? (
                         <img
-                          src={`http://localhost:8000/${user.photo}`}
+                          src={`${user.photo}`}
                           alt={user.name}
                           className={`w-10 h-10 rounded-full border-2 ${
                             isScrolled ? 'border-green-600/50 group-hover:border-green-500' : 'border-green-600/30 group-hover:border-green-600'
