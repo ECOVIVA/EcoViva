@@ -23,7 +23,7 @@ class UsersAdmin(admin.ModelAdmin):
     # Organização dos campos exibidos na página de detalhes do usuário
     fieldsets = (
         (None, {"fields": ("username", "email", "password")}),  # Campos essenciais de identificação e autenticação
-        ("Informações Pessoais", {"fields": ("first_name", "last_name", "phone", "photo")}),  # Informações pessoais do usuário
+        ("Informações Pessoais", {"fields": ("first_name", "last_name", "phone", "photo", 'bio',"interests")}),  # Informações pessoais do usuário
         ("Status", {"fields": ("is_active", "is_staff", "is_superuser")}),  # Status e permissões do usuário
     )
 
@@ -35,3 +35,10 @@ class UsersAdmin(admin.ModelAdmin):
 
     # Configuração de paginação para melhor visualização e desempenho
     list_per_page = 10  # Limita a exibição a 10 usuários por página na listagem
+
+
+@admin.register(models.Interests)
+class InterestsAdmin(admin.ModelAdmin):
+    list_display = ('name',)  # Exibe o campo 'name' na lista
+    search_fields = ('name',)  # Permite buscar pelo nome
+    ordering = ('name',)  # Ordena alfabeticamente

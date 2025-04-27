@@ -1,372 +1,541 @@
-import React, { useState } from 'react';
-import { 
-  Leaf, 
-  TreePine, 
-  Settings, 
-  LogOut, 
-  Bell, 
-  BarChart3, 
-  Calendar, 
-  FileText, 
-  Users,
-  ChevronRight,
-  Target,
-  Award,
-  Recycle,
-  Heart,
-  MapPin,
-  Mail,
-  Phone,
-  Link,
-  Clock,
-  MessageSquare
-} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+"use client"
 
-const StatsCard = ({ icon, value, label }) => (
-  <div className="bg-white rounded-lg shadow p-4">
-    <div className="flex items-center justify-center mb-2 text-green-500">{icon}</div>
-    <h3 className="text-center text-2xl font-bold text-gray-900">{value}</h3>
-    <p className="text-center text-sm text-gray-500">{label}</p>
-  </div>
-);
+import type React from "react"
+import { useEffect, useState } from "react"
+import { Leaf, Edit2, Save, Camera, ImageIcon, Heart, Plus, Sparkles, CloudRain, Sun, Wind } from "lucide-react"
+import { z } from "zod"
+import {motion} from "framer-motion"
+import api from "../services/API/axios"
+import routes from "../services/API/routes"
 
-const ProfileCard = ({ user }) => (
-  <div className="bg-white rounded-lg shadow p-6">
-    <div className="text-center">
-      <img 
-        src={user.avatar} 
-        alt={user.name}
-        className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-green-100"
-      />
-      <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
-      <p className="text-gray-500">{user.role}</p>
-      <p className="mt-2 text-sm text-gray-600">{user.bio}</p>
-    </div>
-    <div className="mt-6 space-y-4">
-      <div className="flex items-center text-gray-600">
-        <MapPin className="h-5 w-5 mr-2" />
-        <span className="text-sm">{user.location}</span>
-      </div>
-      <div className="flex items-center text-gray-600">
-        <Mail className="h-5 w-5 mr-2" />
-        <span className="text-sm">{user.email}</span>
-      </div>
-      <div className="flex items-center text-gray-600">
-        <Phone className="h-5 w-5 mr-2" />
-        <span className="text-sm">{user.phone}</span>
-      </div>
-    </div>
-    <div className="mt-6">
-      <h3 className="font-semibold text-gray-900 mb-2">Expertise</h3>
-      <div className="flex flex-wrap gap-2">
-        {user.expertise.map((skill, index) => (
-          <span 
-            key={index}
-            className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm"
-          >
-            {skill}
-          </span>
-        ))}
-      </div>
-    </div>
-  </div>
-);
+// Enhanced schema with more specific validations
+const profileSchema = z.object({
+  bio: z.string().min(10, "Bio deve ter pelo menos 10 caracteres").max(500, "Bio não pode exceder 500 caracteres"),
+  profileImage: z
+    .instanceof(File)
+    .refine((file) => file.size <= 5 * 1024 * 1024, "Imagem de perfil não pode exceder 5MB")
+    .optional()
+    .or(z.string()),
+  backgroundImage: z
+    .instanceof(File)
+    .refine((file) => file.size <= 5 * 1024 * 1024, "Imagem de fundo não pode exceder 5MB")
+    .optional()
+    .or(z.string()),
+  interests: z.array(z.string()).max(10, "Você pode selecionar no máximo 10 interesses"),
+})
 
-const ProjectCard = ({ project }) => (
-  <div className="border rounded-lg p-4 hover:bg-gray-50 transition-colors duration-200">
-    <div className="flex justify-between items-center">
-      <div>
-        <h3 className="font-medium text-gray-900">{project.name}</h3>
-        <p className="text-sm text-gray-500">Prazo: {project.deadline}</p>
-      </div>
-      <div className="flex items-center space-x-2">
-        <span className={`px-2 py-1 text-xs rounded-full ${
-          project.status === 'Em andamento' ? 'bg-blue-100 text-blue-800' :
-          project.status === 'Finalização' ? 'bg-green-100 text-green-800' :
-          'bg-yellow-100 text-yellow-800'
-        }`}>
-          {project.status}
-        </span>
-        <ChevronRight className="h-5 w-5 text-gray-400" />
-      </div>
-    </div>
-    <div className="mt-4">
-      <div className="relative pt-1">
-        <div className="flex mb-2 items-center justify-between">
-          <div>
-            <span className="text-xs font-semibold inline-block text-green-600">
-              {project.progress}%
-            </span>
-          </div>
-        </div>
-        <div className="overflow-hidden h-2 text-xs flex rounded bg-green-100">
-          <div 
-            style={{ width: `${project.progress}%` }}
-            className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-green-500 transition-all duration-500"
-          ></div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
+const availableInterests = [
+  "Agricultura Sustentável",
+  "Alimentação Sustentável",
+  "Arquitetura Verde",
+  "Compostagem",
+  "Conservação da Água",
+  "Consumo Consciente",
+  "Ecoeducação",
+  "Economia Circular",
+  "Energias Renováveis",
+  "Gestão de Resíduos",
+  "Mobilidade Sustentável",
+  "Moda Sustentável",
+  "Mudanças Climáticas",
+  "Poluição e Controle Ambiental",
+  "Preservação da Biodiversidade",
+  "Produção Limpa",
+  "Reciclagem",
+  "Redução de Plástico",
+  "Reflorestamento",
+  "Zero Waste (Lixo Zero)",
+]
 
-function DashboardPage() {
-  const navigate = useNavigate();
-  const [selectedMonth, setSelectedMonth] = useState(new Date());
+function App() {
+  const [isEditing, setIsEditing] = useState(false)
+  const [bio, setBio] = useState("")
+  const [profileImage, setProfileImage] = useState("https://via.placeholder.com/150")
+  const [backgroundImage, setBackgroundImage] = useState(
+    "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2560&auto=format",
+  )
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [userName, setUserName] = useState("")
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([])
+  const [showInterestSelector, setShowInterestSelector] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const user = {
-    name: 'Ana Silva',
-    role: 'Gerente de Projetos',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=150&q=80',
-    location: 'São Paulo, SP',
-    email: 'ana.silva@ecoviva.com',
-    phone: '+55 (11) 98765-4321',
-    bio: 'Apaixonada por sustentabilidade e inovação ambiental. Trabalhando para criar um futuro mais verde.',
-    socialLinks: {
-      linkedin: 'linkedin.com/in/anasilva',
-      twitter: 'twitter.com/anasilva',
-    },
-    expertise: ['Gestão Ambiental', 'Sustentabilidade', 'Projetos Sociais', 'Educação Ambiental']
-  };
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        setIsLoading(true)
+        const response = await api.get(routes.user.profile)
+        const data = response.data
 
-  const projects = [
-    {
-      name: 'Reflorestamento Vale Verde',
-      progress: 75,
-      status: 'Em andamento',
-      deadline: '15 Abril 2024'
-    },
-    {
-      name: 'Energia Solar Comunidade',
-      progress: 90,
-      status: 'Finalização',
-      deadline: '30 Março 2024'
-    },
-    {
-      name: 'Reciclagem Urbana',
-      progress: 30,
-      status: 'Iniciado',
-      deadline: '1 Junho 2024'
+        setUserName(data.username || "Usuário")
+        setBio(data.bio || "")
+        setSelectedInterests(data.interests || [])
+
+        if (data.photo) {
+          const fullProfileUrl = `${data.photo}`
+          setProfileImage(fullProfileUrl)
+          localStorage.setItem("profileImage", fullProfileUrl)
+        } else {
+          const storedProfileImage = localStorage.getItem("profileImage")
+          if (storedProfileImage) setProfileImage(storedProfileImage)
+        }
+
+        if (data.backgroundImage) {
+          const fullBgUrl = `${data.backgroundImage}`
+          setBackgroundImage(fullBgUrl)
+          localStorage.setItem("backgroundImage", fullBgUrl)
+        } else {
+          const storedBackgroundImage = localStorage.getItem("backgroundImage")
+          if (storedBackgroundImage) setBackgroundImage(storedBackgroundImage)
+        }
+      } catch (err) {
+        console.error("Erro ao carregar perfil:", err)
+        setErrors({ general: "Não foi possível carregar o perfil." })
+      } finally {
+        setIsLoading(false)
+      }
     }
-  ];
 
-  const stats = [
-    { icon: <TreePine />, label: 'Árvores Plantadas', value: '1,234' },
-    { icon: <Users />, label: 'Voluntários', value: '456' },
-    { icon: <BarChart3 />, label: 'Projetos Ativos', value: '12' },
-    { icon: <Calendar />, label: 'Eventos do Mês', value: '8' }
-  ];
+    fetchProfile()
+  }, [])
 
-  const ecoGoals = [
-    {
-      title: 'Plantar 1987675674 Árvores',
-      progress: 65,
-      deadline: 'Dezembro 2024',
-      type: 'Reflorestamento'
-    },
-    {
-      title: 'Coletar 999999999kg de Recicláveis',
-      progress: 40,
-      deadline: 'Junho 2024',
-      type: 'Reciclagem'
-    },
-    {
-      title: 'Educar 1000000 Crianças',
-      progress: 80,
-      deadline: 'Setembro 2024',
-      type: 'Educação'
+  const validateImageDimensions = (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.onload = () => {
+        URL.revokeObjectURL(img.src)
+        resolve(img.width <= 1200 && img.height <= 1200)
+      }
+      img.src = URL.createObjectURL(file)
+    })
+  }
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "profile" | "background") => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      // Validate file size
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors({
+          ...errors,
+          [type]: `Imagem de ${type === "profile" ? "perfil" : "fundo"} não pode exceder 5MB`,
+        })
+        return
+      }
+
+      // Validate image dimensions
+      const validDimensions = await validateImageDimensions(file)
+      if (!validDimensions) {
+        setErrors({
+          ...errors,
+          [type]: `Imagem de ${type === "profile" ? "perfil" : "fundo"} não pode exceder 1200x1200 pixels`,
+        })
+        return
+      }
+
+      // Clear previous errors for this field
+      const newErrors = { ...errors }
+      delete newErrors[type]
+      setErrors(newErrors)
+
+      const imageUrl = URL.createObjectURL(file)
+
+      if (type === "profile") {
+        setProfileImage(imageUrl)
+      } else {
+        setBackgroundImage(imageUrl)
+      }
+
+      const uploadedPhotoUrl = await uploadPhotoToServer(file, type)
+      if (uploadedPhotoUrl) {
+        if (type === "profile") {
+          setProfileImage(uploadedPhotoUrl)
+          localStorage.setItem("profileImage", uploadedPhotoUrl)
+        } else {
+          setBackgroundImage(uploadedPhotoUrl)
+          localStorage.setItem("backgroundImage", uploadedPhotoUrl)
+        }
+      }
+    } catch (err) {
+      console.error(`Erro ao processar imagem de ${type}:`, err)
+      setErrors({
+        ...errors,
+        [type]: `Erro ao processar imagem de ${type === "profile" ? "perfil" : "fundo"}`,
+      })
     }
-  ];
+  }
 
-  const recentPosts = [
-    {
-      title: 'Como Iniciar sua Horta Urbana',
-      date: '2 dias atrás',
-      likes: 156,
-      comments: 23,
-      image: 'https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80'
-    },
-    {
-      title: 'Dicas de Compostagem Doméstica',
-      date: '4 dias atrás',
-      likes: 98,
-      comments: 15,
-      image: 'https://images.unsplash.com/photo-1516253593875-bd7ba052fbc5?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80'
-    }
-  ];
+  async function uploadPhotoToServer(photo: File, type: "profile" | "background") {
+    try {
+      setIsLoading(true)
+      const formData = new FormData()
+      if (type === "profile") {
+        formData.append("photo", photo)
+      } else {
+        formData.append("backgroundImage", photo)
+      }
 
-  const upcomingEvents = [
-    {
-      title: 'Mutirão de Limpeza - Praia de Santos',
-      date: '25 Março 2024',
-      time: '09:00',
-      location: 'Santos, SP',
-      participants: 45
-    },
-    {
-      title: 'Workshop de Reciclagem Criativa',
-      date: '2 Abril 2024',
-      time: '14:00',
-      location: 'Centro Cultural, SP',
-      participants: 30
-    },
-    {
-      title: 'Plantio Comunitário',
-      date: '15 Abril 2024',
-      time: '08:00',
-      location: 'Parque Villa-Lobos',
-      participants: 80
+      const response = await api.patch(routes.user.update, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+
+      const key = type === "profile" ? "photo" : "backgroundImage"
+      const serverPath = response.data[key]
+      if (!serverPath) throw new Error("Caminho de imagem inválido no retorno")
+
+      return `http://localhost:8000${serverPath}`
+    } catch (err: any) {
+      console.error("Erro ao enviar foto:", err)
+
+      // Handle specific API errors
+      if (err.response?.data?.message) {
+        setErrors({
+          ...errors,
+          [type]: err.response.data.message,
+        })
+      } else {
+        setErrors({
+          ...errors,
+          [type]: `Erro ao enviar ${type === "profile" ? "foto de perfil" : "imagem de fundo"} para o servidor.`,
+        })
+      }
+      return null
+    } finally {
+      setIsLoading(false)
     }
-  ];
+  }
+
+  const toggleInterest = (interest: string) => {
+    setSelectedInterests((prev) => {
+      const newInterests = prev.includes(interest) ? prev.filter((i) => i !== interest) : [...prev, interest]
+
+      // Validate interests count
+      if (newInterests.length > 10) {
+        setErrors({
+          ...errors,
+          interests: "Você pode selecionar no máximo 10 interesses",
+        })
+        return prev
+      }
+
+      // Clear interests error if it exists
+      if (errors.interests) {
+        const newErrors = { ...errors }
+        delete newErrors.interests
+        setErrors(newErrors)
+      }
+
+      return newInterests
+    })
+  }
+
+  const handleSave = async () => {
+    try {
+      setIsLoading(true)
+      setErrors({})
+  
+      profileSchema.parse({
+        bio,
+        profileImage,
+        backgroundImage,
+        interests: selectedInterests,
+      })
+  
+      await api.patch(routes.user.update, {
+        bio,
+        interests: selectedInterests,
+      })
+  
+      setIsEditing(false)
+    } catch (err: unknown) {
+      if (err instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {}
+        err.errors.forEach((error) => {
+          const field = error.path[0].toString()
+          newErrors[field] = error.message
+        })
+        setErrors(newErrors)
+      } else if (
+        typeof err === 'object' &&
+        err !== null &&
+        'response' in err &&
+        typeof (err as any).response === 'object' &&
+        (err as any).response?.data
+      ) {
+        const response = (err as any).response
+  
+        if (response.data.errors) {
+          setErrors(response.data.errors)
+        } else if (response.data.message) {
+          setErrors({ general: response.data.message })
+        }
+      } else {
+        console.error("Erro ao salvar perfil:", err)
+        setErrors({ general: "Erro ao salvar as alterações." })
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top Navigation */}
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <button className="p-2 rounded-full hover:bg-gray-100">
-                <Bell className="h-6 w-6 text-gray-600" />
-              </button>
-              <button className="p-2 rounded-full hover:bg-gray-100">
-                <Settings className="h-6 w-6 text-gray-600" />
-              </button>
+    <div className="min-h-screen bg-gradient-to-b from-green-50 to-emerald-100 p-2 sm:p-4 md:p-8">
+      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div className="relative">
+          <div className="relative h-32 sm:h-40 md:h-48 bg-gradient-to-r from-emerald-500 to-green-400 overflow-hidden group">
+            <div
+              className="absolute inset-0 bg-cover bg-center opacity-20"
+              style={{ backgroundImage: `url(${backgroundImage})` }}
+            />
+
+            {/* Animated nature elements */}
+            <motion.div className="absolute inset-0 overflow-hidden">
+              {Array.from({ length: 15 }).map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute text-white/20"
+                  initial={{
+                    x: Math.random() * 100 + "%",
+                    y: Math.random() * 100 + "%",
+                    opacity: 0,
+                  }}
+                  animate={{
+                    y: [Math.random() * 100 + "%", Math.random() * 100 + "%"],
+                    opacity: [0.1, 0.3, 0.1],
+                    rotate: [0, 360],
+                  }}
+                  transition={{
+                    duration: 15 + Math.random() * 20,
+                    repeat: Number.POSITIVE_INFINITY,
+                    delay: Math.random() * 5,
+                  }}
+                >
+                  {i % 5 === 0 ? (
+                    <Leaf size={i % 2 === 0 ? 24 : 16} />
+                  ) : i % 5 === 1 ? (
+                    <Wind size={i % 2 === 0 ? 24 : 16} />
+                  ) : i % 5 === 2 ? (
+                    <Sun size={i % 2 === 0 ? 24 : 16} />
+                  ) : i % 5 === 3 ? (
+                    <CloudRain size={i % 2 === 0 ? 24 : 16} />
+                  ) : (
+                    <Sparkles size={i % 2 === 0 ? 24 : 16} />
+                  )}
+                </motion.div>
+              ))}
+            </motion.div>
+
+            {/* Overlay gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+
+            {isEditing && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex flex-col items-center gap-2">
+                  <ImageIcon className="text-white" size={24} />
+                  <label className="cursor-pointer px-3 py-1 bg-white/90 rounded text-sm hover:bg-white/100 transition-colors">
+                    Escolher Imagem de Fundo
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageChange(e, "background")}
+                      className="hidden"
+                      disabled={isLoading}
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="absolute -bottom-12 sm:-bottom-14 md:-bottom-16 left-4 sm:left-6 md:left-8 z-10">
+            <div className="relative group">
+              <img
+                src={profileImage || "/placeholder.svg"}
+                alt="Profile"
+                className="w-28 h-28 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full border-4 border-white shadow-lg object-cover bg-white"
+              />
+              {isEditing && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                  <div className="flex flex-col items-center gap-2">
+                    <Camera className="text-white" size={20} />
+                    <label className="cursor-pointer px-2 py-1 bg-white/90 rounded text-xs sm:text-sm hover:bg-white/100 transition-colors">
+                      Escolher Foto
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageChange(e, "profile")}
+                        className="hidden"
+                        disabled={isLoading}
+                      />
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
-      </nav>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Profile Section */}
-          <div className="lg:col-span-1 space-y-8">
-            <ProfileCard user={user} />
-            {/* Recent Posts */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Posts Recentes</h3>
-              <div className="space-y-4">
-                {recentPosts.map((post, index) => (
-                  <div key={index} className="flex space-x-4">
-                    <img 
-                      src={post.image}
-                      alt={post.title}
-                      className="w-20 h-20 rounded-lg object-cover"
-                    />
-                    <div>
-                      <h4 className="font-medium text-gray-900">{post.title}</h4>
-                      <p className="text-sm text-gray-500">{post.date}</p>
-                      <div className="flex items-center space-x-4 mt-2">
-                        <span className="flex items-center text-sm text-gray-500">
-                          <Heart className="h-4 w-4 mr-1" /> {post.likes}
-                        </span>
-                        <span className="flex items-center text-sm text-gray-500">
-                          <MessageSquare className="h-4 w-4 mr-1" /> {post.comments}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+        <div className="pt-16 sm:pt-18 md:pt-20 px-4 sm:px-6 md:px-8 pb-6 md:pb-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 md:mb-6 gap-3">
+            <div className="flex flex-col">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center gap-2">
+                {userName} <Leaf className="text-green-500" />
+              </h1>
             </div>
+            <button
+              onClick={() => (isEditing ? handleSave() : setIsEditing(true))}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Processando...
+                </span>
+              ) : (
+                <>
+                  {isEditing ? <Save size={20} /> : <Edit2 size={20} />}
+                  {isEditing ? "Salvar" : "Editar"}
+                </>
+              )}
+            </button>
           </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {stats.map((stat, index) => (
-                <StatsCard key={index} {...stat} />
-              ))}
+          {errors.background && (
+            <div className="text-red-500 text-sm mb-4 bg-red-50 p-3 rounded-lg border border-red-100">
+              {errors.background}
+            </div>
+          )}
+
+          {errors.profile && (
+            <div className="text-red-500 text-sm mb-4 bg-red-50 p-3 rounded-lg border border-red-100">
+              {errors.profile}
+            </div>
+          )}
+
+          <div className="relative mb-6">
+            {isEditing ? (
+              <div className="relative">
+                <textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  rows={3}
+                  className={`w-full p-4 border-2 rounded-lg focus:outline-none focus:ring-2 transition-all bg-emerald-50/50 ${
+                    errors.bio ? "border-red-300 focus:ring-red-500" : "border-emerald-100 focus:ring-emerald-500"
+                  }`}
+                  placeholder="Compartilhe um pouco sobre você..."
+                  disabled={isLoading}
+                />
+                <div
+                  className={`absolute bottom-3 right-3 text-sm font-medium ${
+                    bio.length > 500 ? "text-red-500" : "text-emerald-600"
+                  }`}
+                >
+                  {bio.length} / 500
+                </div>
+              </div>
+            ) : (
+              <div className="bg-gradient-to-r from-emerald-50 to-green-50 p-4 rounded-lg border border-emerald-100">
+                <p className="text-gray-700 leading-relaxed">{bio || "Bio não atualizada"}</p>
+              </div>
+            )}
+            {errors.bio && <p className="text-red-500 text-sm mt-1">{errors.bio}</p>}
+          </div>
+
+          {errors.general && (
+            <div className="text-red-500 text-sm mb-4 bg-red-50 p-3 rounded-lg border border-red-100">
+              {errors.general}
+            </div>
+          )}
+
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Heart className="text-emerald-500" size={20} />
+                <h3 className="text-xl font-bold text-gray-800">Interesses</h3>
+              </div>
+              {isEditing && (
+                <button
+                  onClick={() => setShowInterestSelector(!showInterestSelector)}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isLoading}
+                >
+                  <Plus size={16} />
+                  {showInterestSelector ? "Fechar" : "Adicionar"}
+                </button>
+              )}
             </div>
 
-            {/* Eco Goals */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Metas ECO</h2>
-                <div className="space-y-6">
-                  {ecoGoals.map((goal, index) => (
-                    <div key={index} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center">
-                          <Target className="h-5 w-5 text-green-500 mr-2" />
-                          <h3 className="font-medium text-gray-900">{goal.title}</h3>
-                        </div>
-                        <span className="text-sm text-gray-500">{goal.deadline}</span>
-                      </div>
-                      <div className="mt-2">
-                        <div className="flex justify-between mb-1">
-                          <span className="text-sm font-medium text-green-600">{goal.progress}%</span>
-                          <span className="text-sm text-gray-500">{goal.type}</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-green-500 h-2 rounded-full transition-all duration-500"
-                            style={{ width: `${goal.progress}%` }}
-                          ></div>
-                        </div>
-                      </div>
+            {errors.interests && (
+              <div className="text-red-500 text-sm mb-4 bg-red-50 p-3 rounded-lg border border-red-100">
+                {errors.interests}
+              </div>
+            )}
+
+            {!isEditing && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {selectedInterests.length > 0 ? (
+                  selectedInterests.map((interest) => (
+                    <div
+                      key={interest}
+                      className="p-3 rounded-lg bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-100 shadow-sm"
+                    >
+                      <p className="text-sm font-medium text-emerald-800">{interest}</p>
                     </div>
-                  ))}
-                </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 italic col-span-full">Nenhum interesse selecionado</p>
+                )}
               </div>
-            </div>
+            )}
 
-            {/* Calendar and Events */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Próximos Eventos</h2>
-                <div className="space-y-4">
-                  {upcomingEvents.map((event, index) => (
-                    <div key={index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors duration-200">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-medium text-gray-900">{event.title}</h3>
-                          <div className="mt-2 space-y-1">
-                            <p className="text-sm text-gray-500 flex items-center">
-                              <Calendar className="h-4 w-4 mr-2" />
-                              {event.date}
-                            </p>
-                            <p className="text-sm text-gray-500 flex items-center">
-                              <Clock className="h-4 w-4 mr-2" />
-                              {event.time}
-                            </p>
-                            <p className="text-sm text-gray-500 flex items-center">
-                              <MapPin className="h-4 w-4 mr-2" />
-                              {event.location}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center">
-                          <div className="text-center">
-                            <Users className="h-5 w-5 text-green-500 mb-1" />
-                            <span className="text-sm text-gray-600">{event.participants}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+            {isEditing && showInterestSelector && (
+              <div className="overflow-hidden">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 p-4 bg-emerald-50 rounded-lg border border-emerald-100">
+                  {availableInterests.map((interest) => (
+                    <button
+                      key={interest}
+                      onClick={() => toggleInterest(interest)}
+                      disabled={isLoading || (selectedInterests.length >= 10 && !selectedInterests.includes(interest))}
+                      className={`p-2 rounded-lg text-sm font-medium transition-all ${
+                        selectedInterests.includes(interest)
+                          ? "bg-emerald-500 text-white shadow-md"
+                          : selectedInterests.length >= 10
+                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : "bg-white text-gray-600 hover:bg-emerald-100 hover:text-emerald-700"
+                      }`}
+                    >
+                      {interest}
+                    </button>
                   ))}
                 </div>
               </div>
-            </div>
-
-            {/* Projects List */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Projetos Ativos</h2>
-                <div className="space-y-4">
-                  {projects.map((project, index) => (
-                    <ProjectCard key={index} project={project} />
-                  ))}
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default DashboardPage;
+export default App;

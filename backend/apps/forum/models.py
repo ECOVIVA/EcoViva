@@ -56,6 +56,7 @@ class Thread(models.Model):
     title = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=False)
     content = models.TextField()
+    likes = models.ManyToManyField(Users, related_name='liked_threads', blank=True)
     tags = models.ManyToManyField(Tags, blank=True)  # Relacionamento muitos-para-muitos com Tags
     author = models.ForeignKey(Users, on_delete=models.CASCADE)  # Relaciona a thread a um usuário
     created_at = models.DateTimeField(default=timezone.now)  # Define a data de criação automaticamente
@@ -82,6 +83,31 @@ class Thread(models.Model):
     def __str__(self):
         return self.title  # Retorna o título da thread para facilitar a identificação
 
+class Post(models.Model):
+    """
+    Modelo que representa um post dentro de uma thread.
+
+    - thread: Thread à qual o post pertence.
+    - content: Conteúdo do post.
+    - author: Usuário que criou o post.
+    - created_at: Data de criação.
+    - updated_at: Data da última modificação.
+    - parent_post: Post ao qual este post está respondendo (caso seja uma resposta).
+    """
+
+    thread = models.ForeignKey(Thread, on_delete=models.CASCADE, related_name='posts')  # Relaciona o post à thread
+    content = models.TextField()
+    author = models.ForeignKey(Users, on_delete=models.CASCADE)  # Relaciona o post a um usuário
+    created_at = models.DateTimeField(default=timezone.now)  # Define a data de criação automaticamente
+    updated_at = models.DateTimeField(auto_now=True)  # Atualiza a data toda vez que o post for alterado
+
+    def __str__(self):
+        """
+        Retorna uma string representativa do post, indicando se é uma resposta ou um post principal.
+        """
+        if self.parent_post:
+            return f'Resposta de {self.author.username} para o post {self.parent_post.id} em "{self.thread.title}"'
+        return f'Post de {self.author.username} em "{self.thread.title}"'
 
 # ----- Sinais para manipulação de arquivos de imagem -----
 
@@ -112,31 +138,3 @@ def delete_old_image(sender, instance, **kwargs):
     if old_instance.cover and old_instance.cover != instance.cover:  
         if os.path.isfile(old_instance.cover.path):  # Verifica se a imagem antiga existe
             os.remove(old_instance.cover.path)  # Exclui a imagem antiga do servidor
-
-
-class Post(models.Model):
-    """
-    Modelo que representa um post dentro de uma thread.
-
-    - thread: Thread à qual o post pertence.
-    - content: Conteúdo do post.
-    - author: Usuário que criou o post.
-    - created_at: Data de criação.
-    - updated_at: Data da última modificação.
-    - parent_post: Post ao qual este post está respondendo (caso seja uma resposta).
-    """
-
-    thread = models.ForeignKey(Thread, on_delete=models.CASCADE, related_name='posts')  # Relaciona o post à thread
-    content = models.TextField()
-    author = models.ForeignKey(Users, on_delete=models.CASCADE)  # Relaciona o post a um usuário
-    created_at = models.DateTimeField(default=timezone.now)  # Define a data de criação automaticamente
-    updated_at = models.DateTimeField(auto_now=True)  # Atualiza a data toda vez que o post for alterado
-    parent_post = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE)  # Permite respostas a posts
-
-    def __str__(self):
-        """
-        Retorna uma string representativa do post, indicando se é uma resposta ou um post principal.
-        """
-        if self.parent_post:
-            return f'Resposta de {self.author.username} para o post {self.parent_post.id} em "{self.thread.title}"'
-        return f'Post de {self.author.username} em "{self.thread.title}"'

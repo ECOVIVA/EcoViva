@@ -20,6 +20,11 @@ from . import models
     serem armazenados no banco de dados ou retornados na API, promovendo segurança e confiabilidade.
 """
 
+class InterestsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Interests  # Define o modelo associado ao serializer
+        fields = ['name']  
+
 # Serializer para o modelo de usuário (Users)
 class UsersSerializer(serializers.ModelSerializer):
     """
@@ -31,12 +36,18 @@ class UsersSerializer(serializers.ModelSerializer):
     """
     
     # Campo de senha configurado como write-only (não será retornado na resposta).
+    interests = serializers.SlugRelatedField(
+        many=True,
+        slug_field='name',
+        queryset=models.Interests.objects.all(),
+        required=False
+    )
     password = serializers.CharField(write_only=True)
 
     class Meta:
         model = models.Users  # Define o modelo associado ao serializer
-        fields = ['id', 'username', 'first_name', 'last_name', 'password', 'email', 'phone', 'photo']  # Campos incluídos na serialização
-
+        fields = ['id', 'username', 'first_name', 'last_name', 'password', 'email','bio' ,'interests' ,'phone', 'photo']  # Campos incluídos na serialização
+    
     def validate_phone(self, value):
         """
         Valida e formata o número de telefone.
@@ -66,6 +77,13 @@ class UsersSerializer(serializers.ModelSerializer):
         except serializers.ValidationError as e:
             raise serializers.ValidationError({"password": str(e)})  # Retorna o erro de validação
         return value
+    
+    def validate_bio(self, value):
+        max_line_breaks = 5
+        line_breaks = value.count('\n')
+        if line_breaks > max_line_breaks:
+            raise serializers.ValidationError(f'Máximo de {max_line_breaks} quebras de linha permitidas.')
+        return value
 
     def create(self, validated_data):
         """
@@ -74,10 +92,25 @@ class UsersSerializer(serializers.ModelSerializer):
         - Remove a senha do conjunto de dados antes de criar o usuário.
         - Define a senha de maneira criptografada.
         """
-        password = validated_data.pop('password')  # Remove a senha dos dados validados
+        password = validated_data.pop('password')
+        interests = validated_data.pop('interests', [])  # Extrai os interesses
 
-        user = super().create(validated_data)  # Cria o usuário sem a senha
-        user.set_password(password)  # Define a senha criptografada
-        user.save()  # Salva o usuário no banco de dados
+        user = models.Users.objects.create(**validated_data)  # Cria o usuário
+        user.set_password(password)
+        user.save()
+
+        user.interests.set(interests)  # Associa os interesses ao usuário
 
         return user
+    
+    def update(self, instance, validated_data):
+        interests_data = validated_data.pop('interests', None)
+        for attr, value in validated_data.items():
+            if attr == 'password':
+                instance.set_password(value)
+            else:
+                setattr(instance, attr, value)
+        instance.save()
+        if interests_data is not None:
+            instance.interests.set(interests_data)
+        return instance

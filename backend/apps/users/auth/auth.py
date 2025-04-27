@@ -1,5 +1,6 @@
 from django.contrib.auth.backends import BaseBackend  
 from django.contrib.auth import get_user_model  
+from rest_framework.exceptions import PermissionDenied
 
 User = get_user_model()  # Obtém o modelo de usuário utilizado no projeto, seja o padrão ou customizado
 
@@ -40,4 +41,7 @@ class EmailBackend(BaseBackend):
         """
         Método que verifica se o usuário pode ser autenticado (se está ativo).
         """
-        return user.is_active  # Retorna True se o usuário estiver ativo, caso contrário, False
+        if user.is_active:
+            return True
+        else:
+            raise PermissionDenied({'detail': "Autentique seu email para conseguir o acesso!!"})

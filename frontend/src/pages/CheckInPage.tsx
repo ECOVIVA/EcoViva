@@ -1,6 +1,4 @@
-"use client"
-
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, AwaitedReactNode, JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal } from "react"
 import {
   Send,
   Clock,
@@ -15,13 +13,14 @@ import {
   Star,
 } from "lucide-react"
 import { useIsMobile } from "../hooks/use-mobile"
-import axios from "axios"
-import type { CheckIn, UserProgress } from "../types/types"
-import { ranks } from "./data/ranks"
+import type { UserProgress } from "../types/types"
+import { ranks } from "../pages/data/ranks"
+import api from "../services/API/axios"
+import routes from "../services/API/routes"
+import ErrorMessage from "../components/Errosmensagem/Errormenssage"
+import { checkInSchema, parseApiError } from "../schemas/checkinSchemas"
 
 const SustainableCheckin = () => {
-  const username = "usuario_logado" // Nome de usuário atual do sistema
-  const isMobile = useIsMobile()
   const bubbleRef = useRef<HTMLDivElement>(null)
   const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([])
   const [rippleCount, setRippleCount] = useState(0)
@@ -35,28 +34,29 @@ const SustainableCheckin = () => {
   const [comment, setComment] = useState("")
   const [isCheckingIn, setIsCheckingIn] = useState(false)
   const [checkInSuccess, setCheckInSuccess] = useState(false)
+  const [error, setError] = useState<string>("")
+
+  const fetchBubbleData = async () => {
+    try {
+      // Use the correct endpoint from the Django URLs
+      const response = await api.get(routes.user.bubble.profile)
+      if (response.status === 200) {
+        const bubble = response.data
+        setUserProgress({
+          currentXP: bubble.progress || 0,
+          currentRank: bubble.rank?.id || 1,
+          checkIns: bubble.check_ins || [],
+        })
+      } else {
+        console.error("Erro ao buscar dados da bolha.")
+      }
+    } catch (error) {
+      console.error("Erro ao conectar com a API:", error)
+    }
+  }
 
   // Fetch Bubble data when the component is mounted
   useEffect(() => {
-    const fetchBubbleData = async () => {
-      try {
-        // Use the correct endpoint from the Django URLs
-        const response = await axios.get(`/api/bubble/${username}/`)
-        if (response.status === 200) {
-          const bubble = response.data
-          setUserProgress({
-            currentXP: bubble.progress || 0,
-            currentRank: bubble.rank?.id || 1,
-            checkIns: bubble.check_ins || [],
-          })
-        } else {
-          console.error("Erro ao buscar dados da bolha.")
-        }
-      } catch (error) {
-        console.error("Erro ao conectar com a API:", error)
-      }
-    }
-
     fetchBubbleData()
 
     // Set up periodic ripples
@@ -67,7 +67,7 @@ const SustainableCheckin = () => {
     }, 3000)
 
     return () => clearInterval(interval)
-  }, [username])
+  }, [])
 
   // Create ripple effect in the bubble
   const createRipple = () => {
@@ -102,11 +102,11 @@ const SustainableCheckin = () => {
   }
 
   const getCurrentRank = () => {
-    return ranks.find((rank) => rank.id === userProgress.currentRank) || ranks[0]
+    return ranks.find((rank: { id: number }) => rank.id === userProgress.currentRank) || ranks[0]
   }
 
   const getNextRank = () => {
-    return ranks.find((rank) => rank.id === userProgress.currentRank + 1)
+    return ranks.find((rank: { id: number }) => rank.id === userProgress.currentRank + 1)
   }
 
   const getXPForCurrentRank = () => {
@@ -118,102 +118,53 @@ const SustainableCheckin = () => {
 
   const getCurrentProgressPercentage = () => {
     const currentRank = getCurrentRank()
-    const nextRank = getNextRank()
-
-    if (!nextRank) return 100 // Max level reached
-
-    const xpInCurrentLevel = userProgress.currentXP - currentRank.xpRequired
-    const xpNeededForNextLevel = nextRank.xpRequired - currentRank.xpRequired
-    return Math.min(100, Math.floor((xpInCurrentLevel / xpNeededForNextLevel) * 100))
+    return Math.min(100, Math.floor(((userProgress.currentXP/currentRank.points) * 100)))
   }
 
   const getRemainingXP = () => {
-    const currentRank = getCurrentRank()
     const nextRank = getNextRank()
 
     if (!nextRank) return 0 // Max level reached
-
-    return nextRank.xpRequired - userProgress.currentXP
+    return nextRank.points - userProgress.currentXP
   }
 
   const handleCheckIn = async () => {
-    if (!comment.trim()) return
+    // Reset any existing error and success messages
+    setError("")
+    setCheckInSuccess(false)
+
+    // Validate the input with Zod
+    const validationResult = checkInSchema.safeParse({ description: comment });
+    if (!validationResult.success) {
+      const errorMessage = validationResult.error.errors[0]?.message || "Por favor, preencha corretamente o formulário";
+      setError(errorMessage);
+      return;
+    }
 
     setIsCheckingIn(true)
 
     try {
       // Use the correct endpoint from the Django URLs
-      const response = await axios.post(`/api/bubble/check-in/$<username>/`, {
-        comment: comment.trim(),
-        xpEarned: getXPForCurrentRank(),
+      const response = await api.post(routes.user.bubble.check_in, {
+        description: comment.trim(),
+        xp_earned: getXPForCurrentRank(),
       })
 
       if (response.status === 201 || response.status === 200) {
-        // Handle both success responses
-        let newCheckIn: CheckIn
-        let leveledUp = false
-
-        if (response.data.new_rank) {
-          // User leveled up
-          leveledUp = true
-          // Create a check-in object since the API returns a different format on level up
-          newCheckIn = {
-            id: Date.now(), // Temporary ID
-            comment: comment.trim(),
-            timestamp: new Date().toISOString(),
-            xpEarned: getXPForCurrentRank(),
-          }
-        } else {
-          // Normal check-in response
-          newCheckIn = {
-            id: Date.now(), // Use the ID from response if available
-            comment: comment.trim(),
-            timestamp: new Date().toISOString(),
-            xpEarned: getXPForCurrentRank(),
-          }
-        }
-
-        // Update user progress
-        setUserProgress((prev) => {
-          const newXP = prev.currentXP + newCheckIn.xpEarned
-
-          // Check if user leveled up
-          let newRank = prev.currentRank
-
-          if (leveledUp) {
-            // Find the next rank
-            const nextRank = ranks.find((rank) => rank.id === prev.currentRank + 1)
-            if (nextRank) {
-              newRank = nextRank.id
-            }
-
-            setCheckInSuccess(true)
-
-            // Hide success message after 3 seconds
-            setTimeout(() => {
-              setCheckInSuccess(false)
-            }, 3000)
-          }
-
-          return {
-            currentXP: newXP,
-            currentRank: newRank,
-            checkIns: [newCheckIn, ...prev.checkIns],
-          }
-        })
-
-        setComment("")
-
-        // Create multiple ripples for visual feedback
-        for (let i = 0; i < 5; i++) {
-          setTimeout(() => {
-            createRipple()
-          }, i * 300)
-        }
+        await fetchBubbleData()
+        setCheckInSuccess(true)
+        setComment("") // Clear the form on success
       } else {
         console.error("Erro ao realizar check-in.")
+        setError("Erro ao realizar check-in. Tente novamente mais tarde.")
       }
     } catch (error) {
+      // Parse API error using our helper
+      const parsedError = parseApiError(error)
+      
+      // Set the error message
+      setError(parsedError.message)
+      
       console.error("Erro ao conectar com a API:", error)
     } finally {
       setIsCheckingIn(false)
@@ -318,7 +269,7 @@ const SustainableCheckin = () => {
                 <div>
                   <span className="text-sm text-green-600 font-medium block mb-1">Seu Nível Atual</span>
                   <h3 className="text-xl font-bold text-gray-800 flex items-center">
-                    <span className="mr-2">{getCurrentRank().icon}</span>
+                    <span className="w-20 h-20 flex items-center justify-center rounded-full">{getCurrentRank().icon}</span>
                     {getCurrentRank().name}
                   </h3>
                 </div>
@@ -455,11 +406,17 @@ const SustainableCheckin = () => {
                 </div>
                 <textarea
                   value={comment}
-                  onChange={(e) => setComment(e.target.value)}
+                  onChange={(e) => {
+                    setComment(e.target.value);
+                    if (error) setError(""); // Clear error when user starts typing
+                  }}
                   placeholder="Descreva sua ação sustentável..."
-                  className="w-full h-32 p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300 resize-none bg-white/70 backdrop-blur-sm"
+                  className={`w-full h-32 p-4 border ${error ? 'border-red-300 focus:ring-red-500' : 'border-gray-200 focus:ring-green-500'} rounded-lg focus:ring-2 focus:border-transparent transition-all duration-300 resize-none bg-white/70 backdrop-blur-sm`}
                 />
               </div>
+
+              {/* Display error message if there is one */}
+              {error && <ErrorMessage message={error} />}
 
               <div className="flex justify-end">
                 <button
@@ -486,8 +443,10 @@ const SustainableCheckin = () => {
                 <div className="mt-4 p-3 bg-green-100 border border-green-200 text-green-800 rounded-lg flex items-center animate-fade-in">
                   <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
                   <div>
-                    <p className="font-medium">Parabéns! Você alcançou um novo nível!</p>
-                    <p className="text-sm">Você agora é um {getCurrentRank().name}!</p>
+                    <p className="font-medium">Check-in realizado com sucesso!</p>
+                    {getCurrentRank().id > userProgress.currentRank && (
+                      <p className="text-sm">Parabéns! Você alcançou um novo nível!</p>
+                    )}
                   </div>
                 </div>
               )}
@@ -520,14 +479,14 @@ const SustainableCheckin = () => {
                         key={checkIn.id}
                         className="p-4 bg-white/60 backdrop-blur-sm rounded-lg transform transition-all duration-300 hover:bg-white/80 hover:shadow-md"
                       >
-                        <p className="text-gray-800">{checkIn.comment}</p>
+                        <p className="text-gray-800">{checkIn.description}</p>
                         <div className="flex items-center justify-between mt-2 text-sm text-gray-600">
                           <span className="flex items-center gap-1">
                             <Clock className="w-4 h-4" />
-                            {formatDate(checkIn.timestamp)}
+                            {formatDate(checkIn.created_at)}
                           </span>
                           <span className="flex items-center gap-1 text-green-600 font-medium">
-                            <Trophy className="w-4 h-4 text-amber-500" />+{checkIn.xpEarned} XP
+                            <Trophy className="w-4 h-4 text-amber-500" />+{checkIn.xp_earned} XP
                           </span>
                         </div>
                       </div>
@@ -553,10 +512,10 @@ const SustainableCheckin = () => {
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {ranks.map((rank) => {
+            
+            {ranks.map((rank: { id: Key | null | undefined; points: number; color: any; icon: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; name: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; description: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; difficulty: string }) => {
               const isCurrentRank = rank.id === userProgress.currentRank
-              const isAchieved = userProgress.currentXP >= rank.xpRequired
-              const isNext = rank.id === userProgress.currentRank + 1
+              const isAchieved = userProgress.currentXP >= rank.points
 
               return (
                 <div
@@ -612,7 +571,7 @@ const SustainableCheckin = () => {
                           Alcançado
                         </span>
                       ) : (
-                        <>Requer {rank.xpRequired} XP</>
+                        <>Requer {rank.points} XP</>
                       )}
                     </span>
                   </div>
@@ -700,4 +659,3 @@ const SustainableCheckin = () => {
 }
 
 export default SustainableCheckin
-

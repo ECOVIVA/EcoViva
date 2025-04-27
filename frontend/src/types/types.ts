@@ -8,27 +8,28 @@ export interface User {
   last_name: string;
   email: string;
   phone: string;
-  avatar: string;
+  bio?: string
+  photo?: string;
+  interests?: string[];
   role?: string;
 }
 
 export interface Rank {
-  description: ReactNode;
-  icon: ReactNode;
+  description?: ReactNode;
+  icon?: ReactNode;
   id: number;
   name: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
-  xpRequired: number;
+  points: number;
   color: string;
 }
 
 export interface CheckIn {
-  date: string;
-  userId: string;
-  id: string;
-  comment: string;
-  timestamp: Date;
-  xpEarned: number;
+  bubble: number;
+  id: number;
+  description: string;
+  created_at: string;
+  xp_earned: number;
 }
 
 export interface UserProgress {
@@ -44,26 +45,27 @@ export interface Bubble {
 }
 
 
-export interface ForumPost {
-  tags: any;
+export interface Threads {
   id: string;
-  userId: string;
-  userName: string;
-  userAvatar?: string;
+  slug: string;
+  author: User;
   title: string;
   content: string;
-  date: string;
+  created_at: string;
+  updated_at: string
   likes: number;
-  comments: Comment[];
+  liked: boolean;
+  tags?: string[];
+  posts?: Posts[];
 }
 
-export interface Comment {
+export interface Posts {
   id: string;
-  userId: string;
-  userName: string;
-  userAvatar?: string;
-  content: string;
-  date: string;
+  thread: number;
+  content: string
+  author: User;
+  created_at: string;
+  updated_at: string;
 }
 
 

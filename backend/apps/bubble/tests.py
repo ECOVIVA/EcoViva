@@ -3,6 +3,7 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 from apps.users.tests import UsersMixin
 from apps.users.models import Users  
+from apps.study.models import Achievement, AchievementLog
 from apps.bubble.models import Bubble,CheckIn
 
 """
@@ -16,24 +17,24 @@ from apps.bubble.models import Bubble,CheckIn
 class BubbleViewTests(APITestCase, UsersMixin):
     def setUp(self):
         self.user = self.make_user()
-        self.user = self.make_user_not_autenticated()        
+        self.user2 = self.make_user_not_autenticated()        
 
-    def test_get_bubble_profile(self):
-        # Realizando a requisição GET para obter a bolha associada ao usuário
-        url = reverse('users:bubble:bubble_profile')  # Ajuste conforme o seu URL
+    def test_get_bubble(self):
+        url = reverse('users:bubble:bubble_profile')
+
         response = self.client.get(url)
 
-        # Verificando se o status da resposta é 200 OK
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json().get('user'), self.user.pk)
 
-    def test_get_bubble_profile_fail_for_unauthorized(self):
-        # Realizando a requisição GET para obter a bolha associada ao usuário
-        url = reverse('users:bubble:bubble_profile')  # Ajuste conforme o seu URL
+    def test_get_bubble_fail_for_unauthorized(self):
+        url = reverse('users:bubble:bubble_profile')
+
         self.client.logout()
         response = self.client.get(url)
 
-        # Verificando se o status da resposta é 200 OK
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.json().get('detail'), 'As credenciais de autenticação não foram fornecidas.')
     
 
 
@@ -46,18 +47,40 @@ class CheckInViewTest(APITestCase, UsersMixin):
         # Criando uma bolha associada ao usuário
         self.bubble = Bubble.objects.filter(user = self.user.pk).first()
 
+        self.badge = Achievement.objects.create(**{
+            'name': 'Teste',
+            'category': 'Check-In',
+            'condition': 'checkin_initial',
+            'description': 'Teste'
+        })
+
     def test_post_checkin(self):
-        url = reverse('users:bubble:check_in_create')  # Ajuste conforme o seu URL
+        url = reverse('users:bubble:check_in_create')
 
         payload = {
-            "description": "ALGO ACONTECEU",  # 🔹 Corrigido para minúsculas
+            "description": "ALGO ACONTECEU",
         }
 
         response = self.client.post(url, data=payload, format="json")
 
-        self.bubble.refresh_from_db()  # 🔹 Atualiza a bolha para refletir mudanças
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.json().get('detail'), 'Check-in criado com sucesso!')
+        self.assertEqual(response.json().get('new_badges')[0].get('name'), 'Teste')
+
+
+    def test_post_checkin_fail_for_unauthorized(self):
+        url = reverse('users:bubble:check_in_create')
+        
+        self.client.logout()
+
+        payload = {
+            "description": "ALGO ACONTECEU",
+        }
+
+        response = self.client.post(url, data=payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.json().get('detail'), 'As credenciais de autenticação não foram fornecidas.')
 
     def test_post_checkin_fail_for_created_at(self):
         url = reverse('users:bubble:check_in_create')
@@ -72,8 +95,7 @@ class CheckInViewTest(APITestCase, UsersMixin):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
-            response.json(),
-            {'non_field_errors': ['Um novo Check-in só pode ser feito após 24 horas.']}
+            response.json().get('non_field_errors')[0], 'Um novo Check-in só pode ser feito após 24 horas.'
         )
 
     def test_post_checkin_fail_for_unauthorized(self):
@@ -87,9 +109,9 @@ class CheckInViewTest(APITestCase, UsersMixin):
         response = self.client.post(url, data=payload, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.json().get('detail'), 'As credenciais de autenticação não foram fornecidas.')
 
-
-    def test_increment_progress_on_checkin_creation(self):
+    def test_increment_progress(self):
         """Deve incrementar o progresso da bolha ao criar um CheckIn"""
         self.assertEqual(self.bubble.progress, 0)
 
@@ -98,7 +120,7 @@ class CheckInViewTest(APITestCase, UsersMixin):
         self.bubble.refresh_from_db()
         self.assertEqual(self.bubble.progress, 50)
 
-    def test_upgrade_rank_when_progress_reaches_threshold(self):
+    def test_upgrade_rank(self):
         """Deve mudar o rank da bolha se progresso atingir novo rank"""
         # Primeiro, a bolha está com rank1 e 10 pontos levam para o rank2
         self.bubble.progress = 100

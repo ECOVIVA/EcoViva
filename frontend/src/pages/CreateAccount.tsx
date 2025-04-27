@@ -1,13 +1,17 @@
 import React, { useContext, useState } from 'react';
 import { Leaf, Mail, Lock, Eye, EyeOff, User, Phone, Upload } from 'lucide-react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../components/AuthContext'; // Mantenha o import do AuthContext
+import { AuthContext } from '../components/Auth/AuthContext'; // Mantenha o import do AuthContext
+import api from '../services/API/axios';
+import routes from '../services/API/routes';
+import { userSchema, type UserSchema } from '../schemas/userSchemas';
+import VerificationMessage from '../components/VerificationMenssage';
 
 function App() {
-  const navigator = useNavigate();
+  const navigate = useNavigate();
+  const [showVerification, setShowVerification] = useState(false);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<UserSchema>({
     username: "",
     firstName: "",
     lastName: "",
@@ -15,315 +19,336 @@ function App() {
     phone: "",
     password: "",
     confirmPassword: "",
-    photo: null as File | null,
+    photo: null,
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [photoError, setPhotoError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Não redefine o AuthContext, apenas use o contexto
-  const authContext = useContext(AuthContext); // Aqui, apenas utilize useContext(AuthContext)
+  const authContext = useContext(AuthContext);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setErrors({});
+    setPhotoError("");
     setIsLoading(true);
 
-    // Verifica se as senhas coincidem
-    if (formData.password !== formData.confirmPassword) {
-      setError("As senhas não coincidem");
-      setIsLoading(false);
-      return;
-    }
-
-    if (!authContext) {
-      return <div>Contexto não encontrado. Verifique se você envolveu o componente com o AuthProvider.</div>;
-    }
-
     try {
-      // Enviando dados de texto (usuário) como JSON
-      const userData = {
-        username: formData.username,
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        password: formData.password,
-      };
+      // Validate form data using Zod
+      const validatedData = userSchema.parse(formData);
 
-      const response = await axios.post('http://127.0.0.1:8000/api/users/create/', userData, {
+      if (!authContext) {
+        throw new Error("Contexto de autenticação não encontrado");
+      }
+
+      const userData = new FormData();
+      userData.append('username', validatedData.username);
+      userData.append('first_name', validatedData.firstName);
+      userData.append('last_name', validatedData.lastName);
+      userData.append('email', validatedData.email);
+      // @ts-ignore
+      userData.append('phone', validatedData.phone);
+      userData.append('password', validatedData.password);
+      if (validatedData.photo) userData.append('photo', validatedData.photo);
+
+      const response = await api.post(routes.user.create, userData, {
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'multipart/form-data',
         },
-        withCredentials: true, // Se você estiver lidando com cookies de sessão
       });
 
       if (response.status === 201) {
-        // Se houver uma foto, fazer o upload
-        if (formData.photo) {
-          const formDataToSend = new FormData();
-          formDataToSend.append("photo", formData.photo);
+        setShowVerification(true);
+      }
+    } catch (err: any) {
+      if (err.errors) {
+        const validationErrors: Record<string, string> = {};
+        err.errors.forEach((error: any) => {
+          if (error.path) {
+            validationErrors[error.path[0]] = error.message;
+          }
+        });
+        setErrors(validationErrors);
+      } else if (err.response?.data) {
+        const apiErrors = err.response.data;
 
-          await axios.post(
-            `http://127.0.0.1:8000/api/users/upload-photo/`, // Usando o ID em vez do username
-            formDataToSend,
-            {
-              headers: { "Content-Type": "multipart/form-data" },
-              withCredentials: true,
-            }
-          );
+        if (apiErrors.email) {
+          setErrors((prev) => ({
+            ...prev,
+            email: apiErrors.email[0],
+          }));
         }
 
-        // Supondo que o response contenha o token e os dados do usuário
-        const token = response.data.token; // Ajuste de acordo com a resposta da API
-        const userDataFromApi = response.data.user; // Ajuste de acordo com a resposta da API
+        if (apiErrors.username) {
+          setErrors((prev) => ({
+            ...prev,
+            username: apiErrors.username[0],
+          }));
+        }
 
-        // Chama o login para atualizar o estado do AuthContext
-        authContext.login(token, userDataFromApi); // Atualiza o estado do AuthContext com o usuário e token
-
-        alert("Usuário cadastrado com sucesso!");
-        navigator('/CheckInpage');
+        if (apiErrors.photo) {
+          setPhotoError(apiErrors.photo[0]);
+        }
+      } else {
+        setErrors({
+          submit: "Ocorreu um erro ao criar a conta. Tente novamente."
+        });
       }
-    } catch (err) {
-      setError("Ocorreu um erro ao criar a conta. Tente novamente.");
       console.error(err);
+
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setFormData((prev) => ({ ...prev, photo: e.target.files![0] }));
-    }
+  const handleVerificationClose = () => {
+    setShowVerification(false);
+    navigate('/login');
   };
-  
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
-        <div className="text-center mb-8">
-          <div className="flex justify-center">
+    <>
+      {showVerification && (
+        <VerificationMessage
+          email={formData.email}
+          onClose={handleVerificationClose}
+        />
+      )}
+
+      <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+          <div className="flex justify-center mb-8">
             <Leaf className="h-12 w-12 text-green-600" />
           </div>
-          <h2 className="mt-4 text-3xl font-bold text-green-800">
-            Criar Conta EcoViva
+
+          <h2 className="text-center text-3xl font-extrabold text-gray-900 mb-8">
+            Criar conta
           </h2>
-          <p className="mt-2 text-gray-600">
-            Junte-se à nossa comunidade sustentável
-          </p>
-        </div>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
-            {error}
-          </div>
-        )}
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="grid grid-cols-2 gap-4">
+
+          <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-                Nome
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                Nome de usuário
               </label>
-              <div className="relative">
+              <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <User className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  id="firstName"
+                  id="username"
+                  name="username"
                   type="text"
-                  required
-                  value={formData.firstName}
-                  onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg 
-                            shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 
-                            focus:border-green-500"
-                  placeholder="Nome"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  placeholder="Digite seu nome de usuário"
                 />
+              </div>
+              {errors.username && (
+                <p className="mt-1 text-sm text-red-600">{errors.username}</p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                  Nome
+                </label>
+                <input
+                  id="firstName"
+                  name="firstName"
+                  type="text"
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  placeholder="Digite seu nome"
+                />
+                {errors.firstName && (
+                  <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                  Sobrenome
+                </label>
+                <input
+                  id="lastName"
+                  name="lastName"
+                  type="text"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  placeholder="Digite seu sobrenome"
+                />
+                {errors.lastName && (
+                  <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
+                )}
               </div>
             </div>
 
             <div>
-              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
-                Sobrenome
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email
               </label>
-              <input
-                id="lastName"
-                type="text"
-                required
-                value={formData.lastName}
-                onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg 
-                          shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 
-                          focus:border-green-500"
-                placeholder="Sobrenome"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-              Nome de Usuário
-            </label>
-            <input
-              id="username"
-              type="text"
-              required
-              value={formData.username}
-              onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-              className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg 
-                        shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 
-                        focus:border-green-500"
-              placeholder="Nome de usuário"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail className="h-5 w-5 text-gray-400" />
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  placeholder="Digite seu email"
+                />
               </div>
-              <input
-                id="email"
-                type="email"
-                required
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg 
-                          shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 
-                          focus:border-green-500"
-                placeholder="seu@email.com"
-              />
-            </div>
-          </div>
 
-          <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-              Telefone
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Phone className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                id="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg 
-                          shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 
-                          focus:border-green-500"
-                placeholder="(00) 00000-0000"
-              />
-            </div>
-          </div>
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              )}
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Senha
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock className="h-5 w-5 text-gray-400" />
+            </div>
+
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                Telefone
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Phone className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  placeholder="Digite seu telefone"
+                />
               </div>
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                required
-                value={formData.password}
-                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 
-                          rounded-lg shadow-sm placeholder-gray-400 focus:outline-none 
-                          focus:ring-green-500 focus:border-green-500"
-                placeholder="••••••••"
-              />
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+              {errors.phone && (
+                <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Senha
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  placeholder="Digite sua senha"
+                />
                 <button
                   type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="text-gray-400 hover:text-gray-500 focus:outline-none"
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
+                    <EyeOff className="h-5 w-5 text-gray-400" />
                   ) : (
-                    <Eye className="h-5 w-5" />
+                    <Eye className="h-5 w-5 text-gray-400" />
                   )}
                 </button>
               </div>
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+              )}
             </div>
-          </div>
 
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-              Confirmar Senha
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                id="confirmPassword"
-                type={showPassword ? "text" : "password"}
-                required
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 
-                          rounded-lg shadow-sm placeholder-gray-400 focus:outline-none 
-                          focus:ring-green-500 focus:border-green-500"
-                placeholder="••••••••"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="photo" className="block text-sm font-medium text-gray-700 mb-1">
-              Foto de Perfil
-            </label>
-            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
-              <div className="space-y-1 text-center">
-                <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                <div className="flex text-sm text-gray-600">
-                  <label
-                    htmlFor="photo"
-                    className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500"
-                  >
-                    <span>Upload uma foto</span>
-                    <input id="photo" name="photo" type="file" className="sr-only" onChange={handleFileChange} accept="image/*" />
-                  </label>
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                Confirmar Senha
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
                 </div>
-                <p className="text-xs text-gray-500">PNG, JPG até 10MB</p>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  placeholder="Confirme sua senha"
+                />
+              </div>
+              {errors.confirmPassword && (
+                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="photo" className="block text-sm font-medium text-gray-700">
+                Foto de Perfil
+              </label>
+              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                <div className="space-y-1 text-center">
+                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                  <div className="flex text-sm text-gray-600">
+                    <label
+                      htmlFor="photo"
+                      className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500"
+                    >
+                      <span>Fazer upload de arquivo</span>
+                      <input
+                        id="photo"
+                        name="photo"
+                        type="file"
+                        className="sr-only"
+                        onChange={(e) => setFormData({ ...formData, photo: e.target.files?.[0] || null })}
+                      />
+                    </label>
+                  </div>
+                  <p className="text-xs text-gray-500">PNG, JPG até 10MB</p>
+                </div>
               </div>
             </div>
-          </div>
-
-          <div>
+            {photoError && (
+              <div className="mb-4 p-3 text-red-500 rounded-lg text-sm">
+                {photoError}
+              </div>
+            )}
+            <div>
             <button
-              type="submit"
-              disabled={isLoading}
-              className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg
-                        shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700
-                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500
-                        ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-            >
-              {isLoading ? 'Criando conta...' : 'Criar conta'}
-            </button>
-          </div>
-        </form>
-
-        <div className="mt-6 text-center text-sm">
-          <p className="text-gray-600">
-            Já tem uma conta?{' '}
-            <a href="/Login" className="font-medium text-green-600 hover:text-green-500">
-              Entrar
-            </a>
-          </p>
+                type="submit"
+                disabled={isLoading}
+                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
+                  isLoading
+                    ? 'bg-green-300 cursor-not-allowed'
+                    : 'bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500'
+                }`}
+              >
+                {isLoading ? 'Criando conta...' : 'Criar conta'}
+              </button>
+            </div>
+            {errors.submit && (
+              <div className="mt-2 text-center text-sm text-red-600">
+                {errors.submit}
+              </div>
+            )}
+          </form>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

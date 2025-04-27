@@ -38,12 +38,8 @@ class LoginUserSerializer(serializers.Serializer):
         user = authenticate(email=data['email'], password=data['password'])
 
         if user:
-            if user.is_active:
                 data['user'] = user  # Adiciona o usuário autenticado aos dados retornados
                 return data
-            else:
-                # Retorna erro se o usuário existir, mas não estiver ativo
-                raise serializers.ValidationError({'detail': "Autentique seu email para conseguir o acesso!!"})
 
         # Retorna erro se as credenciais estiverem incorretas
         raise serializers.ValidationError({'detail': "Usuário ou senha incorretos!!"})

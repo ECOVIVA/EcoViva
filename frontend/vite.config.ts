@@ -9,7 +9,15 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
   server: {
-    port: 5174,  
+    port: 5174,
+    proxy: {
+      // Redireciona /api para o backend
+      '/api': {
+        target: 'http://localhost:8000',  // endereço do seu backend Django
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/api/, '')
+      }
+    }
   },
   resolve: {
     alias: {
