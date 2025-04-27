@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Logo from './Logo';
+import { Link } from 'react-router-dom';
 
 const ComingSoon: React.FC = () => {
   const [glitchActive, setGlitchActive] = useState(false);
@@ -54,10 +55,12 @@ const ComingSoon: React.FC = () => {
         
         <div className="flex justify-center">
           <div className="relative group">
+          <Link to="/HistorySection">
             <button className="bg-emerald-500/20 hover:bg-emerald-500/30 backdrop-blur-sm border border-emerald-500/30 text-emerald-100 py-3 px-8 rounded-full transition-all duration-300 transform hover:scale-105 relative overflow-hidden">
               <span className="relative z-10">Saiba mais sobre nossa missão</span>
               <span className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-green-400/30 to-green-400/0 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
             </button>
+            </Link>
             <div className="absolute inset-0 bg-gradient-to-r from-green-400/30 to-teal-400/30 blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-300 -z-10"></div>
           </div>
         </div>

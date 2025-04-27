@@ -1,4 +1,10 @@
-import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useContext,
+  ReactNode,
+} from 'react';
 import api from '../../services/API/axios';
 import routes from '../../services/API/routes';
 import { AxiosResponse } from 'axios';
@@ -13,58 +19,44 @@ interface User {
 interface AuthContextProps {
   isAuthenticated: boolean;
   user: User | null;
+  loading: boolean;
   login: () => Promise<void>;
   logout: () => Promise<void>;
-  updateUserPhoto: (photoUrl: string) => void; // Função para atualizar a foto
+  updateUserPhoto: (photoUrl: string) => void;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
-const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [user, setUser] = useState<User | null>(null);
+const isAuth = (): boolean => {
+  const userData = localStorage.getItem('user');
+  const authStatus = localStorage.getItem('isAuthenticated');
+  return !!userData && authStatus === 'true';
+};
 
-  // Função para atualizar a foto do usuário
+const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
   const updateUserPhoto = (photoUrl: string) => {
     if (user) {
-      setUser({ ...user, photo: photoUrl });
+      const updatedUser = { ...user, photo: photoUrl };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
     }
   };
 
-  // Renova o token caso esteja expirado
   const fetchRefresh = async (): Promise<boolean> => {
     try {
       const response: AxiosResponse = await api.post(routes.auth.refresh);
-      if (response.status === 200) {
-        return true;
-      }
-      console.error('Falha ao renovar token', response);
-      return false;
+      return response.status === 200;
     } catch (error) {
       console.error('Erro ao renovar token:', error);
       return false;
     }
   };
 
-  // Verifica se o token atual é válido
-  const verifyAuthentication = async () => {
-    try {
-      const response: AxiosResponse = await api.get(routes.auth.verify);
-      if (response.status === 200) {
-        setIsAuthenticated(true);
-        await fetchUser(); // garante que o user seja carregado também
-      } else {
-        const refreshed = await fetchRefresh();
-        setIsAuthenticated(refreshed);
-      }
-    } catch (error) {
-      const refreshed = await fetchRefresh();
-      setIsAuthenticated(refreshed);
-    }
-  };
-
-  // Carrega dados do usuário autenticado
-  const fetchUser = async () => {
+  const fetchUser = async (): Promise<boolean> => {
     try {
       const response: AxiosResponse = await api.get(routes.user.profile);
       if (response.status === 200) {
@@ -75,16 +67,48 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
           photo: response.data.photo || undefined,
         };
         setUser(userData);
-       }
+        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('isAuthenticated', 'true');
+        return true;
+      }
     } catch (error) {
       console.error('Erro ao carregar dados do usuário:', error);
+    }
+    return false;
+  };
+
+  const verifyAuthentication = async () => {
+    try {
+      const response = await api.get(routes.auth.verify);
+      if (response.status === 200) {
+        const fetched = await fetchUser();
+        setIsAuthenticated(fetched);
+      } else {
+        const refreshed = await fetchRefresh();
+        if (refreshed) {
+          const fetched = await fetchUser();
+          setIsAuthenticated(fetched);
+        } else {
+          setIsAuthenticated(false);
+        }
+      }
+    } catch (error) {
+      const refreshed = await fetchRefresh();
+      if (refreshed) {
+        const fetched = await fetchUser();
+        setIsAuthenticated(fetched);
+      } else {
+        setIsAuthenticated(false);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   const login = async () => {
     try {
-      await fetchUser();
-      setIsAuthenticated(true);
+      const success = await fetchUser();
+      setIsAuthenticated(success);
     } catch (error) {
       console.error('Erro ao fazer login:', error);
     }
@@ -93,32 +117,58 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const logout = async () => {
     try {
       await api.post(routes.auth.logout);
-      setUser(null);
-      setIsAuthenticated(false);
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
+    } finally {
+      setUser(null);
+      setIsAuthenticated(false);
+      localStorage.removeItem('user');
+      localStorage.removeItem('isAuthenticated');
     }
   };
 
   useEffect(() => {
-    verifyAuthentication();
+    const initialize = async () => {
+      const auth = isAuth();
+      if (auth) {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+          setIsAuthenticated(true);
+        } else {
+          await verifyAuthentication();
+        }
+        setLoading(false);
+      } else {
+        await verifyAuthentication();
+      }
+    };
+
+    initialize();
+
     const intervalId = setInterval(() => {
       verifyAuthentication();
     }, 60000);
 
-    return () => {
-      clearInterval(intervalId);
-    };
+    return () => clearInterval(intervalId);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, updateUserPhoto }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        user,
+        loading,
+        login,
+        logout,
+        updateUserPhoto,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Hook personalizado
 const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -127,4 +177,4 @@ const useAuth = () => {
   return context;
 };
 
-export { AuthProvider, useAuth, AuthContext };
+export { AuthProvider, useAuth, AuthContext, isAuth };
