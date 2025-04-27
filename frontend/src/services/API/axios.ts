@@ -1,4 +1,5 @@
 import axios from 'axios';
+import process from 'process';
 
 // Instância do Axios
 const api = axios.create({

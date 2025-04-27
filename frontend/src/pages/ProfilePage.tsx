@@ -72,7 +72,7 @@ function App() {
         setSelectedInterests(data.interests || [])
 
         if (data.photo) {
-          const fullProfileUrl = `http://localhost:8000${data.photo}`
+          const fullProfileUrl = `${data.photo}`
           setProfileImage(fullProfileUrl)
           localStorage.setItem("profileImage", fullProfileUrl)
         } else {
@@ -81,7 +81,7 @@ function App() {
         }
 
         if (data.backgroundImage) {
-          const fullBgUrl = `http://localhost:8000${data.backgroundImage}`
+          const fullBgUrl = `${data.backgroundImage}`
           setBackgroundImage(fullBgUrl)
           localStorage.setItem("backgroundImage", fullBgUrl)
         } else {
