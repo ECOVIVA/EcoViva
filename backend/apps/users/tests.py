@@ -236,20 +236,3 @@ class UsersTest(APITestCase, UsersMixin):
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(response.json().get('detail'), 'As credenciais de autenticação não foram fornecidas.')
-
-    def test_delete_user_delete(self):
-        api_url = reverse('users:user_delete')
-
-        response = self.client.delete(api_url)
-
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-    def test_delete_user_delete_fail_for_unauthorized(self):
-        api_url = reverse('users:user_delete')
-
-        self.client.logout()
-
-        response = self.client.delete(api_url)
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.assertEqual(response.json().get('detail'), 'As credenciais de autenticação não foram fornecidas.')

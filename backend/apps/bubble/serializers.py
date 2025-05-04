@@ -105,5 +105,5 @@ class BubbleSerializer(serializers.ModelSerializer):
         - Obtém os Check-Ins filtrando pelo ID da bolha.
         - Serializa os Check-Ins e retorna os dados.
         """
-        check_ins = models.CheckIn.objects.filter(bubble=obj)
+        check_ins = obj.checkin_set.all()
         return CheckInSerializer(check_ins, many=True).data  # Serializa múltiplos check-ins

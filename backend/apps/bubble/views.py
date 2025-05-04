@@ -1,10 +1,8 @@
-from django.shortcuts import get_object_or_404  
 from rest_framework.generics import GenericAPIView
-from rest_framework.mixins import ( RetrieveModelMixin, CreateModelMixin, UpdateModelMixin, DestroyModelMixin)
-from django.http import Http404  
+from rest_framework.mixins import RetrieveModelMixin, CreateModelMixin
 from rest_framework.response import Response  
-from rest_framework import status, permissions  
-
+from rest_framework.exceptions import NotFound
+from rest_framework import status, permissions
 from apps.study.serializers import AchievementSerializer
 from apps.bubble import models, serializers  
 from utils.check_achievement import CheckAchievementsCheckIn
@@ -26,10 +24,10 @@ class BubbleProfileView(GenericAPIView, RetrieveModelMixin):
     serializer_class = serializers.BubbleSerializer
 
     def get_object(self):
-        try:  
-            return get_object_or_404(models.Bubble, user=self.request.user.id)  
-        except Http404:  
-            return Response('A Bolha não foi encontrada', status=status.HTTP_404_NOT_FOUND)  
+        try:
+            return models.Bubble.objects.select_related('rank', 'user').prefetch_related('checkin_set').get(user=self.request.user)
+        except models.Bubble.DoesNotExist:
+            raise NotFound("A Bolha não foi encontrada.")
     
     def get(self, request, *args, **kwargs):  
         return self.retrieve(request, *args, **kwargs)
@@ -50,11 +48,11 @@ class CheckInCreateView(GenericAPIView, CreateModelMixin):
     permission_classes = [permissions.IsAuthenticated]  
     serializer_class = serializers.CheckInSerializer
     
-    def get_object(self):
-        try:  
-            return get_object_or_404(models.Bubble, user=self.request.user.id)  
-        except Http404:  
-            return Response('A Bolha não foi encontrada', status=status.HTTP_404_NOT_FOUND) 
+    def get_bubble(self):
+        try:
+            return models.Bubble.objects.select_related('rank', 'user').get(user=self.request.user)
+        except models.Bubble.DoesNotExist:
+            raise NotFound("A Bolha não foi encontrada.")
 
     def get_badge(self):
         check_badge = CheckAchievementsCheckIn()
@@ -65,7 +63,7 @@ class CheckInCreateView(GenericAPIView, CreateModelMixin):
         return self.create(request, *args, **kwargs)
     
     def create(self, request, *args, **kwargs):
-        bubble = self.get_object()
+        bubble = self.get_bubble()
 
         data = request.data  
         data['bubble'] = bubble.id

@@ -13,9 +13,8 @@ from .email.send_email import send_confirmation_email
     - Criar novos usuários (UserCreateView)
     - Consultar os detalhes do usuario autenticado (UserProfileView)
     - Atualizar informações de um usuário (UserUpdateView)
-    - Excluir um usuário (UserDeleteView)
 
-    Cada view gerencia as operações CRUD (Create, Read, Update, Delete) e retorna as respostas em formato JSON.
+    Cada view gerencia as operações CRU (Create, Read, Update) e retorna as respostas em formato JSON.
 """
 
 # View responsável por criar novos usuários na plataforma.
@@ -71,21 +70,3 @@ class UserUpdateView(GenericAPIView, UpdateModelMixin):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response("Dados atualizados com sucesso!!", status=status.HTTP_200_OK)
-
-# View responsável por excluir um usuário específico.
-# Apenas usuários autenticados podem acessar essa rota.
-# Deve ser usada para deletar os dados de um usuario
-class UserDeleteView(GenericAPIView, DestroyModelMixin):
-    permission_classes = [permissions.IsAuthenticated]  # Exige autenticação para acessar a view
-    serializer_class = serializers.UsersSerializer
-
-    def get_object(self):
-        return self.request.user
-    
-    def delete(self, request, *args, **kwargs):
-        return self.destroy(request, *args, **kwargs)
-    
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response("Usuário excluído com sucesso!!", status=status.HTTP_204_NO_CONTENT)

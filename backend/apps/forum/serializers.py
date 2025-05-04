@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from apps.users.serializers import UsersSerializer
+from apps.users.serializers import UsersSerializer, UsersMinimalSerializer
 from apps.users.models import Users
 from . import models
 
@@ -32,11 +32,11 @@ class PostsSerializer(serializers.ModelSerializer):
         Exibe o autor como objeto completo na resposta (GET).
         """
         rep = super().to_representation(instance)
-        rep['author'] = UsersSerializer(instance.author).data
+        rep['author'] = UsersMinimalSerializer(instance.author).data
         return rep
 
 class ThreadReadSerializer(serializers.ModelSerializer):
-    author = serializers.SerializerMethodField()
+    author = UsersMinimalSerializer()
     tags = serializers.SlugRelatedField(
         many=True,
         slug_field='name',  
@@ -53,18 +53,6 @@ class ThreadReadSerializer(serializers.ModelSerializer):
             'tags', 'author', 'slug', 'posts', 'created_at', 'updated_at'
         ]
         read_only_fields = ['slug', 'posts', 'likes', 'liked', 'created_at', 'updated_at']
-
-    def to_representation(self, instance):
-        # Representação customizada para 'author' e 'tags'
-        rep = super().to_representation(instance)
-        rep['author'] = UsersSerializer(instance.author).data
-        return rep
-
-    def get_author(self, obj):
-        return {
-            "username": obj.author.username,
-            "photo": obj.author.photo,
-        }
     
     def get_liked(self, obj):
         # Verifica se o usuário atual curtiu o thread

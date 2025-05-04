@@ -23,7 +23,6 @@ urlpatterns = [
     path('create/', views.UserCreateView.as_view(), name="user_create"),  
     path('profile/', views.UserProfileView.as_view(), name="user_profile"), 
     path('profile/update/', views.UserUpdateView.as_view(), name="user_update"), 
-    path('profile/delete/', views.UserDeleteView.as_view(), name="user_delete"), 
 
     # Rotas relacionadas às bolhas
     path('bubble/', include('apps.bubble.urls')),  

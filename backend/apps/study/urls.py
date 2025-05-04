@@ -18,8 +18,8 @@ app_name = 'study'
 # Mapeamento das rotas para as views relacionadas ao progresso do usuário no aprendizado
 urlpatterns = [
     # Rotas para lições concluídas
-    path('lessons/complete/', views.LessonLogListView.as_view(), name="lessons_complete"),  
-    path('lessons/complete/create/', views.LessonCompletionCreateView.as_view(), name="lesson_complete_create"),  
+    path('lessons/complete/', views.LessonLogListView.as_view(), name="lessons_log"),  
+    path('lessons/complete/create/', views.LessonLogCreateView.as_view(), name="lesson_log_create"),  
 
     # Rotas para conquistas do usuário
     path('achievements/user/', views.UserAchievementsView.as_view(), name="achievements_user"),  

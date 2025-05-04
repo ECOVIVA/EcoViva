@@ -1,8 +1,8 @@
-from django.shortcuts import get_list_or_404, get_object_or_404  
-from django.http import Http404  
+from django.db.models import Count
 from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import ( RetrieveModelMixin, ListModelMixin, CreateModelMixin, UpdateModelMixin, DestroyModelMixin)
 from rest_framework.response import Response  
+from rest_framework.exceptions import NotFound
 from rest_framework import status, permissions  
 
 from apps.users.auth.permissions import IsPostOwner  
@@ -29,22 +29,10 @@ class ThreadListView(GenericAPIView, ListModelMixin):
     serializer_class = serializers.ThreadReadSerializer
 
     def get_queryset(self):
-        try: 
-            threads = get_list_or_404(models.Thread)
-            return threads  
-        except Http404:  
-            return Response({'detail': 'Não há Threads cadastradas'}, status=status.HTTP_404_NOT_FOUND)  
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True, context = {'request': request})
-        return Response(serializer.data)
+        queryset = models.Thread.objects.select_related('author').prefetch_related('likes', 'tags')
+        if not queryset.exists():
+            raise NotFound("Thread não encontrada!")
+        return queryset
     
     def get(self, request, *args, **kwargs):  
         return self.list(request, *args, **kwargs)
@@ -74,15 +62,15 @@ class ThreadUpdateView(GenericAPIView, UpdateModelMixin):
 
     def get_object(self):
         slug = self.kwargs.get('slug')
-        instance = get_object_or_404(models.Thread, slug=slug)
-        self.check_object_permissions(self.request, instance)
-        return instance
+        try:
+            queryset = models.Thread.objects.get(slug = slug)
+            self.check_object_permissions(self.request, queryset)
+            return queryset
+        except models.Thread.DoesNotExist:
+            raise NotFound("Thread não encontrada!")
         
     def partial_update(self, request, *args, **kwargs):
-            try:
-                instance = self.get_object()
-            except Http404:  
-                return Response({'detail': 'Thread não encontrada!'}, status=status.HTTP_404_NOT_FOUND) 
+            instance = self.get_object()
             serializer = self.get_serializer(instance, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             self.perform_update(serializer)
@@ -99,10 +87,10 @@ class ThreadLikeView(GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, slug):     
-        try:  
-            thread = get_object_or_404(models.Thread, slug=slug)
-        except Http404:  
-            return Response({'detail': 'Thread não encontrada!'}, status=status.HTTP_404_NOT_FOUND) 
+        try:
+            thread = models.Thread.objects.get(slug = slug)
+        except models.Thread.DoesNotExist:
+            raise NotFound("Thread não encontrada!")
         
         user = request.user
 
@@ -119,15 +107,15 @@ class ThreadDeleteView(GenericAPIView, DestroyModelMixin):
 
     def get_object(self):
         slug = self.kwargs.get('slug')
-        instance = get_object_or_404(models.Thread, slug=slug)
-        self.check_object_permissions(self.request, instance)
-        return instance
+        try:
+            queryset = models.Thread.objects.get(slug = slug)
+            self.check_object_permissions(self.request, queryset)
+            return queryset
+        except models.Thread.DoesNotExist:
+            raise NotFound("Thread não encontrada!")
 
     def destroy(self, request, *args, **kwargs):
-        try:
-            instance = self.get_object()
-        except Http404:
-            return Response({'detail': 'Thread não encontrada!'}, status=status.HTTP_404_NOT_FOUND)
+        instance = self.get_object()
         self.perform_destroy(instance)
         return Response({'detail': 'Thread deletada com sucesso!'}, status=status.HTTP_204_NO_CONTENT)  
     
@@ -141,17 +129,10 @@ class ThreadDetailView(GenericAPIView, RetrieveModelMixin):
 
     def get_object(self):
         slug = self.kwargs.get('slug')
-        instance = get_object_or_404(models.Thread, slug=slug)
-        return instance  
-        
-    def retrieve(self, request, *args, **kwargs):
-        try:  
-            instance = self.get_object()
-        except Http404:  
-            return Response('A Bolha não foi encontrada', status=status.HTTP_404_NOT_FOUND) 
-        
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        try:
+            return models.Thread.objects.select_related('author').prefetch_related('likes', 'tags', 'posts', 'posts__author').annotate(likes_count=Count('likes')).get(slug = slug)
+        except models.Thread.DoesNotExist:
+            raise NotFound("Thread não encontrada!")
     
     def get(self, request, *args, **kwargs):  
         return self.retrieve(request, *args, **kwargs)
@@ -180,16 +161,15 @@ class PostUpdateView(GenericAPIView, UpdateModelMixin):
 
     def get_object(self):
         id_post = self.kwargs.get('id_post')
-        instance = get_object_or_404(models.Post, id=id_post)
-        self.check_object_permissions(self.request, instance)
-        return instance
+        try:
+            queryset = models.Post.objects.select_related('author', 'thread').get(id = id_post)
+            self.check_object_permissions(self.request, queryset)
+            return queryset
+        except models.Post.DoesNotExist:
+            raise NotFound("Post não encontrado!")
         
     def partial_update(self, request, *args, **kwargs):
-            try: 
-                instance = self.get_object()
-            except Http404:  
-                return Response({'detail': 'Post não encontrado!'}, status=status.HTTP_404_NOT_FOUND) 
-            
+            instance = self.get_object()
             serializer = self.get_serializer(instance, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             self.perform_update(serializer)
@@ -209,16 +189,15 @@ class PostDeleteView(GenericAPIView, DestroyModelMixin):
 
     def get_object(self):
         id_post = self.kwargs.get('id_post')
-        instance = get_object_or_404(models.Post, id=id_post)
-        self.check_object_permissions(self.request, instance)
-        return instance
+        try:
+            queryset = models.Post.objects.get(id = id_post)
+            self.check_object_permissions(self.request, queryset)
+            return queryset
+        except models.Post.DoesNotExist:
+            raise NotFound("Post não encontrado!")
 
     def destroy(self, request, *args, **kwargs):
-        try:
-            instance = self.get_object()
-        except Http404:
-            return Response({'detail': 'Post não encontrado!'}, status=status.HTTP_404_NOT_FOUND)
-
+        instance = self.get_object()
         self.perform_destroy(instance)
         return Response({'detail': 'Post deletado com sucesso!'}, status=status.HTTP_204_NO_CONTENT)  
     

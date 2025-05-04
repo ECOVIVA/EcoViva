@@ -24,7 +24,7 @@ class TestLessions(APITestCase, UsersMixin):
 
     def test_get_lesson_log(self):
         """Testa se retorna corretamente as lições concluídas do usuário autenticado"""
-        url = reverse("study:lessons_complete")  # Ajuste conforme sua URL
+        url = reverse("study:lessons_log")  # Ajuste conforme sua URL
         
         response = self.client.get(url)
 
@@ -33,7 +33,7 @@ class TestLessions(APITestCase, UsersMixin):
 
     def test_get_lesson_log_fail_for_404(self):
         """Testa se retorna 404 caso o usuário não tenha concluído nenhuma lição"""
-        url = reverse("study:lessons_complete") 
+        url = reverse("study:lessons_log") 
 
         self.lesson_log.delete()
         
@@ -43,7 +43,7 @@ class TestLessions(APITestCase, UsersMixin):
         self.assertEqual(response.json().get('detail'), "Este usuário não completou nenhuma lição.")
 
     def test_get_lesson_log_fail_for_unauthorizated(self):
-        url = reverse("study:lessons_complete") 
+        url = reverse("study:lessons_log") 
 
         self.client.logout()
         
@@ -53,7 +53,7 @@ class TestLessions(APITestCase, UsersMixin):
 
     def test_post_lesson_log(self):
         """Testa a criação de um novo registro de lição concluída"""
-        url = reverse("study:lesson_complete_create")  # Ajuste conforme sua URL
+        url = reverse("study:lesson_log_create")  # Ajuste conforme sua URL
 
         self.lesson_log.delete() 
 
@@ -66,7 +66,7 @@ class TestLessions(APITestCase, UsersMixin):
 
     def test_post_lesson_log_fail_for_blank(self):
         """Testa a tentativa de criar um registro sem informar a lição"""
-        url = reverse("study:lesson_complete_create")
+        url = reverse("study:lesson_log_create")
 
         payload = {}  # Não informando a lição
 
@@ -77,7 +77,7 @@ class TestLessions(APITestCase, UsersMixin):
 
     def test_post_duplicate_lesson_completion(self):
         """Testa se impede a criação duplicada de uma conclusão para a mesma lição"""
-        url = reverse("study:lesson_complete_create")
+        url = reverse("study:lesson_log_create")
 
         payload = {"lesson": self.lesson.id}
 
@@ -88,7 +88,7 @@ class TestLessions(APITestCase, UsersMixin):
         self.assertEqual(response2.json().get('non_field_errors')[0], 'Os campos user, lesson devem criar um set único.')
 
     def test_post_unauthorized(self):
-        url = reverse("study:lesson_complete_create")
+        url = reverse("study:lesson_log_create")
 
         self.client.logout()
 

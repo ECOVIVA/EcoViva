@@ -12,16 +12,16 @@ class LessonLogListView(mixins.ListModelMixin, generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = models.LessonLog.objects.filter(user=self.request.user)
+        queryset = models.LessonLog.objects.select_related('user', 'lesson').filter(user=self.request.user)
         if not queryset.exists():
             raise NotFound("Este usuário não completou nenhuma lição.")
         return queryset
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
+ 
 
-
-class LessonCompletionCreateView(mixins.CreateModelMixin, generics.GenericAPIView):
+class LessonLogCreateView(mixins.CreateModelMixin, generics.GenericAPIView):
     """
     Registra uma nova lição como concluída pelo usuário.
     """

@@ -114,3 +114,9 @@ class UsersSerializer(serializers.ModelSerializer):
         if interests_data is not None:
             instance.interests.set(interests_data)
         return instance
+    
+class UsersMinimalSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.Users 
+        fields = ['id', 'username', 'photo']
