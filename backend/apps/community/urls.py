@@ -18,7 +18,7 @@ from . import views
       - post/<int:id_post>/delete/  → Exclui um Post.
 """
 
-app_name = 'forum'
+app_name = 'community'
 
 urlpatterns = [
     # Rotas para Threads

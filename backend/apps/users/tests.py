@@ -100,13 +100,16 @@ class UsersTest(APITestCase, UsersMixin):
 
         response = self.client.post(api_url, data=valid_data, format='multipart')
 
-        # Verifica se o usuário foi criado com sucesso e a foto foi salva
         self.assertEqual(response.status_code, 201)
-        user_profile = models.Users.objects.get(username=valid_data.get("username"))
-        self.assertTrue(user_profile.photo.name.startswith('users_photos/test_photo.jpg'))
+        user = models.Users.objects.get(username=valid_data.get("username"))
+        image_path = user.photo.path
+        with Image.open(image_path) as img:
+            width, height = img.size
 
-        # Limpa o arquivo após o teste
-        user_profile.photo.delete()
+        self.assertLessEqual(width, 450)
+        self.assertLessEqual(height, 450)
+
+        user.photo.delete()
 
     # Testando o método POST para criação de usuário com dados inválidos (faltando email e senha)
     def test_post_user_create_fail_for_phone(self):

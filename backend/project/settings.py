@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     'apps',
     'utils',
     'apps.bubble',
-    'apps.forum',
+    'apps.community',
     'apps.study',
     'apps.users',
 ]
@@ -136,7 +136,6 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 AUTH_USER_MODEL = 'users.Users'
-
 
 AUTHENTICATION_BACKENDS = [
     'apps.users.auth.auth.EmailBackend',  

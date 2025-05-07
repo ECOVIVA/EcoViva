@@ -9,7 +9,7 @@ from apps.users.email.views import EmailConfirmAPIView, ResendConfirmationEmailV
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/forum/', include("apps.forum.urls")),
+    path('api/community/', include("apps.community.urls")),
     path('api/users/', include("apps.users.urls")),
     path('api/study/', include("apps.study.urls")),
     path('api/login/', LoginView.as_view(), name="login"),

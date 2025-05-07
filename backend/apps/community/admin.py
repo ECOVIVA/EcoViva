@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Thread, Post, Tags
+from .models import Thread, Post, Tags, Community
 
 """
     Configuração do Django Admin para gerenciamento dos modelos Thread, Post e Tags.
@@ -11,6 +11,15 @@ from .models import Thread, Post, Tags
     As configurações incluem filtros, pesquisa, preenchimento automático de campos e otimização de queries.
 """
 
+@admin.register(Community)
+class CommunityAdmin(admin.ModelAdmin):
+    list_display = ('name', 'owner', 'is_private', 'created_at')
+    list_filter = ('is_private', 'created_at')
+    search_fields = ('name', 'description', 'owner__username')
+    readonly_fields = ('created_at',)
+    prepopulated_fields = {'slug': ('name',)}
+    filter_horizontal = ('admins', 'pending_requests', 'members')
+
 @admin.register(Thread)
 class ThreadAdmin(admin.ModelAdmin):
     """
@@ -21,15 +30,15 @@ class ThreadAdmin(admin.ModelAdmin):
     - Adiciona filtros para facilitar a navegação.
     - Preenche automaticamente o slug com base no título.
     """
-    list_display = ('id', 'title', 'author', 'created_at', 'updated_at', 'slug')  # Campos visíveis na lista de threads
+    list_display = ('id','community__name', 'title', 'author', 'created_at', 'updated_at', 'slug')  # Campos visíveis na lista de threads
     search_fields = ('title', 'content')  # Habilita busca pelo título e conteúdo da thread
-    list_filter = ('created_at', 'author', 'tags')  # Filtros laterais para data de criação, autor e tags
+    list_filter = ('created_at','community__name', 'author', 'tags')  # Filtros laterais para data de criação, autor e tags
     list_select_related = ('author',)  # Otimiza consultas carregando os autores das threads antecipadamente
     prepopulated_fields = {'slug': ('title',)}  # Preenche automaticamente o slug com base no título
 
     fieldsets = (
         (None, {
-            'fields': ('title', 'content', 'tags', 'author', 'slug', 'cover')  # Campos principais da thread
+            'fields': ('title','community', 'content', 'tags', 'author', 'slug', 'cover')  # Campos principais da thread
         }),
         ('Datas', {
             'fields': ('created_at', "likes"),  # Exibe a data de criação da thread

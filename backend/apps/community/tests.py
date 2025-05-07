@@ -8,33 +8,34 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from io import BytesIO
 from PIL import Image
 
-from apps.forum.models import Thread, Post
+from apps.community.models import Thread, Post, Community
 from apps.users.tests import UsersMixin
 
-class ThreadTests(APITestCase,UsersMixin ):
+class CommunityTests(APITestCase,UsersMixin ):
     def setUp(self):
         # Criação de um usuário para os testes
         self.user = self.make_user()
         self.user2 = self.make_user_not_autenticated()
         
-        self.cover_image = SimpleUploadedFile(
-        name='test_cover.jpg',
-        content=b'\x47\x49\x46\x38\x89\x61',  # Dados binários simulando um JPEG/GIF
-        content_type='image/jpeg'
-    )
+        self.community = Community.objects.create(
+            name="Nome da Comunidade",
+            description="Esta é uma descrição da comunidade.",
+            owner=self.user,
+            is_private=True  # ou False, conforme desejado
+        )
         
         # Criação de uma thread para os testes
         self.thread_data = {
+            'community': self.community,
             'title': 'Test Thread',
             'content': 'Test content for thread',
             'author': self.user,
-            'cover': self.cover_image
         }
 
         self.thread = Thread.objects.create(**self.thread_data)
 
     def test_get_thread_list(self):
-        url = reverse('forum:list_thread')
+        url = reverse('community:list_thread')
 
         response = self.client.get(url)
         print(response.json())
@@ -44,22 +45,24 @@ class ThreadTests(APITestCase,UsersMixin ):
 
 
     def test_post_thread_create(self):
-        url = reverse('forum:create_thread')
+        url = reverse('community:create_thread')
+
         data = {
+            'community': self.community.pk,
             'title': 'New Thread',
             'content': 'Content for new thread',
             'author': self.user.id,
         }
 
         response = self.client.post(url, data, format='json')
-        print(response.json())
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.json().get('detail'), 'Thread criada com sucesso!')
 
     def test_post_thread_create_with_tags(self):
-        url = reverse('forum:create_thread')
+        url = reverse('community:create_thread')
         data = {
+            'community': self.community.pk,
             'title': 'New Thread',
             'content': 'Content for new thread',
             'author': self.user.id,
@@ -74,9 +77,9 @@ class ThreadTests(APITestCase,UsersMixin ):
         self.assertEqual(response.json().get('detail'), 'Thread criada com sucesso!')
 
     def test_post_thread_create_with_cover(self):
-        url = reverse('forum:create_thread')
+        url = reverse('community:create_thread')
 
-        image = Image.new('RGB', (100, 100), color='red')
+        image = Image.new('RGB', (1500, 1500), color='red')
         image_file = BytesIO()
         image.save(image_file, format='JPEG')
         image_file.name = 'test_cover.jpg'
@@ -85,24 +88,35 @@ class ThreadTests(APITestCase,UsersMixin ):
         cover = SimpleUploadedFile(image_file.name, image_file.read(), content_type="image/jpeg")
 
         data = {
+            'community': self.community.pk,
             'title': 'New Thread',
             'content': 'Content for new thread',
             'cover': cover
         }
 
         response = self.client.post(url, data, format='multipart')
+
+        
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         thread = Thread.objects.get(title = data['title'])
+        image_path = thread.cover.path
+        with Image.open(image_path) as img:
+            width, height = img.size
 
-        thread.cover.delete()        
+        self.assertLessEqual(width, 800)
+        self.assertLessEqual(height, 600)
+
+        thread.cover.delete()
+
     
     def test_post_thread_create_fail_for_unauthorized(self):
-        url = reverse('forum:create_thread')
+        url = reverse('community:create_thread')
 
         self.client.logout()
 
         data = {
+            'community': self.community.pk,
             'title': '',
             'content': 'Content for new thread',
             'author': self.user.id
@@ -114,9 +128,10 @@ class ThreadTests(APITestCase,UsersMixin ):
         self.assertEqual(response.json().get('detail'), 'As credenciais de autenticação não foram fornecidas.')
 
     def test_post_thread_create_fail_for_blank(self):
-        url = reverse('forum:create_thread')
+        url = reverse('community:create_thread')
 
         data = {
+            'community': self.community.pk,
             'title': '',
             'content': 'Content for new thread',
         }
@@ -128,11 +143,12 @@ class ThreadTests(APITestCase,UsersMixin ):
 
 
     def test_post_thread_create_fail_for_lenght_255(self):
-        url = reverse('forum:create_thread')
+        url = reverse('community:create_thread')
 
         title_255 = 'a'*256
 
         data = {
+            'community': self.community.pk,
             'title': title_255,
             'content': 'Content for new thread',
             'author': self.user.id
@@ -144,9 +160,10 @@ class ThreadTests(APITestCase,UsersMixin ):
 
     def test_post_thread_create_fail_for_invalid_tags(self):
         """Testa a falha ao criar uma thread com tags em formato inválido"""
-        url = reverse('forum:create_thread')
+        url = reverse('community:create_thread')
 
         data = {
+            'community': self.community.pk,
             'title': 'Thread com tags inválidas',
             'content': 'Content for new thread',
             'author': self.user.id,
@@ -158,7 +175,7 @@ class ThreadTests(APITestCase,UsersMixin ):
         self.assertEqual(response.json().get('tags')[0], 'Necessário uma lista de itens, mas recebeu tipo "str".')
 
     def test_post_thread_create_fail_for_cover_type(self):
-        url = reverse('forum:create_thread')
+        url = reverse('community:create_thread')
 
         image = Image.new('RGB', (100, 100), color='red')
         image_file = BytesIO()
@@ -169,6 +186,7 @@ class ThreadTests(APITestCase,UsersMixin ):
         cover = SimpleUploadedFile(image_file.name, image_file.read(), content_type="image/gif")
 
         data = {
+            'community': self.community.pk,
             'title': 'New Thread',
             'content': 'Content for new thread',
             'author': self.user.id,
@@ -181,7 +199,7 @@ class ThreadTests(APITestCase,UsersMixin ):
         self.assertEqual(response.json().get('cover')[0], 'A extensão de arquivo “gif” não é permitida. As extensões válidas são: jpg, jpeg, png .')
 
     def test_patch_thread_update(self):
-        url = reverse('forum:update_thread', args=[self.thread.slug])
+        url = reverse('community:update_thread', args=[self.thread.slug])
 
         data = {
             'title': 'New_Title',
@@ -196,29 +214,39 @@ class ThreadTests(APITestCase,UsersMixin ):
         self.assertEqual(response.json().get('detail'),  'Thread atualizada com sucesso!')
 
     def test_patch_thread_update_with_cover(self):
-        url = reverse('forum:update_thread', args=[self.thread.slug])
+        url = reverse('community:update_thread', args=[self.thread.slug])
 
-        old_cover_path = self.thread.cover.path
-        self.assertTrue(os.path.exists(old_cover_path))
+        image = Image.new('RGB', (1500, 1500), color='red')
+        image_file = BytesIO()
+        image.save(image_file, format='JPEG')
+        image_file.name = 'test_cover.jpg'
+        image_file.seek(0) 
+
+        cover = SimpleUploadedFile(image_file.name, image_file.read(), content_type="image/jpeg")
 
         data = {
             'title': 'New_Title',
             'tags': ['Updated', 'Thread', 'Test'],
-            'cover': None
+            'cover': cover
         }
 
-        response = self.client.patch(url, data, format='json')
-
-        self.thread.refresh_from_db()
-
+        response = self.client.patch(url, data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        thread = Thread.objects.get(title = data['title'])
+        image_path = thread.cover.path
+        with Image.open(image_path) as img:
+            width, height = img.size
+
+        self.assertLessEqual(width, 800)
+        self.assertLessEqual(height, 600)
+
         self.assertEqual(response.json().get('detail'),  'Thread atualizada com sucesso!')
 
-        self.assertFalse(self.thread.cover)
-        self.assertFalse(os.path.exists(old_cover_path))
+        thread.cover.delete()
 
     def test_patch_thread_update_fail_for_404(self):
-        url = reverse('forum:update_thread', args=[999])
+        url = reverse('community:update_thread', args=[999])
 
         data = {
             'title': 'Error_Test',
@@ -231,7 +259,7 @@ class ThreadTests(APITestCase,UsersMixin ):
 
     def test_patch_thread_update_fail_for_invalid_tags(self):
         """Testa a falha ao atualizar uma thread com tags inválidas"""
-        url = reverse('forum:update_thread', args=[self.thread.slug])
+        url = reverse('community:update_thread', args=[self.thread.slug])
 
         data = {
             'tags': 'invalid_format' 
@@ -243,7 +271,7 @@ class ThreadTests(APITestCase,UsersMixin ):
         self.assertEqual(response.json().get('tags')[0], 'Necessário uma lista de itens, mas recebeu tipo "str".')
 
     def test_patch_thread_update_fail_for_unauthorized(self):
-        url = reverse('forum:update_thread', args=[self.thread.slug])
+        url = reverse('community:update_thread', args=[self.thread.slug])
 
         self.client.logout()
 
@@ -257,7 +285,7 @@ class ThreadTests(APITestCase,UsersMixin ):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_patch_thread_update_fail_for_not_owner(self):
-        url = reverse('forum:update_thread', args=[self.thread.slug])
+        url = reverse('community:update_thread', args=[self.thread.slug])
 
         self.client.logout()
         self.client.force_authenticate(self.user2)
@@ -273,7 +301,7 @@ class ThreadTests(APITestCase,UsersMixin ):
         self.assertEqual(response.json(), {'detail': 'Você não tem permissão para fazer essa ação no post'})
 
     def test_get_thread_detail(self):
-        url = reverse('forum:detail_thread', args=[self.thread.slug])
+        url = reverse('community:detail_thread', args=[self.thread.slug])
 
         response = self.client.get(url) 
 
@@ -283,21 +311,21 @@ class ThreadTests(APITestCase,UsersMixin ):
         self.assertEqual(response.json().get('slug'), self.thread.slug)
 
     def test_delete_thread_delete(self):
-        url = reverse('forum:delete_thread', args=[self.thread.slug])
+        url = reverse('community:delete_thread', args=[self.thread.slug])
 
         response = self.client.delete(url)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_delete_thread_delete_fail_for_not_found(self):
-        url = reverse('forum:delete_thread', args=['asasas'])
+        url = reverse('community:delete_thread', args=['asasas'])
 
         response = self.client.delete(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_delete_thread_delete_fail_unauthorized(self):
-        url = reverse('forum:delete_thread', args=[self.thread.slug])
+        url = reverse('community:delete_thread', args=[self.thread.slug])
 
         self.client.logout()
         response = self.client.delete(url)
@@ -305,7 +333,7 @@ class ThreadTests(APITestCase,UsersMixin ):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_delete_thread_delete_fail_for_not_owner(self):
-        url = reverse('forum:delete_thread', args=[self.thread.slug])
+        url = reverse('community:delete_thread', args=[self.thread.slug])
         self.client.logout()
         self.client.force_authenticate(self.user2)
 
@@ -320,8 +348,16 @@ class PostTests(APITestCase, UsersMixin):
         self.user = self.make_user()
         self.user2 = self.make_user_not_autenticated()
         
+        self.community = Community.objects.create(
+            name="Nome da Comunidade",
+            description="Esta é uma descrição da comunidade.",
+            owner=self.user,
+            is_private=True  # ou False, conforme desejado
+        )
+
         self.thread = Thread.objects.create(
-            **{'title': 'Test Thread',
+            **{'community' : self.community,
+            'title': 'Test Thread',
             'content': 'Test content for thread',
             'author': self.user }
         )
@@ -334,7 +370,7 @@ class PostTests(APITestCase, UsersMixin):
             )
 
     def test_post_create_post(self):
-        url = reverse('forum:create_post')
+        url = reverse('community:create_post')
         data = {
             'thread': self.thread.slug,
             'content': 'Content for new post',
@@ -346,7 +382,7 @@ class PostTests(APITestCase, UsersMixin):
         self.assertEqual(response.json().get('detail'), 'Post criado com sucesso!')
 
     def test_post_post_create_fail_for_unauthorized(self):
-        url = reverse('forum:create_post')
+        url = reverse('community:create_post')
         self.client.logout()
 
         data = {
@@ -360,7 +396,7 @@ class PostTests(APITestCase, UsersMixin):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_patch_post_update(self):
-        url = reverse('forum:post_update', args=[self.post.pk])
+        url = reverse('community:post_update', args=[self.post.pk])
 
         data = {'content': 'Updated content for post'}
 
@@ -369,7 +405,7 @@ class PostTests(APITestCase, UsersMixin):
         self.assertEqual(response.json().get('detail'), 'Post atualizado com sucesso!')
 
     def test_patch_post_update_fail_for_404(self):
-        url = reverse('forum:post_update', args=[999])
+        url = reverse('community:post_update', args=[999])
 
         data = {'content': 'Updated content for post'}
         
@@ -379,7 +415,7 @@ class PostTests(APITestCase, UsersMixin):
         self.assertEqual(response.json().get('detail'), 'Post não encontrado!')
 
     def test_patch_post_update_fail_for_unauthorized(self):
-        url = reverse('forum:post_update', args=[self.post.pk])
+        url = reverse('community:post_update', args=[self.post.pk])
 
         self.client.logout()
 
@@ -389,7 +425,7 @@ class PostTests(APITestCase, UsersMixin):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_patch_post_update_fail_for_not_owner(self):
-        url = reverse('forum:post_update', args=[self.post.pk])
+        url = reverse('community:post_update', args=[self.post.pk])
         self.client.logout()
         self.client.force_authenticate(self.user2)
 
@@ -401,14 +437,14 @@ class PostTests(APITestCase, UsersMixin):
 
 
     def test_delete_post_delete(self):
-        url = reverse('forum:post_delete', args=[self.post.pk])
+        url = reverse('community:post_delete', args=[self.post.pk])
 
         response = self.client.delete(url)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_delete_post_delete_fail_for_404(self):
-        url = reverse('forum:post_delete', args=[999])
+        url = reverse('community:post_delete', args=[999])
 
         response = self.client.delete(url)
 
@@ -416,7 +452,7 @@ class PostTests(APITestCase, UsersMixin):
 
 
     def test_delete_post_delete_fail_for_unauthorized(self):
-        url = reverse('forum:post_delete', args=[self.post.pk])
+        url = reverse('community:post_delete', args=[self.post.pk])
         self.client.logout()
 
         response = self.client.delete(url)
@@ -424,7 +460,7 @@ class PostTests(APITestCase, UsersMixin):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_delete_post_delete_fail_for_not_owner(self):
-        url = reverse('forum:post_delete', args=[self.post.pk])
+        url = reverse('community:post_delete', args=[self.post.pk])
 
         self.client.logout()
         self.client.force_authenticate(self.user2)

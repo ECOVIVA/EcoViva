@@ -5,7 +5,7 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.validators import FileExtensionValidator
 from django.dispatch import receiver
 
-from utils.image import validate_image_dimensions, validate_image_size
+from utils.image import validate_image_size, resize_image_preserve_aspect_ratio
 
 """
     Modelos para gerenciamento de usuários.
@@ -78,7 +78,6 @@ class Users(AbstractUser):
         validators=[
             FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png']),  # Aceita apenas formatos específicos
             validate_image_size,  # Valida tamanho máximo do arquivo
-            validate_image_dimensions,  # Valida dimensões mínimas e máximas da imagem
         ],
         null=True, 
         blank=True
@@ -100,6 +99,13 @@ class Users(AbstractUser):
 
 
 # ----- Sinais -----
+
+@receiver(models.signals.post_save, sender=Users)
+def resize_photo_image(sender, instance, **kwargs):
+    # Verifica se a imagem do banner precisa ser redimensionada
+    if instance.photo:
+        photo_path = instance.photo.path
+        resize_image_preserve_aspect_ratio(photo_path, 450, 450)
 
 @receiver(models.signals.post_delete, sender=Users)
 def deletar_imagem_apos_excluir(sender, instance, **kwargs):

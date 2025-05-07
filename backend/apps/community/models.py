@@ -5,7 +5,7 @@ from django.utils.text import slugify
 from django.core.validators import FileExtensionValidator
 from django.dispatch import receiver
 
-from utils.image import validate_image_dimensions, validate_image_size
+from utils.image import validate_image_size, resize_image_preserve_aspect_ratio
 from apps.users.models import Users
 
 """
@@ -29,6 +29,52 @@ class Tags(models.Model):
         return self.name  # Retorna o nome da tag para facilitar a identificação
 
 
+class Community(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(unique=True, blank=True, null=False)
+    description = models.TextField()
+    banner = models.ImageField(upload_to='community_banners/', blank=True, null=True)
+    icon = models.ImageField(upload_to='community_icons/', blank=True, null=True, validators=[
+            FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png']),
+            validate_image_size,
+        ],)
+    owner = models.ForeignKey(Users, on_delete=models.CASCADE, related_name="communities_owned")
+    admins = models.ManyToManyField(Users, blank=True, related_name="communities_admin")
+    pending_requests = models.ManyToManyField(Users, blank=True, related_name="communities_pending")
+    members = models.ManyToManyField(Users, blank=True, related_name="communities_member")
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_private = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+class Event(models.Model):
+    title = models.CharField(max_length=100)
+    description = models.TextField()
+    date = models.DateTimeField()
+
+    location = models.CharField(max_length=255, blank=True)
+    is_online = models.BooleanField(default=False)
+    link = models.URLField(blank=True, null=True)
+
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='events')
+    created_by = models.ForeignKey(Users, on_delete=models.SET_NULL, null=True, related_name='events_created')
+    participants = models.ManyToManyField(Users, blank=True, related_name='events_joined')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.title} - {self.community.name}"
+    
 class Thread(models.Model):
     """
     Modelo que representa uma thread (tópico de discussão).
@@ -43,12 +89,12 @@ class Thread(models.Model):
     - updated_at: Data da última modificação.
     """
 
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
     cover = models.ImageField(
         upload_to="threads_cover",  # Define o diretório de upload das imagens de capa
         validators=[
             FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png']),  # Restringe formatos de imagem
             validate_image_size,  # Valida o tamanho da imagem
-            validate_image_dimensions  # Valida as dimensões da imagem
         ],
         null=True, 
         blank=True
@@ -109,7 +155,7 @@ class Post(models.Model):
             return f'Resposta de {self.author.username} para o post {self.parent_post.id} em "{self.thread.title}"'
         return f'Post de {self.author.username} em "{self.thread.title}"'
 
-# ----- Sinais para manipulação de arquivos de imagem -----
+# ----- Signals -----
 
 @receiver(models.signals.post_delete, sender=Thread)
 def deletar_imagem_apos_excluir(sender, instance, **kwargs):
@@ -123,18 +169,66 @@ def deletar_imagem_apos_excluir(sender, instance, **kwargs):
 
 @receiver(models.signals.pre_save, sender=Thread)
 def delete_old_image(sender, instance, **kwargs):
-    """ 
-    Remove a imagem antiga quando a capa da thread for alterada. 
     """
-    if not instance.pk:  # Se a thread ainda não existir no banco de dados, não faz nada
+    Remove a foto de perfil antiga quando o usuário atualiza sua imagem.
+    """
+    if not instance.pk:  # Se for um novo usuário, não há imagem antiga para excluir
         return
 
     try:
-        old_instance = sender.objects.get(pk=instance.pk)  # Obtém a versão anterior da thread
+        old_instance = sender.objects.get(pk=instance.pk)  # Obtém a versão antiga do usuário
+    except sender.DoesNotExist:
+        return  # Se o usuário não existir, não há nada a excluir
+
+    if old_instance.cover and old_instance.cover != instance.cover:
+        if os.path.isfile(old_instance.cover.path):  # Verifica se a imagem antiga existe
+            os.remove(old_instance.cover.path)  # Exclui o arquivo da imagem antiga
+
+@receiver(models.signals.post_save, sender=Thread)
+def resize_cover_image(sender, instance, **kwargs):
+    if instance.cover:
+        cover_path = instance.cover.path
+        resize_image_preserve_aspect_ratio(cover_path, 800, 600)
+
+@receiver(models.signals.post_save, sender=Community)
+def owner_is_admin(sender, instance, **kwargs):
+    if instance.owner and instance.owner not in instance.admins.all():
+        instance.admins.add(instance.owner)
+        instance.members.add(instance.owner)
+
+@receiver(models.signals.post_delete, sender=Community)
+def deletar_imagens_apos_excluir(sender, instance, **kwargs):
+    """Remove as imagens do servidor quando a comunidade for excluída."""
+    for image_field in [instance.banner, instance.icon]:
+        if image_field and hasattr(image_field, 'path') and os.path.isfile(image_field.path):
+            os.remove(image_field.path)
+
+@receiver(models.signals.pre_save, sender=Community)
+def deletar_imagens_antigas_ao_salvar(sender, instance, **kwargs):
+    """Remove imagens antigas quando os campos forem atualizados."""
+    if not instance.pk:
+        return
+
+    try:
+        old_instance = sender.objects.get(pk=instance.pk)
     except sender.DoesNotExist:
         return
 
-    # Se a thread já tinha uma imagem e o campo for atualizado com uma nova imagem
-    if old_instance.cover and old_instance.cover != instance.cover:  
-        if os.path.isfile(old_instance.cover.path):  # Verifica se a imagem antiga existe
-            os.remove(old_instance.cover.path)  # Exclui a imagem antiga do servidor
+    for field_name in ['banner', 'icon']:
+        old_file = getattr(old_instance, field_name)
+        new_file = getattr(instance, field_name)
+
+        if old_file and old_file != new_file and hasattr(old_file, 'path') and os.path.isfile(old_file.path):
+            os.remove(old_file.path)
+
+@receiver(models.signals.post_save, sender=Community)
+def resize_community_images(sender, instance, **kwargs):
+    # Verifica se a imagem do banner precisa ser redimensionada
+    if instance.banner:
+        banner_path = instance.banner.path
+        resize_image_preserve_aspect_ratio(banner_path, 800, 600)
+
+    # Verifica se a imagem do ícone precisa ser redimensionada
+    if instance.icon:
+        icon_path = instance.icon.path
+        resize_image_preserve_aspect_ratio(icon_path, 250, 250)
