@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 """
@@ -21,16 +21,32 @@ from . import views
 app_name = 'community'
 
 urlpatterns = [
-    # Rotas para Threads
-    path('thread/list/', views.ThreadListView.as_view(), name="list_thread"),  
-    path('thread/create/', views.ThreadCreateView.as_view(), name='create_thread'), 
-    path('thread/<slug:slug>/', views.ThreadDetailView.as_view(), name='detail_thread'), 
-    path('thread/<slug:slug>/like/', views.ThreadLikeView.as_view(), name='like_thread'), 
-    path('thread/<slug:slug>/update/', views.ThreadUpdateView.as_view(), name='update_thread'), 
-    path('thread/<slug:slug>/delete/', views.ThreadDeleteView.as_view(), name='delete_thread'), 
+    path('communities/', include([
+        path('', views.CommunityListView.as_view(), name="list_community"),
+        path('create/', views.CommunityCreateView.as_view(), name='create_community'),
+        path('<slug:slug>/', include([
+            path('', views.CommunityObjectView.as_view(), name='detail_community'),
+            path('update/', views.CommunityUpdateView.as_view(), name='update_community'),
+            path('delete/', views.CommunityDeleteView.as_view(), name='delete_community'),
+            path('requests/', views.CommunityPendingRequestsView.as_view(), name='pending_requests'),
+            path('requests/confirmation/', views.CommunityConfirmationRequestsView.as_view(), name='pending_confirmation'),
 
-    # Rotas para Posts
-    path('post/create/', views.PostCreateView.as_view(), name='create_post'),  
-    path('post/<int:id_post>/update/', views.PostUpdateView.as_view(), name='post_update'),  
-    path('post/<int:id_post>/delete/', views.PostDeleteView.as_view(), name='post_delete'),  
+            path('threads/', include([
+                path('create/', views.ThreadCreateView.as_view(), name='create_thread'),
+                path('', views.ThreadListView.as_view(), name='list_thread'),
+                path('<slug:thread_slug>/', include([
+                    path('', views.ThreadDetailView.as_view(), name='detail_thread'),
+                    path('like/', views.ThreadLikeView.as_view(), name='like_thread'),
+                    path('update/', views.ThreadUpdateView.as_view(), name='update_thread'),
+                    path('delete/', views.ThreadDeleteView.as_view(), name='delete_thread'),
+
+                    path('posts/', include([
+                        path('create/', views.PostCreateView.as_view(), name='create_post'),
+                        path('<int:id_post>/update/', views.PostUpdateView.as_view(), name='post_update'),
+                        path('<int:id_post>/delete/', views.PostDeleteView.as_view(), name='post_delete'),
+                    ])),
+                ])),
+            ])),
+        ])),
+    ])),
 ]

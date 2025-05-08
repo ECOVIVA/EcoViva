@@ -11,3 +11,39 @@ class IsPostOwner(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return obj.author == request.user
+    
+class IsCommunityOwner(BasePermission):
+    """
+    Permite acesso apenas aos donos da bolha relacionada ao CheckIn.
+    """
+    message = "Você não tem permissão para fazer essa ação no post"
+
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        return obj.owner == request.user
+
+class IsCommunityAdmin(BasePermission):
+    """
+    Permite acesso apenas aos donos da bolha relacionada ao CheckIn.
+    """
+    message = "Você não tem permissão para fazer essa ação no post"
+
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        return request.user in obj.admins.all() or request.user == obj.owner
+     
+class IsCommunityMember(BasePermission):
+    """
+    Permite acesso apenas aos donos da bolha relacionada ao CheckIn.
+    """
+    message = "Você não tem permissão para fazer essa ação no post"
+
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated
+
+    def has_object_permission(self, request, view, obj):
+        return request.user in obj.members.all() or request.user == obj.owner
