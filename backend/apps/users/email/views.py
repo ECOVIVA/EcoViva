@@ -7,9 +7,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 
-from ..models import Users
-from .tokens import email_confirmation_token
-from .send_email import send_confirmation_email
+from apps.users.models import Users
+from apps.users.email.tokens import email_confirmation_token
+from apps.users.email.send_email import send_confirmation_email
 
 """
     Este arquivo contém as views responsáveis pela confirmação e reenvio de e-mails de ativação de conta.

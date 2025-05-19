@@ -1,0 +1,163 @@
+from rest_framework.generics import GenericAPIView
+from rest_framework.mixins import ( RetrieveModelMixin, ListModelMixin, CreateModelMixin, UpdateModelMixin, DestroyModelMixin)
+from rest_framework.response import Response  
+from rest_framework.exceptions import NotFound
+from rest_framework import status, permissions  
+
+from apps.users.auth.permissions import IsCommunityAdmin, IsCommunityMember, IsCommunityOwner
+from apps.community.models.community import *
+from apps.community.serializers.community import *
+
+class CommunityListView(GenericAPIView, ListModelMixin):
+    permission_classes = [permissions.IsAuthenticated]  
+    serializer_class = CommunitySerializer
+
+    def get_queryset(self):
+        queryset = Community.objects.select_related('owner').prefetch_related('members')
+        if not queryset:
+            raise NotFound("Não há comunidades!")
+        return queryset
+    
+    def get(self, request, *args, **kwargs):  
+        return self.list(request, *args, **kwargs)
+    
+class CommunityObjectView(GenericAPIView, RetrieveModelMixin):
+    permission_classes = [IsCommunityMember]  
+    serializer_class = CommunitySerializer
+
+    def get_object(self):
+        slug = self.kwargs.get('slug')
+        try:
+            return models.Community.objects.select_related('owner').prefetch_related('admins', 'members').get(slug = slug)
+        except models.Thread.DoesNotExist:
+            raise NotFound("Comunidade não encontrada!")
+    
+    def get(self, request, *args, **kwargs):  
+        return self.retrieve(request, *args, **kwargs)
+
+class CommunityRegisterUser(GenericAPIView, CreateModelMixin):
+    def post(self, request,*args, **kwargs):
+        slug = self.kwargs.get('slug')
+        user = request.user
+
+        community = Community.objects.get(slug = slug)
+
+        if not community:
+            raise NotFound("Comunidade não encontrada!")
+        
+        if community.is_private:
+            community.pending_requests.add(user)
+            return Response({'detail': 'Usuário adicionado a lista de pendencias.'}, status=status.HTTP_200_OK)
+        else:
+            community.members.add(user)
+            return Response({'detail': 'Usuário adicionado ao grupo.'}, status=status.HTTP_200_OK)     
+    
+class CommunityPendingRequestsView(GenericAPIView, RetrieveModelMixin):
+    permission_classes = [IsCommunityAdmin]  
+    serializer_class = CommunitySerializer
+
+    def get_queryset(self):
+        queryset = Community.objects.prefetch_related('pending_requests')
+        if not queryset:
+            raise NotFound("Não há requisições!")
+        return queryset
+    
+    def get(self, request, *args, **kwargs):  
+        return self.retrieve(request, *args, **kwargs)
+
+class CommunityConfirmationRequestsView(GenericAPIView):
+    permission_classes = [IsCommunityAdmin]
+    serializer_class = CommunitySerializer
+
+    def post(self, request, *args, **kwargs):
+        slug = self.kwargs.get('slug')
+        request_id = request.data.get('request_id')
+        confirmation = request.data.get('confirmation')
+
+        if confirmation is None or not isinstance(confirmation, bool):
+            return Response(
+                {'detail': 'A confirmação deve ser um booleano.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        community = Community.objects.prefetch_related('pending_requests').get(slug = slug)
+
+        if confirmation:
+            user = community.pending_requests.filter(id = request_id).first()
+            if user:
+                community.pending_requests.remove(user)
+                community.members.add(user)
+                return Response({'detail': 'Usuário confirmado como membro.'}, status=status.HTTP_200_OK)
+            return Response({'detail': 'Usuário não está na lista de solicitações pendentes.'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            community.pending_requests.remove(user)
+            return Response({'detail': 'Solicitação negada com sucesso.'}, status=status.HTTP_200_OK)
+
+
+class CommunityCreateView(GenericAPIView, CreateModelMixin):  
+    """ Cria uma nova thread. Apenas usuários autenticados podem acessar. """  
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CommunitySerializer  
+
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()  
+
+        data["owner"] = request.user.pk
+
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response({'detail': 'Comunidade criada com sucesso!'}, status=status.HTTP_201_CREATED)
+    
+    def post(self, request):  
+        return self.create(request)
+
+
+class CommunityUpdateView(GenericAPIView, UpdateModelMixin):  
+    """ Atualiza parcialmente uma thread. Apenas o dono da thread pode modificar. """  
+    permission_classes = [IsCommunityAdmin]  
+    serializer_class = CommunitySerializer
+
+    def get_object(self):
+        slug = self.kwargs.get('slug')
+        try:
+            queryset = Community.objects.get(slug = slug)
+            self.check_object_permissions(self.request, queryset)
+            return queryset
+        except Community.DoesNotExist:
+            raise NotFound("Comunidade não encontrada!")
+        
+    def partial_update(self, request, *args, **kwargs):
+            instance = self.get_object()
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+
+            if getattr(instance, '_prefetched_objects_cache', None):
+                instance._prefetched_objects_cache = {}
+
+            return Response({'detail': 'Thread atualizada com sucesso!'}, status=status.HTTP_200_OK)  
+    
+    def patch(self, request, *args, **kwargs):  
+        return self.partial_update(request,  *args, **kwargs)
+    
+class CommunityDeleteView(GenericAPIView, DestroyModelMixin):  
+    """ Deleta uma thread. Apenas o dono da thread pode excluir. """  
+    permission_classes = [IsCommunityOwner]  
+
+    def get_object(self):
+        slug = self.kwargs.get('slug')
+        try:
+            queryset = Community.objects.get(slug = slug)
+            self.check_object_permissions(self.request, queryset)
+            return queryset
+        except Community.DoesNotExist:
+            raise NotFound("Thread não encontrada!")
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'detail': 'Comunidade deletada com sucesso!'}, status=status.HTTP_204_NO_CONTENT)  
+    
+    def delete(self, request, *args, **kwargs):  
+        return self.destroy(request,  *args, **kwargs) 

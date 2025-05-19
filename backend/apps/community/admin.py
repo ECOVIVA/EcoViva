@@ -1,15 +1,7 @@
 from django.contrib import admin
-from .models import Thread, Post, Tags, Community
-
-"""
-    Configuração do Django Admin para gerenciamento dos modelos Thread, Post e Tags.
-
-    - ThreadAdmin: Configuração para visualizar e administrar threads no painel de administração.
-    - PostAdmin: Configuração para exibição e controle dos posts dentro de threads.
-    - TagsAdmin: Interface para gerenciamento das tags associadas às threads.
-
-    As configurações incluem filtros, pesquisa, preenchimento automático de campos e otimização de queries.
-"""
+from apps.community.models.community import *
+from apps.community.models.threads import *
+from apps.community.models.events import *
 
 @admin.register(Community)
 class CommunityAdmin(admin.ModelAdmin):
@@ -22,71 +14,102 @@ class CommunityAdmin(admin.ModelAdmin):
 
 @admin.register(Thread)
 class ThreadAdmin(admin.ModelAdmin):
-    """
-    Configuração da administração de Threads no Django Admin.
-    
-    - Exibe informações essenciais na lista de threads.
-    - Permite busca por título e conteúdo.
-    - Adiciona filtros para facilitar a navegação.
-    - Preenche automaticamente o slug com base no título.
-    """
-    list_display = ('id','community__name', 'title', 'author', 'created_at', 'updated_at', 'slug')  # Campos visíveis na lista de threads
-    search_fields = ('title', 'content')  # Habilita busca pelo título e conteúdo da thread
-    list_filter = ('created_at','community__name', 'author', 'tags')  # Filtros laterais para data de criação, autor e tags
-    list_select_related = ('author',)  # Otimiza consultas carregando os autores das threads antecipadamente
-    prepopulated_fields = {'slug': ('title',)}  # Preenche automaticamente o slug com base no título
+    list_display = ('id','community__name', 'title', 'author', 'created_at', 'updated_at', 'slug')
+    search_fields = ('title', 'content')
+    list_filter = ('created_at','community__name', 'author', 'tags')
+    list_select_related = ('author',)
+    prepopulated_fields = {'slug': ('title',)}
 
     fieldsets = (
         (None, {
-            'fields': ('title','community', 'content', 'tags', 'author', 'slug', 'cover')  # Campos principais da thread
+            'fields': ('title','community', 'content', 'tags', 'author', 'slug', 'cover')
         }),
         ('Datas', {
-            'fields': ('created_at', "likes"),  # Exibe a data de criação da thread
-            'classes': ('collapse',)  # Oculta essa seção por padrão para um layout mais limpo
+            'fields': ('created_at', "likes"),
+            'classes': ('collapse',)
         }),
     )
-
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    """
-    Configuração da administração de Posts no Django Admin.
-    
-    - Exibe os principais detalhes dos posts.
-    - Permite busca pelo conteúdo dos posts.
-    - Adiciona filtros para facilitar a navegação.
-    - Melhora a performance com list_select_related.
-    """
-    list_display = ('id', 'content', 'author', 'thread', 'created_at', 'updated_at')  # Lista de posts
-    search_fields = ('content',)  # Habilita pesquisa pelo conteúdo do post
-    list_filter = ('created_at', 'author', 'thread', )  # Filtros laterais para organização dos posts
-    list_select_related = ('author', 'thread')  # Otimiza consultas carregando os relacionamentos antecipadamente
+    list_display = ('id', 'content', 'author', 'thread', 'created_at', 'updated_at')
+    search_fields = ('content',)
+    list_filter = ('created_at', 'author', 'thread', )
+    list_select_related = ('author', 'thread')
 
     fieldsets = (
         (None, {
-            'fields': ('content', 'author', 'thread', )  # Campos principais do post
+            'fields': ('content', 'author', 'thread', )
         }),
         ('Datas', {
-            'fields': ('created_at', ),  # Exibe datas do post
-            'classes': ('collapse',)  # Oculta essa seção por padrão
+            'fields': ('created_at', ),
+            'classes': ('collapse',)
         }),
     )
-
 
 @admin.register(Tags)
 class TagsAdmin(admin.ModelAdmin):
-    """
-    Configuração da administração de Tags no Django Admin.
-    
-    - Exibe as tags cadastradas.
-    - Permite busca pelo nome da tag.
-    """
-    list_display = ('id', 'name')  # Exibe o ID e nome da tag na listagem
-    search_fields = ('name',)  # Habilita pesquisa pelo nome da tag
-    prepopulated_fields = {'name': ('name',)}  # Sugestão automática do nome da tag
+    list_display = ('id', 'name')
+    search_fields = ('name',)
+    prepopulated_fields = {'name': ('name',)}
 
     fieldsets = (
         (None, {
-            'fields': ('name',)  # Campo principal para definir o nome da tag
+            'fields': ('name',)
         }),
     )
+
+@admin.register(Gincana)
+class GincanaAdmin(admin.ModelAdmin):
+    list_display = ('title', 'community', 'deadline', 'created_at')
+    search_fields = ('title',)
+    list_filter = ('community', 'deadline')
+
+@admin.register(GincanaCompetitor)
+class GincanaCompetitorAdmin(admin.ModelAdmin):
+    list_display = ('name', 'gincana', 'points')
+    search_fields = ('name',)
+    list_filter = ('gincana',)
+    filter_horizontal = ('members',)
+
+@admin.register(GincanaRecord)
+class GincanaRecordAdmin(admin.ModelAdmin):
+    list_display = ('competitor_group', 'gincana', 'registered_by', 'collected_at')
+    list_filter = ('gincana', 'collected_at')
+    search_fields = ('competitor_group__name',)
+
+@admin.register(Campanha)
+class CampanhaAdmin(admin.ModelAdmin):
+    list_display = ('title', 'community', 'deadline', 'created_at')
+    search_fields = ('title',)
+    list_filter = ('community', 'deadline')
+
+@admin.register(CampanhaParticipant)
+class CampanhaParticipantAdmin(admin.ModelAdmin):
+    list_display = ('user', 'campanha', 'joined_at')
+    list_filter = ('campanha', 'joined_at')
+    search_fields = ('user__username',)
+
+@admin.register(Quiz)
+class QuizAdmin(admin.ModelAdmin):
+    list_display = ('title', 'gincana', 'campanha', 'created_at')
+    list_filter = ('gincana', 'campanha', 'created_at')
+    search_fields = ('title',)
+
+@admin.register(QuizQuestion)
+class QuizQuestionAdmin(admin.ModelAdmin):
+    list_display = ('text', 'quiz')
+    search_fields = ('text',)
+    list_filter = ('quiz',)
+
+@admin.register(QuizOption)
+class QuizOptionAdmin(admin.ModelAdmin):
+    list_display = ('text', 'question', 'is_correct')
+    list_filter = ('is_correct', 'question')
+    search_fields = ('text',)
+
+@admin.register(QuizAnswer)
+class QuizAnswerAdmin(admin.ModelAdmin):
+    list_display = ('user', 'question', 'selected_option', 'answered_at')
+    search_fields = ('user__username',)
+    list_filter = ('answered_at',)
