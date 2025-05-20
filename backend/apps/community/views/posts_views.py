@@ -34,7 +34,7 @@ class PostUpdateView(GenericAPIView, UpdateModelMixin):
     def get_object(self):
         id_post = self.kwargs.get('id_post')
         try:
-            queryset = models.Post.objects.select_related('author', 'thread').get(id = id_post)
+            queryset = Post.objects.select_related('author', 'thread').get(id = id_post)
             self.check_object_permissions(self.request, queryset)
             return queryset
         except Post.DoesNotExist:
@@ -62,7 +62,7 @@ class PostDeleteView(GenericAPIView, DestroyModelMixin):
     def get_object(self):
         id_post = self.kwargs.get('id_post')
         try:
-            queryset = models.Post.objects.get(id = id_post)
+            queryset = Post.objects.get(id = id_post)
             self.check_object_permissions(self.request, queryset)
             return queryset
         except Post.DoesNotExist:

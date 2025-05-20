@@ -1,8 +1,8 @@
 from rest_framework import serializers
 from apps.users.serializers import UsersSerializer, UsersMinimalSerializer
 from apps.users.models import Users
-from models.threads import Post, Thread, Tags
-from models.community import Community
+from apps.community.models.threads import Post, Thread, Tags
+from apps.community.models.community import Community
 
 class PostsSerializer(serializers.ModelSerializer):
     author = serializers.PrimaryKeyRelatedField(

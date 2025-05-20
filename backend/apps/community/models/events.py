@@ -62,7 +62,7 @@ class GincanaCompetitor(models.Model):
 class GincanaRecord(models.Model):
     gincana = models.ForeignKey(Gincana, on_delete=models.CASCADE, related_name='collection_records')
     competitor_group = models.ForeignKey(GincanaCompetitor, on_delete=models.CASCADE, related_name='collection_records')
-    registered_by = models.ForeignKey('apps.users.Users', on_delete=models.SET_NULL, null=True, blank=True, related_name='collection_records')
+    registered_by = models.ForeignKey(Users, on_delete=models.SET_NULL, null=True, blank=True, related_name='collection_records')
     
     metal_qty = models.PositiveIntegerField(default=0)
     paper_qty = models.PositiveIntegerField(default=0)

@@ -1,7 +1,7 @@
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from apps.community.models import Thread, Post, Community
+from apps.community.models.threads import Thread, Post, Community
 from apps.users.tests import UsersMixin
 
 class PostTests(APITestCase, UsersMixin):

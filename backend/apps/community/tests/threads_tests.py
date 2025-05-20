@@ -4,7 +4,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from io import BytesIO
 from PIL import Image
-from apps.community.models import Thread, Community
+from apps.community.models.threads import Thread
+from apps.community.models.community import Community
 from apps.users.tests import UsersMixin
 
 class ThreadTests(APITestCase, UsersMixin):

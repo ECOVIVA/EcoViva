@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from apps.users.serializers import UsersSerializer, UsersMinimalSerializer
 from apps.users.models import Users
-from models.community import Community
+from apps.community.models.community import Community
 
 class CommunitySerializer(serializers.ModelSerializer):
     owner = serializers.PrimaryKeyRelatedField(queryset=Users.objects.all())

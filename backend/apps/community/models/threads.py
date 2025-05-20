@@ -66,14 +66,14 @@ class Post(models.Model):
             return f'Resposta de {self.author.username} para o post {self.parent_post.id} em "{self.thread.title}"'
         return f'Post de {self.author.username} em "{self.thread.title}"'
     
-@receiver(models.signals.post_delete, sender=models.Thread)
+@receiver(models.signals.post_delete, sender=Thread)
 def deletar_imagem_apos_excluir(sender, instance, **kwargs):
     if instance.cover: 
         if os.path.isfile(instance.cover.path):  
             os.remove(instance.cover.path)  
 
 
-@receiver(models.signals.pre_save, sender=models.Thread)
+@receiver(models.signals.pre_save, sender=Thread)
 def delete_old_image(sender, instance, **kwargs):
     if not instance.pk: 
         return
@@ -87,7 +87,7 @@ def delete_old_image(sender, instance, **kwargs):
         if os.path.isfile(old_instance.cover.path): 
             os.remove(old_instance.cover.path)  
 
-@receiver(models.signals.post_save, sender=models.Thread)
+@receiver(models.signals.post_save, sender=Thread)
 def resize_cover_image(sender, instance, **kwargs):
     if instance.cover:
         cover_path = instance.cover.path

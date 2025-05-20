@@ -33,22 +33,20 @@ class Community(models.Model):
         return self.name
     
 
-@receiver(models.signals.post_save, sender=models.Community)
+@receiver(models.signals.post_save, sender=Community)
 def owner_is_admin(sender, instance, **kwargs):
     if instance.owner and instance.owner not in instance.admins.all():
         instance.admins.add(instance.owner)
         instance.members.add(instance.owner)
 
-@receiver(models.signals.post_delete, sender=models.Community)
+@receiver(models.signals.post_delete, sender=Community)
 def deletar_imagens_apos_excluir(sender, instance, **kwargs):
-    """Remove as imagens do servidor quando a comunidade for excluída."""
     for image_field in [instance.banner, instance.icon]:
         if image_field and hasattr(image_field, 'path') and os.path.isfile(image_field.path):
             os.remove(image_field.path)
 
-@receiver(models.signals.pre_save, sender=models.Community)
+@receiver(models.signals.pre_save, sender=Community)
 def deletar_imagens_antigas_ao_salvar(sender, instance, **kwargs):
-    """Remove imagens antigas quando os campos forem atualizados."""
     if not instance.pk:
         return
 
@@ -64,14 +62,12 @@ def deletar_imagens_antigas_ao_salvar(sender, instance, **kwargs):
         if old_file and old_file != new_file and hasattr(old_file, 'path') and os.path.isfile(old_file.path):
             os.remove(old_file.path)
 
-@receiver(models.signals.post_save, sender=models.Community)
+@receiver(models.signals.post_save, sender=Community)
 def resize_community_images(sender, instance, **kwargs):
-    # Verifica se a imagem do banner precisa ser redimensionada
     if instance.banner:
         banner_path = instance.banner.path
         resize_image_preserve_aspect_ratio(banner_path, 800, 600)
 
-    # Verifica se a imagem do ícone precisa ser redimensionada
     if instance.icon:
         icon_path = instance.icon.path
         resize_image_preserve_aspect_ratio(icon_path, 250, 250)
