@@ -10,7 +10,6 @@ from apps.users.tests import UsersMixin
 
 class ThreadTests(APITestCase, UsersMixin):
     def setUp(self):
-        # Criação de um usuário para os testes
         self.user = self.make_user()
         self.user2 = self.make_user_not_autenticated()
         

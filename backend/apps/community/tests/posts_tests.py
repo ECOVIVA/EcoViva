@@ -6,7 +6,6 @@ from apps.users.tests import UsersMixin
 
 class PostTests(APITestCase, UsersMixin):
     def setUp(self):
-        # Criação de um usuário para os testes
         self.user = self.make_user()
         self.user2 = self.make_user_not_autenticated()
         
@@ -14,7 +13,7 @@ class PostTests(APITestCase, UsersMixin):
             name="Nome da Comunidade",
             description="Esta é uma descrição da comunidade.",
             owner=self.user,
-            is_private=True  # ou False, conforme desejado
+            is_private=True 
         )
 
         self.thread = Thread.objects.create(
