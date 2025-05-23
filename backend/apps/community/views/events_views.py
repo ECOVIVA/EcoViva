@@ -2,7 +2,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.mixins import ( RetrieveModelMixin, ListModelMixin, CreateModelMixin, UpdateModelMixin, DestroyModelMixin)
 from rest_framework.response import Response  
 from rest_framework.exceptions import NotFound
-from rest_framework import status, permissions  
+from rest_framework import status 
 
 from apps.users.auth.permissions import IsCommunityAdmin, IsCommunityMember, IsCommunityOwner
 from apps.community.models.events import *
@@ -14,7 +14,7 @@ class GincanaListView(GenericAPIView, ListModelMixin):
     
     def get_queryset(self, *args, **kwargs):
         community_slug = self.kwargs.get('slug')
-        queryset = Gincana.objects.select_related('community').filter(community = community_slug)
+        queryset = Gincana.objects.filter(community = community_slug)
         if not queryset:
             raise NotFound("Não há Gincanas!")
         return queryset
@@ -29,7 +29,7 @@ class GincanaObjectView(GenericAPIView, RetrieveModelMixin):
     def get_object(self):
         id = self.kwargs.get('id_gincana')
         try:
-            return Gincana.objects.select_related('owner').prefetch_related('admins', 'members').get(id = id)
+            return Gincana.objects.get(id = id)
         except Gincana.DoesNotExist:
             raise NotFound("Gincana não encontrada!")
     
@@ -136,8 +136,8 @@ class GincanaRecordObjectView(GenericAPIView, RetrieveModelMixin):
     def get_object(self):
         id = self.kwargs.get('id_gincana')
         try:
-            return Gincana.objects.select_related('owner').prefetch_related('admins', 'members').get(id = id)
-        except Gincana.DoesNotExist:
+            return GincanaRecord.objects.get(id = id)
+        except GincanaRecord.DoesNotExist:
             raise NotFound("Registro não encontrado!")
     
     def get(self, request, *args, **kwargs):
