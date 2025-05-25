@@ -7,13 +7,42 @@ class GincanaSerializer(serializers.ModelSerializer):
         model = Gincana
         fields = '__all__'
 
-class GincanaCompetitorSerializer(serializers.ModelSerializer):
-    members = serializers.PrimaryKeyRelatedField(many=True, queryset=Users.objects.all())
+class GincanaCompetitorListSerializer(serializers.ListSerializer):
+    members = serializers.PrimaryKeyRelatedField(many=True, queryset=Users.objects.all(), required = False)
 
     class Meta:
         model = GincanaCompetitor
         fields = ['id', 'gincana', 'name', 'points', 'members']
 
+    def validate(self, data):
+        gincana = self.context.get('gincana')
+        names = [item['name'] for item in data]
+
+        if len(names) != len(set(names)):
+            raise serializers.ValidationError(
+                "Existem nomes duplicados na lista enviada."
+            )
+
+        existentes = GincanaCompetitor.objects.filter(
+            gincana=gincana,
+            name__in=names
+        ).values_list('name', flat=True)
+
+        if existentes:
+            raise serializers.ValidationError(
+                f"Os seguintes nomes já existem nesta gincana: {', '.join(existentes)}"
+            )
+
+        return data
+    
+class GincanaCompetitorSerializer(serializers.ModelSerializer):
+    members = serializers.PrimaryKeyRelatedField(many=True, queryset=Users.objects.all(), required = False)
+
+    class Meta:
+        model = GincanaCompetitor
+        list_serializer_class = GincanaCompetitorListSerializer
+        fields = ['id', 'gincana', 'name', 'points', 'members']
+    
 class GincanaRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = GincanaRecord

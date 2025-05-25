@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.dispatch import receiver
 from apps.users.models import Users
 from .community import Community
 
@@ -7,7 +8,6 @@ class BaseEvent(models.Model):
     community = models.ForeignKey(
         Community, 
         on_delete=models.CASCADE, 
-        related_name='%(class)ss',
         verbose_name="Community"
     )
     created_by = models.ForeignKey(
@@ -41,12 +41,13 @@ class Gincana(BaseEvent):
         verbose_name_plural = "Gincanas"
 
 class GincanaCompetitor(models.Model):
+
     gincana = models.ForeignKey(
         Gincana, on_delete=models.CASCADE, related_name='competitor_groups',
         verbose_name="Gincana"
     )
     name = models.CharField(max_length=100, verbose_name="Group Name")
-    points = models.PositiveIntegerField()
+    points = models.PositiveIntegerField(blank=True, default=0)
     members = models.ManyToManyField(
         Users, blank=True, related_name='gincana_groups',
         verbose_name="Members"
@@ -55,6 +56,7 @@ class GincanaCompetitor(models.Model):
     class Meta:
         verbose_name = "Gincana Competitor"
         verbose_name_plural = "Gincana Competitors"
+        unique_together = ('gincana', 'name')
 
     def __str__(self):
         return f"{self.name} - {self.gincana.title}"
@@ -156,3 +158,21 @@ class QuizAnswer(models.Model):
         unique_together = ('user', 'question')
         verbose_name = "Quiz Answer"
         verbose_name_plural = "Quiz Answers"
+
+@receiver(models.signals.post_save, sender=GincanaRecord)
+def points_for_record(sender, instance, created, **kwargs):
+    if not created:
+        return  
+
+    gincana = instance.gincana
+    competitor = instance.competitor_group
+
+    pontos = (
+        instance.metal_qty * gincana.metal_points +
+        instance.paper_qty * gincana.paper_points +
+        instance.plastic_qty * gincana.plastic_points +
+        instance.glass_qty * gincana.glass_points
+    )
+
+    competitor.points += pontos
+    competitor.save()

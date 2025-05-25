@@ -11,8 +11,7 @@ urlpatterns = [
         path('register/', community_views.CommunityRegisterUser.as_view(), name='register_user'),
         path('requests/', community_views.CommunityPendingRequestsView.as_view(), name='pending_requests'),
         path('requests/confirmation/', community_views.CommunityConfirmationRequestsView.as_view(), name='pending_confirmation'),
-        path('threads/', include([
-            path('', include('apps.community.urls_.threads')),
-        ])),
+        path('threads/', include('apps.community.urls_.threads')),
+        path('events/', include('apps.community.urls_.events'))
     ])),
 ]
