@@ -1,14 +1,14 @@
 from rest_framework.generics import GenericAPIView
-from rest_framework.mixins import ( RetrieveModelMixin, ListModelMixin, CreateModelMixin, UpdateModelMixin, DestroyModelMixin)
+from rest_framework.mixins import ( RetrieveModelMixin, ListModelMixin, CreateModelMixin, DestroyModelMixin,UpdateModelMixin)
 from rest_framework.response import Response  
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework import status 
 
 from apps.users.auth.permissions import IsCommunityAdmin, IsCommunityMember, IsCommunityOwner
 from apps.community.models.events import *
 from apps.community.serializers.events import *
 
-class GincanaListView(GenericAPIView, ListModelMixin):
+class ChallengeListView(GenericAPIView, ListModelMixin):
     permission_classes = [IsCommunityMember]
     serializer_class = GincanaSerializer
     
@@ -31,7 +31,7 @@ class GincanaListView(GenericAPIView, ListModelMixin):
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
-class GincanaObjectView(GenericAPIView, RetrieveModelMixin):
+class ChallengeObjectView(GenericAPIView, RetrieveModelMixin):
     permission_classes = [IsCommunityMember]
     serializer_class = GincanaSerializer
     
@@ -54,7 +54,7 @@ class GincanaObjectView(GenericAPIView, RetrieveModelMixin):
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
 
-class GincanaCreateView(GenericAPIView, CreateModelMixin):
+class ChallengeCreateView(GenericAPIView, CreateModelMixin):
     permission_classes = [IsCommunityAdmin]
     serializer_class = GincanaSerializer
     
@@ -81,7 +81,7 @@ class GincanaCreateView(GenericAPIView, CreateModelMixin):
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
-class GincanaDeleteView(GenericAPIView, DestroyModelMixin):
+class ChallengeDeleteView(GenericAPIView, DestroyModelMixin):
     permission_classes = [IsCommunityAdmin]
     serializer_class = GincanaSerializer
     
@@ -109,7 +109,7 @@ class GincanaDeleteView(GenericAPIView, DestroyModelMixin):
     def delete(self, request, *args, **kwargs):  
         return self.destroy(request,  *args, **kwargs)
 
-class GincanaCompetitorCreateView(GenericAPIView, CreateModelMixin):
+class ChallengeCompetitorCreateView(GenericAPIView, CreateModelMixin):
     permission_classes = [IsCommunityAdmin]
     serializer_class = GincanaCompetitorSerializer
     
@@ -149,7 +149,7 @@ class GincanaCompetitorCreateView(GenericAPIView, CreateModelMixin):
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
-class GincanaCompetitorDeleteView(GenericAPIView, DestroyModelMixin):
+class ChallengeCompetitorDeleteView(GenericAPIView, DestroyModelMixin):
     permission_classes = [IsCommunityAdmin]
     serializer_class = GincanaCompetitorSerializer
     
@@ -184,7 +184,7 @@ class GincanaCompetitorDeleteView(GenericAPIView, DestroyModelMixin):
     def delete(self, request, *args, **kwargs):  
         return self.destroy(request,  *args, **kwargs)
 
-class GincanaRecordCreateView(GenericAPIView, CreateModelMixin):
+class ChallengeRecordCreateView(GenericAPIView, CreateModelMixin):
     permission_classes = [IsCommunityAdmin]
     serializer_class = GincanaRecordSerializer
     
@@ -223,17 +223,3 @@ class GincanaRecordCreateView(GenericAPIView, CreateModelMixin):
     
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
-    
-class GincanaRecordObjectView(GenericAPIView, RetrieveModelMixin):
-    permission_classes = [IsCommunityAdmin]
-    serializer_class = GincanaRecordSerializer
-    
-    def get_object(self):
-        id = self.kwargs.get('id_gincana')
-        try:
-            return GincanaRecord.objects.get(id = id)
-        except GincanaRecord.DoesNotExist:
-            raise NotFound("Registro não encontrado!")
-    
-    def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)

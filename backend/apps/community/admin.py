@@ -59,57 +59,27 @@ class TagsAdmin(admin.ModelAdmin):
         }),
     )
 
-@admin.register(Gincana)
+@admin.register(Challenge)
 class GincanaAdmin(admin.ModelAdmin):
     list_display = ('title', 'community', 'deadline', 'created_at')
     search_fields = ('title',)
     list_filter = ('community', 'deadline')
 
-@admin.register(GincanaCompetitor)
+@admin.register(ChallengeCompetitor)
 class GincanaCompetitorAdmin(admin.ModelAdmin):
     list_display = ('name', 'gincana', 'points')
     search_fields = ('name',)
     list_filter = ('gincana',)
     filter_horizontal = ('members',)
 
-@admin.register(GincanaRecord)
+@admin.register(ChallengeRecord)
 class GincanaRecordAdmin(admin.ModelAdmin):
     list_display = ('competitor_group', 'gincana', 'registered_by', 'collected_at')
     list_filter = ('gincana', 'collected_at')
     search_fields = ('competitor_group__name',)
 
-@admin.register(Campanha)
+@admin.register(Campaign)
 class CampanhaAdmin(admin.ModelAdmin):
     list_display = ('title', 'community', 'deadline', 'created_at')
     search_fields = ('title',)
     list_filter = ('community', 'deadline')
-
-@admin.register(CampanhaParticipant)
-class CampanhaParticipantAdmin(admin.ModelAdmin):
-    list_display = ('user', 'campanha', 'joined_at')
-    list_filter = ('campanha', 'joined_at')
-    search_fields = ('user__username',)
-
-@admin.register(Quiz)
-class QuizAdmin(admin.ModelAdmin):
-    list_display = ('title', 'gincana', 'campanha', 'created_at')
-    list_filter = ('gincana', 'campanha', 'created_at')
-    search_fields = ('title',)
-
-@admin.register(QuizQuestion)
-class QuizQuestionAdmin(admin.ModelAdmin):
-    list_display = ('text', 'quiz')
-    search_fields = ('text',)
-    list_filter = ('quiz',)
-
-@admin.register(QuizOption)
-class QuizOptionAdmin(admin.ModelAdmin):
-    list_display = ('text', 'question', 'is_correct')
-    list_filter = ('is_correct', 'question')
-    search_fields = ('text',)
-
-@admin.register(QuizAnswer)
-class QuizAnswerAdmin(admin.ModelAdmin):
-    list_display = ('user', 'question', 'selected_option', 'answered_at')
-    search_fields = ('user__username',)
-    list_filter = ('answered_at',)
