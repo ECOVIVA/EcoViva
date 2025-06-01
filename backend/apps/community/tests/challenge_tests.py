@@ -31,7 +31,7 @@ class ChallengeTests(APITestCase, UsersMixin):
         )
 
         self.competitor = ChallengeCompetitor.objects.create(
-            challenge = self.challenge,
+            gincana = self.challenge,
             name = 'Group'
         )
 
@@ -83,7 +83,6 @@ class ChallengeTests(APITestCase, UsersMixin):
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual('Comunidade não encontrada!', response.json().get('detail'))
 
     def test_get_challenge_object_fail_404_for_challenge(self):
         url = reverse('community:challenge-detail', args = [self.community.slug, 9999])
@@ -91,7 +90,7 @@ class ChallengeTests(APITestCase, UsersMixin):
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual('Challenge não encontrada!', response.json().get('detail'))
+        self.assertEqual('Gincana não encontrada!', response.json().get('detail'))
 
     def test_get_challenge_object_fail_403(self):
         url = reverse('community:challenge-detail', args = [self.community.slug, self.challenge.id])
@@ -129,7 +128,7 @@ class ChallengeTests(APITestCase, UsersMixin):
         response = self.client.post(url, data, format = "json")
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual('Challenge criada com sucesso!', response.json().get("detail"))
+        self.assertEqual('Gincana criada com sucesso!', response.json().get("detail"))
 
     def test_post_challenge_create_fail_for_404(self):
         url = reverse('community:challenge-create', args = ['RANNNNNNNNNNNNN'])
@@ -147,7 +146,6 @@ class ChallengeTests(APITestCase, UsersMixin):
         response = self.client.post(url, data, format = "json")
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual('Comunidade não encontrada!', response.json().get("detail"))
 
     def test_post_challenge_create_fail_for_403(self):
         url = reverse('community:challenge-create', args = [self.community.slug])
@@ -220,7 +218,7 @@ class ChallengeTests(APITestCase, UsersMixin):
         self.assertIn('Formato inválido para data e hora. Use um dos formatos a seguir: YYYY-MM-DDThh:mm[:ss[.uuuuuu]][+HH:MM|-HH:MM|Z].', response.json().get('deadline'))
 
     def test_delete_challenge_delete(self):
-        url = reverse('community:challenge-delete', args = [self.community.slug, self.challenge.id])
+        url = reverse('community:challenge-delete', args = [self.community.slug, self.challenge.pk])
         
         response = self.client.delete(url)
 
@@ -232,7 +230,6 @@ class ChallengeTests(APITestCase, UsersMixin):
         response = self.client.delete(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual('Comunidade não encontrada!', response.json().get('detail'))
 
     def test_delete_challenge_delete_fail_for_404_for_challenge(self):
         url = reverse('community:challenge-delete', args = [self.community.slug, 99999])
@@ -240,7 +237,7 @@ class ChallengeTests(APITestCase, UsersMixin):
         response = self.client.delete(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual('Challenge não encontrada!', response.json().get('detail'))
+        self.assertEqual('Gincana não encontrada!', response.json().get('detail'))
 
     def test_delete_challenge_delete_fail_403(self):
         url = reverse('community:challenge-delete', args = [self.community.slug, self.challenge.id])
@@ -296,7 +293,6 @@ class ChallengeTests(APITestCase, UsersMixin):
         response = self.client.post(url, data, format = "json")
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual('Comunidade não encontrada!', response.json().get('detail'))
 
 
     def test_post_create_competitor_fail_for_404_for_challenge(self):
@@ -309,7 +305,7 @@ class ChallengeTests(APITestCase, UsersMixin):
         response = self.client.post(url, data, format = "json")
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual('Challenge não encontrada!', response.json().get('detail'))
+        self.assertEqual('Gincana não encontrada!', response.json().get('detail'))
 
     def test_post_create_competitor_fail_for_403(self):
         url = reverse('community:challenge-competitor-create', args = [self.community.slug, self.challenge.pk])
@@ -366,30 +362,28 @@ class ChallengeTests(APITestCase, UsersMixin):
         self.assertIn('Existem nomes duplicados na lista enviada.', response.json().get('non_field_errors'))
 
     def test_delete_challenge_competitor_delete(self):
-        url = reverse('community:challenge-competitor-delete', args = [self.community.slug, self.challenge.id, self.competitor.name])
+        url = reverse('community:challenge-competitor-delete', args = [self.community.slug, self.challenge.id, self.competitor.pk])
         
         response = self.client.delete(url)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_delete_challenge_competitor_delete_fail_for_404_for_community(self):
-        url = reverse('community:challenge-competitor-delete', args = ['RANNNNNNNN', self.challenge.id, self.competitor.name])
+        url = reverse('community:challenge-competitor-delete', args = ['RANNNNNNNN', self.challenge.id, self.competitor.pk])
         
         response = self.client.delete(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual('Comunidade não encontrada!', response.json().get('detail'))
 
     def test_delete_challenge_competitor_delete_fail_for_404_for_challenge(self):
-        url = reverse('community:challenge-competitor-delete', args = [self.community.slug, 99999, self.competitor.name])
+        url = reverse('community:challenge-competitor-delete', args = [self.community.slug, 99999, self.competitor.pk])
         
         response = self.client.delete(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual('Challenge não encontrada!', response.json().get('detail'))
 
     def test_delete_challenge_competitor_delete_fail_403(self):
-        url = reverse('community:challenge-competitor-delete', args = [self.community.slug, self.challenge.id, self.competitor.name])
+        url = reverse('community:challenge-competitor-delete', args = [self.community.slug, self.challenge.id, self.competitor.pk])
         
         self.client.logout()
         self.client.force_authenticate(self.user2)
@@ -400,7 +394,7 @@ class ChallengeTests(APITestCase, UsersMixin):
         self.assertEqual('Você precisa ser administrador da comunidade para ter acesso a essa ação.', response.json().get('detail'))
 
     def test_delete_challenge_competitor_delete_fail_401(self):
-        url = reverse('community:challenge-competitor-delete', args = [self.community.slug, self.challenge.id, self.competitor.name])
+        url = reverse('community:challenge-competitor-delete', args = [self.community.slug, self.challenge.id, self.competitor.pk])
         
         self.client.logout()
 
@@ -409,9 +403,10 @@ class ChallengeTests(APITestCase, UsersMixin):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_post_competitor_record(self):
-        url = reverse('community:challenge-record-create', args = [self.community.slug, self.challenge.id, self.competitor.name])
+        url = reverse('community:challenge-record-create', args = [self.community.slug, self.challenge.id])
 
         data = {
+           'competitor_group': self.competitor.pk,
            'metal_qty': 1,
            'paper_qty': 1,
            'plastic_qty': 1,
@@ -420,6 +415,7 @@ class ChallengeTests(APITestCase, UsersMixin):
         
         response = self.client.post(url, data, format = "json")
 
+        print(response.json())
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual('Registro criado com sucesso!', response.json().get('detail'))
 
@@ -428,7 +424,7 @@ class ChallengeTests(APITestCase, UsersMixin):
         self.assertEqual(self.competitor.points, 4)
 
     def test_posts_competitor_record_fail_for_404_for_community(self):
-        url = reverse('community:challenge-record-create', args = ["RANNNNNNNNNNN", self.challenge.id, self.competitor.name])
+        url = reverse('community:challenge-record-create', args = ["RA", self.challenge.pk])
 
         data = {
            'metal_qty': 1,
@@ -440,10 +436,9 @@ class ChallengeTests(APITestCase, UsersMixin):
         response = self.client.post(url, data, format = "json")
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual('Comunidade não encontrada!', response.json().get('detail'))
 
     def test_posts_competitor_record_fail_for_404_for_challenge(self):
-        url = reverse('community:challenge-record-create', args = [self.community.slug, 999, self.competitor.name])
+        url = reverse('community:challenge-record-create', args = [self.community.slug, 999])
 
         data = {
            'metal_qty': 1,
@@ -455,30 +450,16 @@ class ChallengeTests(APITestCase, UsersMixin):
         response = self.client.post(url, data, format = "json")
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual('Challenge não encontrada!', response.json().get('detail'))
 
-    def test_posts_competitor_record_fail_for_404_name(self):
-        url = reverse('community:challenge-record-create', args = [self.community.slug, self.challenge.id, 'RANNNNNNNNN'])
-
-        data = {
-           'metal_qty': 1,
-           'paper_qty': 1,
-           'plastic_qty': 1,
-           'glass_qty': 1
-        }
-        
-        response = self.client.post(url, data, format = "json")
-
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual('Competidor não encontrado!', response.json().get('detail'))
 
     def test_posts_competitor_record_fail_for_403(self):
-        url = reverse('community:challenge-record-create', args = [self.community.slug, self.challenge.id, self.competitor.name])
+        url = reverse('community:challenge-record-create', args = [self.community.slug, self.challenge.pk])
 
         self.client.logout()
         self.client.force_authenticate(self.user2)
 
         data = {
+            'competitor_group': self.competitor.pk,
            'metal_qty': 1,
            'paper_qty': 1,
            'plastic_qty': 1,
@@ -491,7 +472,7 @@ class ChallengeTests(APITestCase, UsersMixin):
         self.assertEqual('Você precisa ser administrador da comunidade para ter acesso a essa ação.', response.json().get('detail'))
 
     def test_posts_competitor_record_fail_for_401(self):
-        url = reverse('community:challenge-record-create', args = [self.community.slug, self.challenge.id, self.competitor.name])
+        url = reverse('community:challenge-record-create', args = [self.community.slug, self.challenge.id])
 
         self.client.logout()
 

@@ -4,14 +4,14 @@ from apps.community.models.events import *
 
 class ChallengeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Gincana
+        model = Challenge
         fields = '__all__'
 
 class ChallengeCompetitorListSerializer(serializers.ListSerializer):
     members = serializers.PrimaryKeyRelatedField(many=True, queryset=Users.objects.all(), required = False)
 
     class Meta:
-        model = GincanaCompetitor
+        model = ChallengeCompetitor
         fields = ['id', 'gincana', 'name', 'points', 'members']
 
     def validate(self, data):
@@ -23,7 +23,7 @@ class ChallengeCompetitorListSerializer(serializers.ListSerializer):
                 "Existem nomes duplicados na lista enviada."
             )
 
-        existentes = GincanaCompetitor.objects.filter(
+        existentes = ChallengeCompetitor.objects.filter(
             gincana=gincana,
             name__in=names
         ).values_list('name', flat=True)
@@ -39,20 +39,20 @@ class ChallengeCompetitorSerializer(serializers.ModelSerializer):
     members = serializers.PrimaryKeyRelatedField(many=True, queryset=Users.objects.all(), required = False)
 
     class Meta:
-        model = GincanaCompetitor
+        model = ChallengeCompetitor
         list_serializer_class = ChallengeCompetitorListSerializer
         fields = ['id', 'gincana', 'name', 'points', 'members']
     
 class ChallengeRecordSerializer(serializers.ModelSerializer):
     class Meta:
-        model = GincanaRecord
+        model = ChallengeRecord
         fields = [
             'id', 'gincana', 'competitor_group', 'registered_by',
             'metal_qty', 'paper_qty', 'plastic_qty', 'glass_qty',
             'collected_at'
         ]
 
-class CampanhaSerializer(serializers.ModelSerializer):
+class CampaignSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Campanha
+        model = Campaign
         fields = '__all__'

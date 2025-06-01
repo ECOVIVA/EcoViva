@@ -5,12 +5,12 @@ from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework import status 
 
 from apps.users.auth.permissions import IsCommunityAdmin, IsCommunityMember, IsCommunityOwner
-from apps.community.models.events import *
-from apps.community.serializers.events import *
+from apps.community.models.events import Challenge, ChallengeCompetitor, Community
+from apps.community.serializers.events import ChallengeSerializer, ChallengeRecordSerializer, ChallengeCompetitorSerializer
 
 class ChallengeListView(GenericAPIView, ListModelMixin):
     permission_classes = [IsCommunityMember]
-    serializer_class = GincanaSerializer
+    serializer_class = ChallengeSerializer
     
     def get_queryset(self, *args, **kwargs):
         community_slug = self.kwargs.get('slug')
@@ -22,7 +22,7 @@ class ChallengeListView(GenericAPIView, ListModelMixin):
 
         self.check_object_permissions(self.request, community)
 
-        queryset = Gincana.objects.filter(community=community)
+        queryset = Challenge.objects.filter(community=community)
         if not queryset.exists():
             raise NotFound("Não há Gincanas!")
 
@@ -33,34 +33,28 @@ class ChallengeListView(GenericAPIView, ListModelMixin):
 
 class ChallengeObjectView(GenericAPIView, RetrieveModelMixin):
     permission_classes = [IsCommunityMember]
-    serializer_class = GincanaSerializer
+    serializer_class = ChallengeSerializer
     
     def get_object(self):
         community_slug = self.kwargs.get('slug')
-        id = self.kwargs.get('id_gincana')
+        id = self.kwargs.get('id_challenge')
 
         try:
-            community = Community.objects.get(slug=community_slug)
-        except Community.DoesNotExist:
-            raise NotFound("Comunidade não encontrada!")
-
-        self.check_object_permissions(self.request, community)
-
-        try:
-            return Gincana.objects.get(community = community, id = id)
-        except Gincana.DoesNotExist:
+            object = Challenge.objects.get(community__slug = community_slug, id = id)
+        except Challenge.DoesNotExist:
             raise NotFound("Gincana não encontrada!")
+        
+        self.check_object_permissions(self.request, object.community)
+        return object
     
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
 
 class ChallengeCreateView(GenericAPIView, CreateModelMixin):
     permission_classes = [IsCommunityAdmin]
-    serializer_class = GincanaSerializer
+    serializer_class = ChallengeSerializer
     
     def create(self, request, *args, **kwargs):
-        data = request.data.copy() 
-
         community_slug = self.kwargs.get('slug')
 
         try:
@@ -68,8 +62,9 @@ class ChallengeCreateView(GenericAPIView, CreateModelMixin):
         except Community.DoesNotExist:
             raise NotFound("Comunidade não encontrada!")
         
-        self.check_object_permissions(request, community )
+        self.check_object_permissions(request, community)
 
+        data = request.data.copy() 
         data["created_by"] = request.user.pk
         data['community'] = community.pk
 
@@ -83,23 +78,19 @@ class ChallengeCreateView(GenericAPIView, CreateModelMixin):
 
 class ChallengeDeleteView(GenericAPIView, DestroyModelMixin):
     permission_classes = [IsCommunityAdmin]
-    serializer_class = GincanaSerializer
+    serializer_class = ChallengeSerializer
     
     def get_object(self):
         community_slug = self.kwargs.get('slug')
-        id = self.kwargs.get('id_gincana')
+        id = self.kwargs.get('id_challenge')
 
         try:
-            community = Community.objects.get(slug=community_slug)
-        except Community.DoesNotExist:
-            raise NotFound("Comunidade não encontrada!")
-
-        self.check_object_permissions(self.request, community)
-
-        try:
-            return Gincana.objects.get(community = community, id = id)
-        except Gincana.DoesNotExist:
+            object = Challenge.objects.get(community__slug = community_slug, id = id)
+        except Challenge.DoesNotExist:
             raise NotFound("Gincana não encontrada!")
+        
+        self.check_object_permissions(self.request, object.community)
+        return object
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -111,70 +102,53 @@ class ChallengeDeleteView(GenericAPIView, DestroyModelMixin):
 
 class ChallengeCompetitorCreateView(GenericAPIView, CreateModelMixin):
     permission_classes = [IsCommunityAdmin]
-    serializer_class = GincanaCompetitorSerializer
+    serializer_class = ChallengeCompetitorSerializer
     
     def create(self, request, *args, **kwargs):
         is_many = isinstance(request.data, list)
-
         community_slug = self.kwargs.get('slug')
-        id = self.kwargs.get('id_gincana')
+        id = self.kwargs.get('id_challenge')
 
         try:
-            community = Community.objects.get(slug=community_slug)
-        except Community.DoesNotExist:
-            raise NotFound("Comunidade não encontrada!")
-
-        self.check_object_permissions(self.request, community)
-
-        try:
-            gincana = Gincana.objects.get(community=community, id=id)
-        except Gincana.DoesNotExist:
+            challenge = Challenge.objects.get(community__slug = community_slug, id=id)
+        except Challenge.DoesNotExist:
             raise NotFound("Gincana não encontrada!")
+        
+        self.check_object_permissions(self.request, challenge.community)
 
         data = request.data.copy()
 
         if is_many:
             for item in data:
-                item['gincana'] = gincana.pk
+                item['gincana'] = challenge.pk
         else:
-            data['gincana'] = gincana.pk
+            data['gincana'] = challenge.pk
 
         serializer = self.get_serializer(data=data, many=is_many)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
 
         return Response({'detail': 'Competidor(es) da Gincana registrado(s).'}, status=status.HTTP_201_CREATED)
-
     
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
 class ChallengeCompetitorDeleteView(GenericAPIView, DestroyModelMixin):
     permission_classes = [IsCommunityAdmin]
-    serializer_class = GincanaCompetitorSerializer
+    serializer_class = ChallengeCompetitorSerializer
     
     def get_object(self):
-        id = self.kwargs.get('id_gincana')
-        name = self.kwargs.get('name')
+        id_challenge = self.kwargs.get('id_challenge')
+        id_competitor = self.kwargs.get('id_competitor')
         community_slug = self.kwargs.get('slug')
-
-        try:
-            community = Community.objects.get(slug=community_slug)
-        except Community.DoesNotExist:
-            raise NotFound("Comunidade não encontrada!")
-
-        try:
-            gincana = Gincana.objects.get(community=community, id=id)
-        except Gincana.DoesNotExist:
-            raise NotFound("Gincana não encontrada!")
-        
-        self.check_object_permissions(self.request, community)
         
         try:
-            queryset = GincanaCompetitor.objects.get(gincana = gincana, name = name)
-            return queryset
-        except GincanaCompetitor.DoesNotExist:
+            object = ChallengeCompetitor.objects.get(gincana__community__slug = community_slug, gincana = id_challenge, id = id_competitor)
+        except ChallengeCompetitor.DoesNotExist:
             raise NotFound("Competidor não encontrado!")
+        
+        self.check_object_permissions(self.request, object.gincana.community)
+        return object
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -186,37 +160,25 @@ class ChallengeCompetitorDeleteView(GenericAPIView, DestroyModelMixin):
 
 class ChallengeRecordCreateView(GenericAPIView, CreateModelMixin):
     permission_classes = [IsCommunityAdmin]
-    serializer_class = GincanaRecordSerializer
+    serializer_class = ChallengeRecordSerializer
     
     def create(self, request, *args, **kwargs):
+        is_many = isinstance(request.data, list)
         data = request.data.copy()  
 
-        community_slug = self.kwargs.get('slug')
-        id = self.kwargs.get('id_gincana')
-        name = self.kwargs.get('name')
+        id_competitor = self.request.data.get('competitor_group')
 
         try:
-            community = Community.objects.get(slug=community_slug)
-        except Community.DoesNotExist:
-            raise NotFound("Comunidade não encontrada!")
-
-        self.check_object_permissions(request, community)
-
-        try:
-            gincana = Gincana.objects.get(community=community, id=id)
-        except Gincana.DoesNotExist:
-            raise NotFound("Gincana não encontrada!")
-        
-        try:
-            competitor = GincanaCompetitor.objects.get(gincana = gincana, name = name)
-        except GincanaCompetitor.DoesNotExist:
+            competitor = ChallengeCompetitor.objects.get(id = id_competitor)
+        except ChallengeCompetitor.DoesNotExist:
             raise NotFound("Competidor não encontrado!")
         
-        data["registered_by"] = request.user.pk
-        data["competitor_group"] = competitor.pk
-        data['gincana'] = gincana.pk
+        self.check_object_permissions(request, competitor.gincana.community)
 
-        serializer = self.get_serializer(data=data, many = True)
+        data["registered_by"] = request.user.pk
+        data['gincana'] = competitor.gincana.pk
+
+        serializer = self.get_serializer(data=data, many = is_many)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response({'detail': 'Registro criado com sucesso!'}, status=status.HTTP_201_CREATED)

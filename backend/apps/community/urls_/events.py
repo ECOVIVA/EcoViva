@@ -1,31 +1,31 @@
 from django.urls import path, include
-from apps.community.views.gincana_views import *
-from apps.community.views.campanha_views import *
+from apps.community.views.challenge_views import *
+from apps.community.views.campaign_views import *
 
 urlpatterns = [
     path('challenge/', include([
         path('', ChallengeListView.as_view(), name='challenge-list'),
         path('create/', ChallengeCreateView.as_view(), name='challenge-create'),
 
-        path('<int:id_gincana>/', include([
+        path('<int:id_challenge>/', include([
             path('', ChallengeObjectView.as_view(), name='challenge-detail'),
             path('delete/', ChallengeDeleteView.as_view(), name='challenge-delete'),
             path('competitors/create/', ChallengeCompetitorCreateView.as_view(), name='challenge-competitor-create'),
             path('competitors/record/create/', ChallengeRecordCreateView.as_view(), name='challenge-record-create'),
-            path('competitors/<str:name>/delete/', ChallengeCompetitorDeleteView.as_view(), name='challenge-competitor-delete'),]))
+            path('competitors/delete/<int:id_competitor>/', ChallengeCompetitorDeleteView.as_view(), name='challenge-competitor-delete'),]))
         ])),
     path('campaign/', include(
         [
-            path('', CampanhaListView.as_view(), name='campanha-list'),              
-            path('create/', CampanhaCreateView.as_view(), name='campanha-create'),
-            path('<int:id_campanha>/', include(
+            path('', CampaignListView.as_view(), name='campaign-list'),              
+            path('create/', CampaignCreateView.as_view(), name='campaign-create'),
+            path('<int:id_campaign>/', include(
                 [
-                path('', CampanhaDetailView.as_view(), name='campanha-detail'),  
-                path('update/', CampanhaUpdateView.as_view(), name='campanha-update'), 
-                path('delete/', CampanhaDeleteView.as_view(), name='campanha-delete'),   
+                path('', CampaignDetailView.as_view(), name='campaign-detail'),  
+                path('update/', CampaignUpdateView.as_view(), name='campaign-update'), 
+                path('delete/', CampaignDeleteView.as_view(), name='campaign-delete'),   
 
-                path('join/', ToggleCampanhaParticipationView.as_view(), name='campanha-toggle'),  
-                path('participants/', ListParticipantsView.as_view(), name='campanha-participants'), 
+                path('join/', ToggleCampaignParticipationView.as_view(), name='campaign-toggle'),  
+                path('participants/', ListParticipantsView.as_view(), name='campaign-participants'), 
                 ]
             )),              
         ]
