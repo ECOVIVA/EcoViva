@@ -1,15 +1,14 @@
 from django.db.models import Count
-from rest_framework.generics import GenericAPIView
-from rest_framework.mixins import ( RetrieveModelMixin, ListModelMixin, CreateModelMixin, UpdateModelMixin, DestroyModelMixin)
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.response import Response  
 from rest_framework.exceptions import NotFound
 from rest_framework import status, permissions  
 
 from apps.users.auth.permissions import IsPostOwner
-from apps.community.models.threads import *
-from apps.community.serializers.threads import *
+from apps.community.models.threads import Thread
+from apps.community.serializers.threads import ThreadReadSerializer, ThreadWriteSerializer
 
-class ThreadListView(GenericAPIView, ListModelMixin):  
+class ThreadListView(ListAPIView):  
     """ Retorna uma lista com todas as threads cadastradas. """  
     permission_classes = [permissions.IsAuthenticated]  
     serializer_class = ThreadReadSerializer
@@ -23,7 +22,7 @@ class ThreadListView(GenericAPIView, ListModelMixin):
     def get(self, request, *args, **kwargs):  
         return self.list(request, *args, **kwargs)
 
-class ThreadCreateView(GenericAPIView, CreateModelMixin):  
+class ThreadCreateView(CreateAPIView):  
     """ Cria uma nova thread. Apenas usuários autenticados podem acessar. """  
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ThreadWriteSerializer  
@@ -42,7 +41,7 @@ class ThreadCreateView(GenericAPIView, CreateModelMixin):
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
-class ThreadUpdateView(GenericAPIView, UpdateModelMixin):  
+class ThreadUpdateView(UpdateAPIView):  
     """ Atualiza parcialmente uma thread. Apenas o dono da thread pode modificar. """  
     permission_classes = [IsPostOwner]  
     serializer_class = ThreadWriteSerializer
@@ -70,7 +69,7 @@ class ThreadUpdateView(GenericAPIView, UpdateModelMixin):
     def patch(self, request, *args, **kwargs):  
         return self.partial_update(request,  *args, **kwargs)
     
-class ThreadLikeView(GenericAPIView):
+class ThreadLikeView(CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, slug):     
@@ -88,7 +87,7 @@ class ThreadLikeView(GenericAPIView):
             thread.likes.add(user)
             return Response({'liked': True}, status=status.HTTP_200_OK)
 
-class ThreadDeleteView(GenericAPIView, DestroyModelMixin):  
+class ThreadDeleteView(DestroyAPIView):  
     """ Deleta uma thread. Apenas o dono da thread pode excluir. """  
     permission_classes = [IsPostOwner]  
 
@@ -109,7 +108,7 @@ class ThreadDeleteView(GenericAPIView, DestroyModelMixin):
     def delete(self, request, *args, **kwargs):  
         return self.destroy(request,  *args, **kwargs) 
 
-class ThreadDetailView(GenericAPIView, RetrieveModelMixin):  
+class ThreadDetailView(RetrieveAPIView):  
     """ Retorna detalhes de uma thread específica. """  
     permission_classes = [permissions.AllowAny]  
     serializer_class = ThreadReadSerializer

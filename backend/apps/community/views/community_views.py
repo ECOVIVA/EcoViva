@@ -1,14 +1,13 @@
-from rest_framework.generics import GenericAPIView
-from rest_framework.mixins import ( RetrieveModelMixin, ListModelMixin, CreateModelMixin, UpdateModelMixin, DestroyModelMixin)
+from rest_framework.generics import GenericAPIView, ListAPIView, CreateAPIView, UpdateAPIView, RetrieveAPIView, DestroyAPIView
 from rest_framework.response import Response  
 from rest_framework.exceptions import NotFound
 from rest_framework import status, permissions  
 
 from apps.users.auth.permissions import IsCommunityAdmin, IsCommunityMember, IsCommunityOwner
-from apps.community.models.community import *
-from apps.community.serializers.community import *
+from apps.community.models.community import Community
+from apps.community.serializers.community import CommunitySerializer, UsersSerializer
 
-class CommunityListView(GenericAPIView, ListModelMixin):
+class CommunityListView(ListAPIView):
     permission_classes = [permissions.IsAuthenticated]  
     serializer_class = CommunitySerializer
 
@@ -18,10 +17,7 @@ class CommunityListView(GenericAPIView, ListModelMixin):
             raise NotFound("Não há comunidades!")
         return queryset
     
-    def get(self, request, *args, **kwargs):  
-        return self.list(request, *args, **kwargs)
-    
-class CommunityObjectView(GenericAPIView, RetrieveModelMixin):
+class CommunityObjectView(RetrieveAPIView):
     permission_classes = [IsCommunityMember]  
     serializer_class = CommunitySerializer
 
@@ -33,11 +29,8 @@ class CommunityObjectView(GenericAPIView, RetrieveModelMixin):
             return queryset
         except Community.DoesNotExist:
             raise NotFound("Comunidade não encontrada!")
-    
-    def get(self, request, *args, **kwargs):  
-        return self.retrieve(request, *args, **kwargs)
 
-class CommunityRegisterUser(GenericAPIView, CreateModelMixin):
+class CommunityRegisterUser(CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     def post(self, request,*args, **kwargs):
         slug = self.kwargs.get('slug')
@@ -55,7 +48,7 @@ class CommunityRegisterUser(GenericAPIView, CreateModelMixin):
             community.members.add(user)
             return Response({'detail': 'Usuário adicionado ao grupo.'}, status=status.HTTP_200_OK)     
     
-class CommunityPendingRequestsView(GenericAPIView, ListModelMixin):
+class CommunityPendingRequestsView(ListAPIView):
     permission_classes = [IsCommunityAdmin]  
     serializer_class = UsersSerializer
 
@@ -68,9 +61,6 @@ class CommunityPendingRequestsView(GenericAPIView, ListModelMixin):
             return community.pending_requests.all()  
         except Community.DoesNotExist:
             raise NotFound("Comunidade não encontrada!")
-
-    def get(self, request, *args, **kwargs):  
-        return self.list(request, *args, **kwargs)
 
 class CommunityConfirmationRequestsView(GenericAPIView):
     permission_classes = [IsCommunityAdmin]
@@ -106,7 +96,7 @@ class CommunityConfirmationRequestsView(GenericAPIView):
             return Response({'detail': 'Solicitação negada com sucesso.'}, status=status.HTTP_200_OK)
 
 
-class CommunityCreateView(GenericAPIView, CreateModelMixin):  
+class CommunityCreateView(CreateAPIView):  
     """ Cria uma nova thread. Apenas usuários autenticados podem acessar. """  
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = CommunitySerializer  
@@ -120,13 +110,8 @@ class CommunityCreateView(GenericAPIView, CreateModelMixin):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response({'detail': 'Comunidade criada com sucesso!'}, status=status.HTTP_201_CREATED)
-    
-    def post(self, request):  
-        return self.create(request)
 
-
-class CommunityUpdateView(GenericAPIView, UpdateModelMixin):  
-    """ Atualiza parcialmente uma thread. Apenas o dono da thread pode modificar. """  
+class CommunityUpdateView(UpdateAPIView):  
     permission_classes = [IsCommunityAdmin]  
     serializer_class = CommunitySerializer
 
@@ -150,11 +135,7 @@ class CommunityUpdateView(GenericAPIView, UpdateModelMixin):
 
             return Response({'detail': 'Comunidade atualizada com sucesso!'}, status=status.HTTP_200_OK)  
     
-    def patch(self, request, *args, **kwargs):  
-        return self.partial_update(request,  *args, **kwargs)
-    
-class CommunityDeleteView(GenericAPIView, DestroyModelMixin):  
-    """ Deleta uma thread. Apenas o dono da thread pode excluir. """  
+class CommunityDeleteView(DestroyAPIView):  
     permission_classes = [IsCommunityOwner]  
 
     def get_object(self):
@@ -170,6 +151,3 @@ class CommunityDeleteView(GenericAPIView, DestroyModelMixin):
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response({'detail': 'Comunidade deletada com sucesso!'}, status=status.HTTP_204_NO_CONTENT)  
-    
-    def delete(self, request, *args, **kwargs):  
-        return self.destroy(request,  *args, **kwargs) 

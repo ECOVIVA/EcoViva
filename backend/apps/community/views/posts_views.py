@@ -1,13 +1,12 @@
-from rest_framework.generics import GenericAPIView
-from rest_framework.mixins import ( CreateModelMixin, UpdateModelMixin, DestroyModelMixin)
+from rest_framework.generics import  CreateAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.response import Response  
 from rest_framework.exceptions import NotFound
 from rest_framework import status, permissions  
 from apps.users.auth.permissions import IsPostOwner
-from apps.community.models.threads import *
-from apps.community.serializers.threads import *
+from apps.community.models.threads import Post
+from apps.community.serializers.threads import PostsSerializer
 
-class PostCreateView(GenericAPIView, CreateModelMixin):  
+class PostCreateView(CreateAPIView):  
     """ Cria um novo post dentro de uma thread. Apenas usuários autenticados podem postar. """  
     permission_classes = [permissions.IsAuthenticated]  
     serializer_class = PostsSerializer
@@ -23,10 +22,7 @@ class PostCreateView(GenericAPIView, CreateModelMixin):
         self.perform_create(serializer)
         return Response({'detail': 'Post criado com sucesso!'}, status=status.HTTP_201_CREATED)
 
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
-
-class PostUpdateView(GenericAPIView, UpdateModelMixin):  
+class PostUpdateView(UpdateAPIView):  
     """ Atualiza parcialmente um post. Apenas o dono do post pode modificar. """  
     permission_classes = [IsPostOwner]  
     serializer_class = PostsSerializer
@@ -50,12 +46,8 @@ class PostUpdateView(GenericAPIView, UpdateModelMixin):
                 instance._prefetched_objects_cache = {}
 
             return Response({'detail': 'Post atualizado com sucesso!'}, status=status.HTTP_200_OK)  
-    
-    def patch(self, request, *args, **kwargs):  
-        return self.partial_update(request,  *args, **kwargs)
 
-class PostDeleteView(GenericAPIView, DestroyModelMixin):  
-    """ Deleta um post. Apenas o dono do post pode excluir. """  
+class PostDeleteView(DestroyAPIView):  
     permission_classes = [IsPostOwner]  
     serializer_class = PostsSerializer
 
@@ -72,6 +64,3 @@ class PostDeleteView(GenericAPIView, DestroyModelMixin):
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response({'detail': 'Post deletado com sucesso!'}, status=status.HTTP_204_NO_CONTENT)  
-    
-    def delete(self, request, *args, **kwargs):  
-        return self.destroy(request,  *args, **kwargs)
