@@ -55,7 +55,7 @@ const Navbar: React.FC = () => {
     },
     {
       label: 'Comunidade',
-      href: '/Forum'
+      href: '/comunidade'
     },
     {
       label: 'Programas',

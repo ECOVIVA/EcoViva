@@ -28,6 +28,8 @@ import ResetPassword from '../pages/ResetPassword'
 import ThreadDetailPage from '../pages/ThreadPage'
 import TermosDeUso from '../pages/Documents/TermosDeUso'
 import PolíticadeUsodeCookies from '../pages/Documents/PolíticadeUsodeCookies'
+import Comunidade from '../pages/comunidade'
+import { CommunityProfile } from '../pages/CommunityProfile'
 
 const HideLayoutRoutes = ['/login', '/CreateAccount', '/RequestPassword']
 
@@ -60,8 +62,10 @@ const RouterComponent: React.FC = () => {
           <Route path="/CertificatePage" element={<CertificatePage />} />
           <Route path="/ParceriasPage" element={<ParceriaPage />} />
           <Route path="/CreateAccount" element={<CreateAccount />} />
+          <Route path="/Comunidade" element={<Comunidade />} />
           <Route path="/RequestPassword" element={<RequestPassword />} />
           <Route path="/ECOstudy" element={<ECOstudy />} />
+          <Route path="/CommunityProfile" element={<CommunityProfile />} />
           <Route path="/ProfilePage"
             element={
               <ProtectedRoute>
