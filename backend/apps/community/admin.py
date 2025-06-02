@@ -60,22 +60,22 @@ class TagsAdmin(admin.ModelAdmin):
     )
 
 @admin.register(Challenge)
-class GincanaAdmin(admin.ModelAdmin):
+class ChallengeAdmin(admin.ModelAdmin):
     list_display = ('title', 'community', 'deadline', 'created_at')
     search_fields = ('title',)
     list_filter = ('community', 'deadline')
 
 @admin.register(ChallengeCompetitor)
-class GincanaCompetitorAdmin(admin.ModelAdmin):
-    list_display = ('name', 'gincana', 'points')
+class ChallengeCompetitorAdmin(admin.ModelAdmin):
+    list_display = ('name', 'challenge', 'points')
     search_fields = ('name',)
-    list_filter = ('gincana',)
+    list_filter = ('challenge',)
     filter_horizontal = ('members',)
 
 @admin.register(ChallengeRecord)
-class GincanaRecordAdmin(admin.ModelAdmin):
-    list_display = ('competitor_group', 'gincana', 'registered_by', 'collected_at')
-    list_filter = ('gincana', 'collected_at')
+class ChallengeRecordAdmin(admin.ModelAdmin):
+    list_display = ('competitor_group', 'registered_by', 'collected_at')
+    list_filter = ('collected_at',)
     search_fields = ('competitor_group__name',)
 
 @admin.register(Campaign)

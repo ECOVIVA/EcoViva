@@ -43,7 +43,7 @@ class CampaignTests(APITestCase, UsersMixin):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual('Comunidade não encontrada!', response.json().get('detail'))
+        self.assertEqual('Campanhas não encontradas!', response.json().get('detail'))
 
     def test_get_campaign_list_fail_for_403(self):
         url = reverse('community:campaign-list', args = [self.community.slug])
@@ -334,7 +334,7 @@ class CampaignTests(APITestCase, UsersMixin):
         response = self.client.post(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual('Campanha não encontrada.', response.json().get('detail'))
+        self.assertEqual('Campanha não encontrada!', response.json().get('detail'))
 
 
     def test_post_campaign_toggle_participant_fail_404_for_campaign(self):
@@ -343,7 +343,7 @@ class CampaignTests(APITestCase, UsersMixin):
         response = self.client.post(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual('Campanha não encontrada.', response.json().get('detail'))
+        self.assertEqual('Campanha não encontrada!', response.json().get('detail'))
 
     def test_post_campaign_toggle_participant_fail_403(self):
         url = reverse('community:campaign-toggle', args = [self.community.slug, self.campaign.pk])

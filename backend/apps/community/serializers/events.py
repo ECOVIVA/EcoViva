@@ -12,10 +12,10 @@ class ChallengeCompetitorListSerializer(serializers.ListSerializer):
 
     class Meta:
         model = ChallengeCompetitor
-        fields = ['id', 'gincana', 'name', 'points', 'members']
+        fields = ['id', 'challenge', 'name', 'points', 'members']
 
     def validate(self, data):
-        gincana = self.context.get('gincana')
+        challenge = self.context.get('challenge')
         names = [item['name'] for item in data]
 
         if len(names) != len(set(names)):
@@ -24,13 +24,13 @@ class ChallengeCompetitorListSerializer(serializers.ListSerializer):
             )
 
         existentes = ChallengeCompetitor.objects.filter(
-            gincana=gincana,
+            challenge=challenge,
             name__in=names
         ).values_list('name', flat=True)
 
         if existentes:
             raise serializers.ValidationError(
-                f"Os seguintes nomes já existem nesta gincana: {', '.join(existentes)}"
+                f"Os seguintes nomes já existem nesta challenge: {', '.join(existentes)}"
             )
 
         return data
@@ -41,13 +41,13 @@ class ChallengeCompetitorSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChallengeCompetitor
         list_serializer_class = ChallengeCompetitorListSerializer
-        fields = ['id', 'gincana', 'name', 'points', 'members']
+        fields = ['id', 'challenge', 'name', 'points', 'members']
     
 class ChallengeRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChallengeRecord
         fields = [
-            'id', 'gincana', 'competitor_group', 'registered_by',
+            'id', 'competitor_group', 'registered_by',
             'metal_qty', 'paper_qty', 'plastic_qty', 'glass_qty',
             'collected_at'
         ]

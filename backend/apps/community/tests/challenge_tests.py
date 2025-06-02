@@ -31,7 +31,7 @@ class ChallengeTests(APITestCase, UsersMixin):
         )
 
         self.competitor = ChallengeCompetitor.objects.create(
-            gincana = self.challenge,
+            challenge = self.challenge,
             name = 'Group'
         )
 
@@ -48,7 +48,7 @@ class ChallengeTests(APITestCase, UsersMixin):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual('Comunidade não encontrada!' ,response.json().get('detail'))
+        self.assertEqual('Gincanas não encontradas!' ,response.json().get('detail'))
 
     def test_get_challenge_list_fail_for_403(self):
         url = reverse('community:challenge-list', args = [self.community.slug])

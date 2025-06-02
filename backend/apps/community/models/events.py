@@ -41,8 +41,7 @@ class Challenge(BaseEvent):
         verbose_name_plural = "Gincanas"
 
 class ChallengeCompetitor(models.Model):
-
-    gincana = models.ForeignKey(
+    challenge = models.ForeignKey(
        Challenge, on_delete=models.CASCADE, related_name='competitor_groups',
         verbose_name="Gincana"
     )
@@ -56,13 +55,12 @@ class ChallengeCompetitor(models.Model):
     class Meta:
         verbose_name = "Gincana Competitor"
         verbose_name_plural = "Gincana Competitors"
-        unique_together = ('gincana', 'name')
+        unique_together = ('challenge', 'name')
 
     def __str__(self):
         return f"{self.name} - {self.gincana.title}"
     
 class ChallengeRecord(models.Model):
-    gincana = models.ForeignKey(Challenge, on_delete=models.CASCADE, related_name='collection_records')
     competitor_group = models.ForeignKey(ChallengeCompetitor, on_delete=models.CASCADE, related_name='collection_records')
     registered_by = models.ForeignKey(Users, on_delete=models.SET_NULL, null=True, blank=True, related_name='collection_records')
     
@@ -94,14 +92,14 @@ def points_for_record(sender, instance, created, **kwargs):
     if not created:
         return  
 
-    gincana = instance.gincana
+    challenge = instance.competitor_group.challenge
     competitor = instance.competitor_group
 
     pontos = (
-        instance.metal_qty * gincana.metal_points +
-        instance.paper_qty * gincana.paper_points +
-        instance.plastic_qty * gincana.plastic_points +
-        instance.glass_qty * gincana.glass_points
+        instance.metal_qty * challenge.metal_points +
+        instance.paper_qty * challenge.paper_points +
+        instance.plastic_qty * challenge.plastic_points +
+        instance.glass_qty * challenge.glass_points
     )
 
     competitor.points += pontos
