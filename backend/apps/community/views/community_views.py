@@ -7,39 +7,43 @@ from apps.users.auth.permissions import IsCommunityAdmin, IsCommunityMember, IsC
 from apps.community.models.community import Community
 from apps.community.serializers.community import CommunitySerializer, UsersSerializer
 
-class CommunityListView(ListAPIView):
+class CommunityViewMixin:
+    def get_community_list(self):
+        community = Community.objects.select_related('owner').prefetch_related('members')
+        if not community:
+            raise NotFound("Não há comunidades!")
+        return community
+    
+    def get_community_object(self, community_slug):
+        try:
+            return Community.objects.select_related('owner').prefetch_related('admins', 'members', 'pending_requests').get(slug = community_slug)
+        except Community.DoesNotExist:
+            raise NotFound("Comunidade não encontrada!")
+    
+class CommunityListView(CommunityViewMixin, ListAPIView):
     permission_classes = [permissions.IsAuthenticated]  
     serializer_class = CommunitySerializer
 
     def get_queryset(self):
-        queryset = Community.objects.select_related('owner').prefetch_related('members')
-        if not queryset:
-            raise NotFound("Não há comunidades!")
-        return queryset
+        return self.get_community_list()
     
-class CommunityObjectView(RetrieveAPIView):
+class CommunityObjectView(CommunityViewMixin, RetrieveAPIView):
     permission_classes = [IsCommunityMember]  
     serializer_class = CommunitySerializer
 
     def get_object(self):
-        slug = self.kwargs.get('slug')
-        try:
-            queryset = Community.objects.select_related('owner').prefetch_related('admins', 'members').get(slug = slug)
-            self.check_object_permissions(self.request, queryset)
-            return queryset
-        except Community.DoesNotExist:
-            raise NotFound("Comunidade não encontrada!")
+        community_slug = self.kwargs.get('slug')
+        object = self.get_community_object(community_slug)
+        self.check_object_permissions(self.request, object)
+        return object
 
-class CommunityRegisterUser(CreateAPIView):
+class CommunityRegisterUser(CommunityViewMixin, CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     def post(self, request,*args, **kwargs):
-        slug = self.kwargs.get('slug')
+        community_slug = self.kwargs.get('slug')
         user = request.user
 
-        try:    
-            community = Community.objects.get(slug = slug)
-        except Community.DoesNotExist:
-            raise NotFound("Comunidade não encontrada!")
+        community = self.get_community_object(community_slug)
         
         if community.is_private:
             community.pending_requests.add(user)
@@ -48,26 +52,23 @@ class CommunityRegisterUser(CreateAPIView):
             community.members.add(user)
             return Response({'detail': 'Usuário adicionado ao grupo.'}, status=status.HTTP_200_OK)     
     
-class CommunityPendingRequestsView(ListAPIView):
+class CommunityPendingRequestsView(CommunityViewMixin, ListAPIView):
     permission_classes = [IsCommunityAdmin]  
     serializer_class = UsersSerializer
 
     def get_queryset(self):    
-        slug = self.kwargs.get('slug')
-        
-        try:
-            community = Community.objects.prefetch_related('pending_requests').get(slug=slug)
-            self.check_object_permissions(self.request, community)
-            return community.pending_requests.all()  
-        except Community.DoesNotExist:
-            raise NotFound("Comunidade não encontrada!")
+        community_slug = self.kwargs.get('slug')
+    
+        community = self.get_community_object(community_slug)
+        self.check_object_permissions(self.request, community)
+        return community.pending_requests.all()  
 
-class CommunityConfirmationRequestsView(GenericAPIView):
+class CommunityConfirmationRequestsView(CommunityViewMixin, GenericAPIView):
     permission_classes = [IsCommunityAdmin]
     serializer_class = CommunitySerializer
 
     def post(self, request, *args, **kwargs):
-        slug = self.kwargs.get('slug')
+        community_slug = self.kwargs.get('slug')
         request_id = request.data.get('request_id')
         confirmation = request.data.get('confirmation')
 
@@ -77,10 +78,7 @@ class CommunityConfirmationRequestsView(GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        try:
-            community = Community.objects.prefetch_related('pending_requests').get(slug = slug)
-        except Community.DoesNotExist:
-            raise NotFound('Comunidade não encontrada.')
+        community = self.get_community_object(community_slug)
 
         self.check_object_permissions(self.request, community)
         user = community.pending_requests.filter(id = request_id).first()
@@ -111,18 +109,16 @@ class CommunityCreateView(CreateAPIView):
         self.perform_create(serializer)
         return Response({'detail': 'Comunidade criada com sucesso!'}, status=status.HTTP_201_CREATED)
 
-class CommunityUpdateView(UpdateAPIView):  
+class CommunityUpdateView(CommunityViewMixin, UpdateAPIView):  
     permission_classes = [IsCommunityAdmin]  
     serializer_class = CommunitySerializer
 
     def get_object(self):
-        slug = self.kwargs.get('slug')
-        try:
-            queryset = Community.objects.get(slug = slug)
-            self.check_object_permissions(self.request, queryset)
-            return queryset
-        except Community.DoesNotExist:
-            raise NotFound("Comunidade não encontrada!")
+        community_slug = self.kwargs.get('slug')
+
+        object = self.get_community_object(community_slug)
+        self.check_object_permissions(self.request, object)
+        return object
         
     def partial_update(self, request, *args, **kwargs):
             instance = self.get_object()
@@ -135,17 +131,15 @@ class CommunityUpdateView(UpdateAPIView):
 
             return Response({'detail': 'Comunidade atualizada com sucesso!'}, status=status.HTTP_200_OK)  
     
-class CommunityDeleteView(DestroyAPIView):  
+class CommunityDeleteView(CommunityViewMixin, DestroyAPIView):  
     permission_classes = [IsCommunityOwner]  
 
     def get_object(self):
-        slug = self.kwargs.get('slug')
-        try:
-            queryset = Community.objects.get(slug = slug)
-            self.check_object_permissions(self.request, queryset)
-            return queryset
-        except Community.DoesNotExist:
-            raise NotFound("Comunidade não encontrada!")
+        community_slug = self.kwargs.get('slug')
+
+        object = self.get_community_object(community_slug)
+        self.check_object_permissions(self.request, object)
+        return object
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
