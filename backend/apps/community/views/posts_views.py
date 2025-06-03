@@ -6,6 +6,14 @@ from apps.users.auth.permissions import IsPostOwner
 from apps.community.models.threads import Post
 from apps.community.serializers.threads import PostsSerializer
 
+class PostViewMixin:
+    def get_post(self, id_post):
+        try:
+            object = Post.objects.select_related('author', 'thread').get(id = id_post)
+            return object
+        except Post.DoesNotExist:
+            raise NotFound("Post não encontrado!")
+    
 class PostCreateView(CreateAPIView):  
     """ Cria um novo post dentro de uma thread. Apenas usuários autenticados podem postar. """  
     permission_classes = [permissions.IsAuthenticated]  
@@ -22,19 +30,16 @@ class PostCreateView(CreateAPIView):
         self.perform_create(serializer)
         return Response({'detail': 'Post criado com sucesso!'}, status=status.HTTP_201_CREATED)
 
-class PostUpdateView(UpdateAPIView):  
+class PostUpdateView(PostViewMixin, UpdateAPIView):  
     """ Atualiza parcialmente um post. Apenas o dono do post pode modificar. """  
     permission_classes = [IsPostOwner]  
     serializer_class = PostsSerializer
 
     def get_object(self):
         id_post = self.kwargs.get('id_post')
-        try:
-            queryset = Post.objects.select_related('author', 'thread').get(id = id_post)
-            self.check_object_permissions(self.request, queryset)
-            return queryset
-        except Post.DoesNotExist:
-            raise NotFound("Post não encontrado!")
+        object = self.get_post(id_post)
+        self.check_object_permissions(self.request, object)
+        return object
         
     def partial_update(self, request, *args, **kwargs):
             instance = self.get_object()
@@ -47,18 +52,15 @@ class PostUpdateView(UpdateAPIView):
 
             return Response({'detail': 'Post atualizado com sucesso!'}, status=status.HTTP_200_OK)  
 
-class PostDeleteView(DestroyAPIView):  
+class PostDeleteView(PostViewMixin, DestroyAPIView):  
     permission_classes = [IsPostOwner]  
     serializer_class = PostsSerializer
 
     def get_object(self):
         id_post = self.kwargs.get('id_post')
-        try:
-            queryset = Post.objects.get(id = id_post)
-            self.check_object_permissions(self.request, queryset)
-            return queryset
-        except Post.DoesNotExist:
-            raise NotFound("Post não encontrado!")
+        object = self.get_post(id_post)
+        self.check_object_permissions(self.request, object)
+        return object
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
