@@ -1,17 +1,19 @@
 from rest_framework.generics import  CreateAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.response import Response  
 from rest_framework import status, permissions  
-from apps.users.auth.permissions import IsPostOwner
+from apps.users.auth.permissions import IsPostOwner, IsCommunityMember
 from apps.community.serializers.threads import PostsSerializer
 from utils.mixins.community_mixins import PostViewMixin
     
-class PostCreateView(CreateAPIView):  
+class PostCreateView(PostViewMixin ,CreateAPIView):  
     """ Cria um novo post dentro de uma thread. Apenas usuários autenticados podem postar. """  
-    permission_classes = [permissions.IsAuthenticated]  
+    permission_classes = [IsCommunityMember]  
     serializer_class = PostsSerializer
 
-    def create(self, request, *args, **kwargs):
-        data = request.data.copy()
+    def create(self, *args, **kwargs):
+        community_slug = self.kwargs.get('slug')
+        self.check_object_permissions(self.request, self.get_community_object(community_slug))
+        data = self.request.data.copy()
 
         data['author'] = self.request.user.pk
         data['thread'] = self.kwargs.get('thread_slug')

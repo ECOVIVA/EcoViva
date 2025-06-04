@@ -41,6 +41,22 @@ class PostTests(APITestCase, UsersMixin):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.json().get('detail'), 'Post criado com sucesso!')
 
+    def test_post_post_create_fail_for_403(self):
+        url = reverse('community:create_post', args = [self.community.slug, self.thread.slug])
+        self.client.logout()
+        self.client.force_authenticate(self.user2)
+
+        data = {
+            'thread': self.thread.pk,
+            'content': 'Content for new post',
+            'author': self.user.pk
+        }
+        
+        response = self.client.post(url, data)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual('Somente membro da comunidade pode realizar essa ação.', response.json().get('detail'))
+
     def test_post_post_create_fail_for_unauthorized(self):
         url = reverse('community:create_post', args = [self.community.slug, self.thread.slug])
         self.client.logout()

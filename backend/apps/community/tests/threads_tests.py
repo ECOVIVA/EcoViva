@@ -36,6 +36,15 @@ class ThreadTests(APITestCase, UsersMixin):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_get_thread_list_fail_for_403(self):
+        url = reverse('community:list_thread', args=[self.community.slug])
+
+        self.client.logout()
+        self.client.force_authenticate(self.user2)
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual('Somente membro da comunidade pode realizar essa ação.', response.json().get('detail'))
 
     def test_post_thread_create(self):
         url = reverse('community:create_thread', args=[self.community.slug])
@@ -98,6 +107,22 @@ class ThreadTests(APITestCase, UsersMixin):
 
         thread.cover.delete()
 
+    def test_post_thread_create_fail_for_403(self):
+        url = reverse('community:create_thread', args=[self.community.slug])
+
+        self.client.logout()
+        self.client.force_authenticate(self.user2)
+
+        data = {
+            'title': 'New Thread',
+            'content': 'Content for new thread',
+            'author': self.user.id,
+        }
+
+        response = self.client.post(url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual('Somente membro da comunidade pode realizar essa ação.', response.json().get('detail'))
     
     def test_post_thread_create_fail_for_unauthorized(self):
         url = reverse('community:create_thread', kwargs={'slug': self.community.slug})
@@ -294,10 +319,19 @@ class ThreadTests(APITestCase, UsersMixin):
 
         response = self.client.get(url) 
 
-        print(response.json())
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json().get('slug'), self.thread.slug)
+
+    def test_get_thread_detail_fail_for_403(self):
+        url = reverse('community:detail_thread', args=[self.community.slug, self.thread.slug])
+
+        self.client.logout()
+        self.client.force_authenticate(self.user2)
+
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual('Somente membro da comunidade pode realizar essa ação.', response.json().get('detail'))
 
     def test_delete_thread_delete(self):
         url = reverse('community:delete_thread', args=[self.community.slug, self.thread.slug])
