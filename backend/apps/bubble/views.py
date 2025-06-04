@@ -1,11 +1,11 @@
-from rest_framework.generics import GenericAPIView
-from rest_framework.mixins import RetrieveModelMixin, CreateModelMixin
+from rest_framework.generics import RetrieveAPIView, CreateAPIView
 from rest_framework.response import Response  
-from rest_framework.exceptions import NotFound
 from rest_framework import status, permissions
 from apps.study.serializers import AchievementSerializer
-from apps.bubble import models, serializers  
+from apps.bubble.serializers.bubble_serializers import BubbleSerializer
+from apps.bubble.serializers.checkin_serializers import CheckInSerializer
 from utils.check_achievement import CheckAchievementsCheckIn
+from utils.mixins.bubble_mixins import BubbleMixinView
 
 """
     Este módulo define as views da aplicação "Bubble", responsáveis por processar requisições HTTP 
@@ -15,19 +15,16 @@ from utils.check_achievement import CheckAchievementsCheckIn
     - CheckInCreateView    → Permite a criação de um novo check-in.
 """  
 
-class BubbleProfileView(GenericAPIView, RetrieveModelMixin):  
+class BubbleProfileView(BubbleMixinView, RetrieveAPIView):  
     """
     Retorna a bolha do usuário autenticado.
     Apenas o dono da bolha pode acessar esta rota.
     """
     permission_classes = [permissions.IsAuthenticated]  
-    serializer_class = serializers.BubbleSerializer
+    serializer_class = BubbleSerializer
 
     def get_object(self):
-        try:
-            return models.Bubble.objects.select_related('rank', 'user').prefetch_related('checkin_set').get(user=self.request.user)
-        except models.Bubble.DoesNotExist:
-            raise NotFound("A Bolha não foi encontrada.")
+        return self.get_bubble(self.request.user)
     
     def get(self, request, *args, **kwargs):  
         return self.retrieve(request, *args, **kwargs)
@@ -39,20 +36,14 @@ class BubbleProfileView(GenericAPIView, RetrieveModelMixin):
         return Response(serializer.data)
 
 
-class CheckInCreateView(GenericAPIView, CreateModelMixin):  
+class CheckInCreateView(BubbleMixinView, CreateAPIView):  
     """
     Cria um novo check-in para a bolha do usuário autenticado.
     Atualiza o progresso da bolha e verifica se houve mudança de rank.
     Apenas o dono da bolha pode acessar esta rota.
     """
     permission_classes = [permissions.IsAuthenticated]  
-    serializer_class = serializers.CheckInSerializer
-    
-    def get_bubble(self):
-        try:
-            return models.Bubble.objects.select_related('rank', 'user').get(user=self.request.user)
-        except models.Bubble.DoesNotExist:
-            raise NotFound("A Bolha não foi encontrada.")
+    serializer_class = CheckInSerializer
 
     def get_badge(self):
         check_badge = CheckAchievementsCheckIn()
@@ -62,10 +53,10 @@ class CheckInCreateView(GenericAPIView, CreateModelMixin):
     def post(self, request, *args, **kwargs):  
         return self.create(request, *args, **kwargs)
     
-    def create(self, request, *args, **kwargs):
-        bubble = self.get_bubble()
+    def create(self, *args, **kwargs):
+        bubble = self.get_bubble(self.request.user)
 
-        data = request.data  
+        data = self.request.data  
         data['bubble'] = bubble.id
         data['xp_earned'] = bubble.rank.difficulty.points_for_activity 
 

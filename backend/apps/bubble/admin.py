@@ -1,5 +1,6 @@
 from django.contrib import admin
-from . import models
+from apps.bubble.models.bubble import Bubble, Difficulty, Rank
+from apps.bubble.models.checkin import CheckIn
 
 """
     Configuração do Django Admin para gerenciamento dos modelos:
@@ -11,7 +12,7 @@ from . import models
 """
 
 # Configuração do modelo Difficulty no Django Admin
-@admin.register(models.Difficulty)
+@admin.register(Difficulty)
 class DifficultyAdmin(admin.ModelAdmin):
     """
     Administração do modelo Difficulty.
@@ -25,7 +26,7 @@ class DifficultyAdmin(admin.ModelAdmin):
     ordering = ('points_for_activity',)  # Ordena por pontos de atividade
 
 # Configuração do modelo Rank no Django Admin
-@admin.register(models.Rank)
+@admin.register(Rank)
 class RankAdmin(admin.ModelAdmin):
     """
     Administração do modelo Rank.
@@ -41,7 +42,7 @@ class RankAdmin(admin.ModelAdmin):
     ordering = ('points',)  # Ordena os ranks pelo número de pontos necessários
 
 # Configuração do modelo Bubble no Django Admin
-@admin.register(models.Bubble)
+@admin.register(Bubble)
 class BubbleAdmin(admin.ModelAdmin):
     """
     Administração do modelo Bubble.
@@ -58,7 +59,7 @@ class BubbleAdmin(admin.ModelAdmin):
     list_per_page = 10  # Define limite de 10 itens por página
 
 # Configuração do modelo CheckIn no Django Admin
-@admin.register(models.CheckIn)
+@admin.register(CheckIn)
 class CheckInAdmin(admin.ModelAdmin):
     """
     Administração do modelo CheckIn.

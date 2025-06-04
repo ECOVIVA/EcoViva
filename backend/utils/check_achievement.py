@@ -1,6 +1,6 @@
 from apps.study.models import Achievement, AchievementLog, LessonLog
 from apps.users.models import Users
-from apps.bubble.models import CheckIn
+from apps.bubble.models.checkin import CheckIn
 from django.utils.timezone import now, timedelta
 
 class CheckAchievements:
