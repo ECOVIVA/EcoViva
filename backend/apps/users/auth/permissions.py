@@ -16,7 +16,7 @@ class IsCommunityOwner(BasePermission):
     """
     Permite acesso apenas aos donos da bolha relacionada ao CheckIn.
     """
-    message = "Você não tem permissão para fazer essa ação no post"
+    message = "Somente o dono da comunidade pode realizar essa ação."
 
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated
@@ -28,7 +28,7 @@ class IsCommunityAdmin(BasePermission):
     """
     Permite acesso apenas aos donos da bolha relacionada ao CheckIn.
     """
-    message = "Você não tem permissão para fazer essa ação no post"
+    message = "Você precisa ser administrador da comunidade para ter acesso a essa ação."
 
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated
@@ -37,10 +37,7 @@ class IsCommunityAdmin(BasePermission):
         return request.user in obj.admins.all() or request.user == obj.owner
      
 class IsCommunityMember(BasePermission):
-    """
-    Permite acesso apenas aos donos da bolha relacionada ao CheckIn.
-    """
-    message = "Você não tem permissão para fazer essa ação no post"
+    message = "Somente membro da comunidade pode realizar essa ação."
 
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated
