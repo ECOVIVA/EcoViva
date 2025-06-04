@@ -1,37 +1,11 @@
 from rest_framework.generics import  CreateAPIView, RetrieveAPIView, ListAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.response import Response  
-from rest_framework.exceptions import NotFound
 from rest_framework import status 
-from django.db.models.query import QuerySet
 
 from apps.users.auth.permissions import IsCommunityAdmin, IsCommunityMember
 from apps.users.serializers import UsersMinimalSerializer
-from apps.community.models.events import Campaign, Community
 from apps.community.serializers.events import CampaignSerializer
-
-class CampaignViewMixin:
-    def get_community(self, community_slug):
-        try:
-            community = Community.objects.get(slug=community_slug)
-        except Community.DoesNotExist:
-            raise NotFound("Comunidade não encontrada!")
-        
-        return community
-    
-    def get_campaign_queryset(self, community_slug) -> QuerySet[Campaign]:
-        queryset = Campaign.objects.select_related('community').filter(community__slug = community_slug)
-        if not queryset.exists():
-            raise NotFound("Campanhas não encontradas!")
-        
-        return queryset
-    
-    def get_campaign_object(self, community_slug, id) -> Campaign:
-        try:
-            object = Campaign.objects.select_related('community').prefetch_related('participants').get(community__slug = community_slug, id = id)
-        except Campaign.DoesNotExist:
-            raise NotFound("Campanha não encontrada!")
-        
-        return object
+from utils.mixins.community_mixins import CampaignViewMixin
 
 class CampaignCreateView(CreateAPIView, CampaignViewMixin):
     permission_classes = [IsCommunityAdmin]
@@ -40,7 +14,7 @@ class CampaignCreateView(CreateAPIView, CampaignViewMixin):
     def create(self, request, *args, **kwargs):
         community_slug = self.kwargs.get('slug')
 
-        community = self.get_community(community_slug)
+        community = self.get_community_object(community_slug)
         self.check_object_permissions(request, community)
 
         data = request.data.copy()  

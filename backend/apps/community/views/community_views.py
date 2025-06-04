@@ -6,19 +6,7 @@ from rest_framework import status, permissions
 from apps.users.auth.permissions import IsCommunityAdmin, IsCommunityMember, IsCommunityOwner
 from apps.community.models.community import Community
 from apps.community.serializers.community import CommunitySerializer, UsersSerializer
-
-class CommunityViewMixin:
-    def get_community_list(self):
-        community = Community.objects.select_related('owner').prefetch_related('members')
-        if not community:
-            raise NotFound("Não há comunidades!")
-        return community
-    
-    def get_community_object(self, community_slug):
-        try:
-            return Community.objects.select_related('owner').prefetch_related('admins', 'members', 'pending_requests').get(slug = community_slug)
-        except Community.DoesNotExist:
-            raise NotFound("Comunidade não encontrada!")
+from utils.mixins.community_mixins import CommunityViewMixin
     
 class CommunityListView(CommunityViewMixin, ListAPIView):
     permission_classes = [permissions.IsAuthenticated]  

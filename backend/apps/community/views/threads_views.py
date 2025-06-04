@@ -1,26 +1,11 @@
-from django.db.models import Count
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.response import Response  
-from rest_framework.exceptions import NotFound
-from rest_framework import status, permissions  
+from rest_framework import status  
 
 from apps.users.auth.permissions import IsPostOwner, IsCommunityMember
-from apps.community.models.threads import Thread
 from apps.community.models.community import Community
 from apps.community.serializers.threads import ThreadReadSerializer, ThreadWriteSerializer
-
-class ThreadViewMixin:
-    def get_thread_list(self):
-        queryset = Thread.objects.select_related('author', 'community').prefetch_related('likes', 'tags')
-        if not queryset.exists():
-            raise NotFound("Thread não encontrada!")
-        return queryset
-    
-    def get_thread_object(self, thread_slug):
-        try:
-            return Thread.objects.select_related('author', 'community').prefetch_related('likes', 'tags', 'posts', 'posts__author').annotate(likes_count=Count('likes')).get(slug = thread_slug)
-        except Thread.DoesNotExist:
-            raise NotFound("Thread não encontrada!")
+from utils.mixins.community_mixins import ThreadViewMixin
 
 class ThreadListView(ThreadViewMixin,ListAPIView):  
     """ Retorna uma lista com todas as threads cadastradas. """  
@@ -28,12 +13,15 @@ class ThreadListView(ThreadViewMixin,ListAPIView):
     serializer_class = ThreadReadSerializer
 
     def get_queryset(self):
-        queryset = self.get_thread_list()
+        community_slug = self.kwargs.get('slug')
+        queryset = self.get_thread_list(community_slug)
+        self.check_object_permissions(self.request, queryset.first().community)
+        return queryset
     
     def get(self, request, *args, **kwargs):  
         return self.list(request, *args, **kwargs)
 
-class ThreadCreateView(CreateAPIView):  
+class ThreadCreateView(ThreadViewMixin,CreateAPIView):  
     """ Cria uma nova thread. Apenas usuários autenticados podem acessar. """  
     permission_classes = [IsCommunityMember]
     serializer_class = ThreadWriteSerializer  
@@ -45,7 +33,7 @@ class ThreadCreateView(CreateAPIView):
         data["author"] = request.user.pk
         data['community'] = community_slug
 
-        self.check_object_permissions(self.request, Community.objects.get(slug = community_slug))
+        self.check_object_permissions(self.request, self.get_community_object(community_slug))
 
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)

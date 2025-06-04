@@ -1,18 +1,9 @@
 from rest_framework.generics import  CreateAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.response import Response  
-from rest_framework.exceptions import NotFound
 from rest_framework import status, permissions  
 from apps.users.auth.permissions import IsPostOwner
-from apps.community.models.threads import Post
 from apps.community.serializers.threads import PostsSerializer
-
-class PostViewMixin:
-    def get_post(self, id_post):
-        try:
-            object = Post.objects.select_related('author', 'thread').get(id = id_post)
-            return object
-        except Post.DoesNotExist:
-            raise NotFound("Post não encontrado!")
+from utils.mixins.community_mixins import PostViewMixin
     
 class PostCreateView(CreateAPIView):  
     """ Cria um novo post dentro de uma thread. Apenas usuários autenticados podem postar. """  
