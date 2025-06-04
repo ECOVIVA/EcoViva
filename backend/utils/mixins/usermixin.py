@@ -1,6 +1,5 @@
 from apps.users import models
 
-# Mixin para facilitar a criação de usuários nos testes
 class UsersMixin:
     def make_user(
         self,
@@ -12,7 +11,6 @@ class UsersMixin:
         phone='(11) 11111-1111',
         photo=None,
     ):
-        # Cria um usuário no banco de dados e faz autenticação automática
         user = models.Users.objects.create_user(
             first_name=first_name,
             last_name=last_name,

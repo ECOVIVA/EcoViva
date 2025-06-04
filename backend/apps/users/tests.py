@@ -5,7 +5,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from io import BytesIO
 from PIL import Image
 
-from utils.usermixin import UsersMixin
+from utils.mixins.usermixin import UsersMixin
 from apps.users import models
 
 # Testes da View 'UsersCreateView', que cria novos usuários

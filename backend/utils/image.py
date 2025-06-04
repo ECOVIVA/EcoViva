@@ -12,5 +12,5 @@ def resize_image_preserve_aspect_ratio(image_path, max_width, max_height):
         return
 
     with Image.open(image_path) as img:
-        img.thumbnail((max_width, max_height))  # Redimensiona mantendo proporção
+        img.thumbnail((max_width, max_height))
         img.save(image_path)

@@ -1,19 +1,19 @@
-from rest_framework.generics import GenericAPIView
-from rest_framework.mixins import ( CreateModelMixin, UpdateModelMixin, DestroyModelMixin)
+from rest_framework.generics import  CreateAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.response import Response  
-from rest_framework.exceptions import NotFound
 from rest_framework import status, permissions  
-from apps.users.auth.permissions import IsPostOwner
-from apps.community.models.threads import *
-from apps.community.serializers.threads import *
-
-class PostCreateView(GenericAPIView, CreateModelMixin):  
+from apps.users.auth.permissions import IsPostOwner, IsCommunityMember
+from apps.community.serializers.threads import PostsSerializer
+from utils.mixins.community_mixins import PostViewMixin
+    
+class PostCreateView(PostViewMixin ,CreateAPIView):  
     """ Cria um novo post dentro de uma thread. Apenas usuários autenticados podem postar. """  
-    permission_classes = [permissions.IsAuthenticated]  
+    permission_classes = [IsCommunityMember]  
     serializer_class = PostsSerializer
 
-    def create(self, request, *args, **kwargs):
-        data = request.data.copy()
+    def create(self, *args, **kwargs):
+        community_slug = self.kwargs.get('slug')
+        self.check_object_permissions(self.request, self.get_community_object(community_slug))
+        data = self.request.data.copy()
 
         data['author'] = self.request.user.pk
         data['thread'] = self.kwargs.get('thread_slug')
@@ -23,22 +23,16 @@ class PostCreateView(GenericAPIView, CreateModelMixin):
         self.perform_create(serializer)
         return Response({'detail': 'Post criado com sucesso!'}, status=status.HTTP_201_CREATED)
 
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
-
-class PostUpdateView(GenericAPIView, UpdateModelMixin):  
+class PostUpdateView(PostViewMixin, UpdateAPIView):  
     """ Atualiza parcialmente um post. Apenas o dono do post pode modificar. """  
     permission_classes = [IsPostOwner]  
     serializer_class = PostsSerializer
 
     def get_object(self):
         id_post = self.kwargs.get('id_post')
-        try:
-            queryset = Post.objects.select_related('author', 'thread').get(id = id_post)
-            self.check_object_permissions(self.request, queryset)
-            return queryset
-        except Post.DoesNotExist:
-            raise NotFound("Post não encontrado!")
+        object = self.get_post(id_post)
+        self.check_object_permissions(self.request, object)
+        return object
         
     def partial_update(self, request, *args, **kwargs):
             instance = self.get_object()
@@ -50,28 +44,18 @@ class PostUpdateView(GenericAPIView, UpdateModelMixin):
                 instance._prefetched_objects_cache = {}
 
             return Response({'detail': 'Post atualizado com sucesso!'}, status=status.HTTP_200_OK)  
-    
-    def patch(self, request, *args, **kwargs):  
-        return self.partial_update(request,  *args, **kwargs)
 
-class PostDeleteView(GenericAPIView, DestroyModelMixin):  
-    """ Deleta um post. Apenas o dono do post pode excluir. """  
+class PostDeleteView(PostViewMixin, DestroyAPIView):  
     permission_classes = [IsPostOwner]  
     serializer_class = PostsSerializer
 
     def get_object(self):
         id_post = self.kwargs.get('id_post')
-        try:
-            queryset = Post.objects.get(id = id_post)
-            self.check_object_permissions(self.request, queryset)
-            return queryset
-        except Post.DoesNotExist:
-            raise NotFound("Post não encontrado!")
+        object = self.get_post(id_post)
+        self.check_object_permissions(self.request, object)
+        return object
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response({'detail': 'Post deletado com sucesso!'}, status=status.HTTP_204_NO_CONTENT)  
-    
-    def delete(self, request, *args, **kwargs):  
-        return self.destroy(request,  *args, **kwargs)

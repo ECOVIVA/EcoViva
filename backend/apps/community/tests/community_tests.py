@@ -36,7 +36,6 @@ class CommunityTests(APITestCase, UsersMixin):
 
         self.community.pending_requests.add(self.user2)
 
-
     def test_get_community_list(self):
         url = reverse('community:list_community')
 
