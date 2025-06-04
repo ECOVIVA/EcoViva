@@ -4,34 +4,48 @@ from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 from rest_framework import status, permissions  
 
-from apps.users.auth.permissions import IsPostOwner
+from apps.users.auth.permissions import IsPostOwner, IsCommunityMember
 from apps.community.models.threads import Thread
+from apps.community.models.community import Community
 from apps.community.serializers.threads import ThreadReadSerializer, ThreadWriteSerializer
 
-class ThreadListView(ListAPIView):  
-    """ Retorna uma lista com todas as threads cadastradas. """  
-    permission_classes = [permissions.IsAuthenticated]  
-    serializer_class = ThreadReadSerializer
-
-    def get_queryset(self):
-        queryset = Thread.objects.select_related('author').prefetch_related('likes', 'tags')
+class ThreadViewMixin:
+    def get_thread_list(self):
+        queryset = Thread.objects.select_related('author', 'community').prefetch_related('likes', 'tags')
         if not queryset.exists():
             raise NotFound("Thread não encontrada!")
         return queryset
+    
+    def get_thread_object(self, thread_slug):
+        try:
+            return Thread.objects.select_related('author', 'community').prefetch_related('likes', 'tags', 'posts', 'posts__author').annotate(likes_count=Count('likes')).get(slug = thread_slug)
+        except Thread.DoesNotExist:
+            raise NotFound("Thread não encontrada!")
+
+class ThreadListView(ThreadViewMixin,ListAPIView):  
+    """ Retorna uma lista com todas as threads cadastradas. """  
+    permission_classes = [IsCommunityMember]  
+    serializer_class = ThreadReadSerializer
+
+    def get_queryset(self):
+        queryset = self.get_thread_list()
     
     def get(self, request, *args, **kwargs):  
         return self.list(request, *args, **kwargs)
 
 class ThreadCreateView(CreateAPIView):  
     """ Cria uma nova thread. Apenas usuários autenticados podem acessar. """  
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsCommunityMember]
     serializer_class = ThreadWriteSerializer  
 
     def create(self, request, *args, **kwargs):
+        community_slug = self.kwargs.get('slug')
         data = request.data.copy()  
 
         data["author"] = request.user.pk
-        data['community'] = self.kwargs.get('slug')
+        data['community'] = community_slug
+
+        self.check_object_permissions(self.request, Community.objects.get(slug = community_slug))
 
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
@@ -41,19 +55,16 @@ class ThreadCreateView(CreateAPIView):
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 
-class ThreadUpdateView(UpdateAPIView):  
+class ThreadUpdateView(ThreadViewMixin, UpdateAPIView):  
     """ Atualiza parcialmente uma thread. Apenas o dono da thread pode modificar. """  
     permission_classes = [IsPostOwner]  
     serializer_class = ThreadWriteSerializer
 
     def get_object(self):
-        slug = self.kwargs.get('thread_slug')
-        try:
-            queryset = Thread.objects.get(slug = slug)
-            self.check_object_permissions(self.request, queryset)
-            return queryset
-        except Thread.DoesNotExist:
-            raise NotFound("Thread não encontrada!")
+        thread_slug = self.kwargs.get('thread_slug')
+        object = self.get_thread_object(thread_slug)
+        self.check_object_permissions(self.request, object)
+        return object
         
     def partial_update(self, request, *args, **kwargs):
             instance = self.get_object()
@@ -69,16 +80,14 @@ class ThreadUpdateView(UpdateAPIView):
     def patch(self, request, *args, **kwargs):  
         return self.partial_update(request,  *args, **kwargs)
     
-class ThreadLikeView(CreateAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+class ThreadLikeView(ThreadViewMixin, CreateAPIView):
+    permission_classes = [IsCommunityMember]
 
-    def post(self, request, slug):     
-        try:
-            thread = Thread.objects.get(slug = slug)
-        except Thread.DoesNotExist:
-            raise NotFound("Thread não encontrada!")
+    def post(self, request):  
+        thread_slug = self.kwargs.get('thread_slug')   
+        thread = self.get_thread_object(thread_slug)
         
-        user = request.user
+        user = self.request.user
 
         if thread.likes.filter(id=user.id).exists():
             thread.likes.remove(user)
@@ -87,18 +96,15 @@ class ThreadLikeView(CreateAPIView):
             thread.likes.add(user)
             return Response({'liked': True}, status=status.HTTP_200_OK)
 
-class ThreadDeleteView(DestroyAPIView):  
+class ThreadDeleteView(ThreadViewMixin, DestroyAPIView):  
     """ Deleta uma thread. Apenas o dono da thread pode excluir. """  
     permission_classes = [IsPostOwner]  
 
     def get_object(self):
-        slug = self.kwargs.get('thread_slug')
-        try:
-            queryset = Thread.objects.get(slug = slug)
-            self.check_object_permissions(self.request, queryset)
-            return queryset
-        except Thread.DoesNotExist:
-            raise NotFound("Thread não encontrada!")
+        thread_slug = self.kwargs.get('thread_slug')
+        object = self.get_thread_object(thread_slug)
+        self.check_object_permissions(self.request, object)
+        return object
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -108,17 +114,16 @@ class ThreadDeleteView(DestroyAPIView):
     def delete(self, request, *args, **kwargs):  
         return self.destroy(request,  *args, **kwargs) 
 
-class ThreadDetailView(RetrieveAPIView):  
+class ThreadDetailView(ThreadViewMixin, RetrieveAPIView):  
     """ Retorna detalhes de uma thread específica. """  
-    permission_classes = [permissions.AllowAny]  
+    permission_classes = [IsCommunityMember]  
     serializer_class = ThreadReadSerializer
 
     def get_object(self):
-        slug = self.kwargs.get('thread_slug')
-        try:
-            return Thread.objects.select_related('author').prefetch_related('likes', 'tags', 'posts', 'posts__author').annotate(likes_count=Count('likes')).get(slug = slug)
-        except Thread.DoesNotExist:
-            raise NotFound("Thread não encontrada!")
+        thread_slug = self.kwargs.get('thread_slug')
+        object = self.get_thread_object(thread_slug)
+        self.check_object_permissions(self.request, object.community)
+        return object
     
     def get(self, request, *args, **kwargs):  
         return self.retrieve(request, *args, **kwargs)
