@@ -31,6 +31,7 @@ import PolíticadeUsodeCookies from '../pages/Documents/PolíticadeUsodeCookies'
 import Comunidade from '../pages/comunidade'
 import { CommunityProfile } from '../pages/CommunityProfile'
 
+
 const HideLayoutRoutes = ['/login', '/CreateAccount', '/RequestPassword']
 
 // Hook para verificar se a rota atual deve esconder o layout

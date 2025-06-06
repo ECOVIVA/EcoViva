@@ -21,10 +21,7 @@ export const Sidebar: React.FC = () => {
           <Bookmark size={20} />
           <span>Salvos</span>
         </a>
-        <a href="#" className="flex items-center space-x-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
-          <Calendar size={20} />
-          <span>Eventos</span>
-        </a>
+        
       </nav>
       
       <div className="mt-8">
