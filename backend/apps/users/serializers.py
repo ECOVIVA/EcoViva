@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import password_validation
 import re
-from apps.bubble.models import Bubble
+from apps.bubble.models.bubble import Bubble
 from . import models
 
 """

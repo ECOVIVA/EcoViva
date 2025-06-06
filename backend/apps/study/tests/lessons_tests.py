@@ -2,9 +2,7 @@ from django.urls import reverse
 from rest_framework.test import APITestCase
 from rest_framework import status
 from apps.users.tests import UsersMixin
-from apps.study.models import LessonLog, Lesson, Achievement, AchievementLog
-from apps.bubble.models import Bubble, CheckIn
-
+from apps.study.models.lessons import LessonLog, Lesson
 
 class TestLessions(APITestCase, UsersMixin):
     def setUp(self):
@@ -14,14 +12,7 @@ class TestLessions(APITestCase, UsersMixin):
         self.lesson2 = Lesson.objects.create(title="Lição Teste 2")
 
         self.lesson_log = LessonLog.objects.create(user=self.user, lesson=self.lesson)
-
-        self.badge = Achievement.objects.create(**{
-            'name': 'Teste',
-            'category': 'Lesson',
-            'condition': 'lesson_initial',
-            'description': 'Teste'
-        })
-
+    
     def test_get_lesson_log(self):
         """Testa se retorna corretamente as lições concluídas do usuário autenticado"""
         url = reverse("study:lessons_log")  # Ajuste conforme sua URL
@@ -95,23 +86,6 @@ class TestLessions(APITestCase, UsersMixin):
         payload = {"lesson": self.lesson.id}
 
         response = self.client.post(url, data=payload, format="json")
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.assertEqual(response.json().get('detail'), 'As credenciais de autenticação não foram fornecidas.')
-
-
-    def test_get_achivements_list(self):
-        url = reverse("study:achievements_user")
-
-        response = self.client.get(url, format="json")  
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_get_achivements_list_unauthorized(self):
-        url = reverse("study:achievements_user")
-
-        self.client.logout()
-        response = self.client.get(url, format="json")  
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(response.json().get('detail'), 'As credenciais de autenticação não foram fornecidas.')
