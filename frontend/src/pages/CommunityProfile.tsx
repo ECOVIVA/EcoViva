@@ -3,7 +3,6 @@ import { Users, Calendar, BookOpen, Settings, Share2, Bell } from 'lucide-react'
 import { CommunityHeader } from './community/CommunityHeader';
 import { CommunityTabs } from './community/CommunityTabs';
 import { CommunityRooms } from './community/CommunityRooms';
-import { CommunityEvents } from './community/CommunityEvents';
 import { CommunityMembers } from './community/CommunityMembers';
 
 export const CommunityProfile: React.FC = () => {
@@ -62,7 +61,6 @@ export const CommunityProfile: React.FC = () => {
               )}
               
               {activeTab === 'salas' && <CommunityRooms />}
-              {activeTab === 'eventos' && <CommunityEvents />}
               {activeTab === 'membros' && <CommunityMembers />}
             </div>
           </div>
