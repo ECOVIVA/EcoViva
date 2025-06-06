@@ -1,5 +1,4 @@
-from rest_framework.generics import GenericAPIView
-from rest_framework.mixins import ( RetrieveModelMixin, CreateModelMixin, UpdateModelMixin, DestroyModelMixin)
+from rest_framework.generics import RetrieveAPIView, CreateAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.response import Response  
 from rest_framework import status, permissions  
 from . import models, serializers 
@@ -19,12 +18,9 @@ from .email.send_email import send_confirmation_email
 
 # View responsável por criar novos usuários na plataforma.
 # Usada para criar usuarios, manda um email para a autenticação do email.
-class UserCreateView(GenericAPIView, CreateModelMixin):
+class UserCreateView(CreateAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = serializers.UsersSerializer
-
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
     
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -41,28 +37,22 @@ class UserCreateView(GenericAPIView, CreateModelMixin):
     
 # View responsável por retornar o perfil do usuário autenticado.
 # Deve ser usada para pegar os dados do usuário que esta autenticado.
-class UserProfileView(GenericAPIView, RetrieveModelMixin):
+class UserProfileView(RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]  # Exige autenticação para acessar a view
     serializer_class = serializers.UsersSerializer
 
     def get_object(self):
         return self.request.user
-    
-    def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
     
 # View responsável por atualizar parcialmente os dados de um usuário específico.
 # Apenas usuários autenticados podem acessar essa rota.
 # Deve ser usada para atualizar os dados do usuário.
-class UserUpdateView(GenericAPIView, UpdateModelMixin):
+class UserUpdateView(UpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]  # Exige autenticação para acessar a view
     serializer_class = serializers.UsersSerializer
 
     def get_object(self):
         return self.request.user
-    
-    def patch(self, request, *args, **kwargs):
-        return self.partial_update(request, *args, **kwargs)
     
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
