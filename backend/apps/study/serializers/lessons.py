@@ -1,5 +1,5 @@
 from rest_framework import serializers  
-from . import models  
+from apps.study.models.lessons import Lesson, LessonLog
 
 """
     Este módulo define os serializers para os modelos relacionados às lições e conquistas dos usuários.
@@ -16,7 +16,7 @@ class LessonSerializer(serializers.ModelSerializer):
     Serializa todos os campos do modelo.
     """
     class Meta:  
-        model = models.Lesson  
+        model = Lesson  
         fields = '__all__'  
 
 
@@ -27,7 +27,7 @@ class LessonLogSerializer(serializers.ModelSerializer):
     O campo 'completed_at' é somente leitura.
     """
     class Meta:  
-        model = models.LessonLog  
+        model = LessonLog  
         fields = ['user', 'lesson', 'completed_at']  
         read_only_fields = ['completed_at']  
 
@@ -40,31 +40,7 @@ class LessonLogSerializer(serializers.ModelSerializer):
         lesson = validated_data['lesson']  
 
         # Impede que um usuário registre a mesma lição como concluída mais de uma vez  
-        if models.LessonLog.objects.filter(user=user, lesson=lesson).exists():  
+        if LessonLog.objects.filter(user=user, lesson=lesson).exists():  
             raise serializers.ValidationError("O usuário já concluiu esta lição.")  
 
         return super().create(validated_data)  
-
-
-class AchievementSerializer(serializers.ModelSerializer):  
-    """
-    Serializador para o modelo Achievement, que representa as conquistas disponíveis no sistema.
-    Serializa todos os campos, incluindo o ícone da conquista.
-    """
-    icon = serializers.ImageField(required=False, allow_null=True)
-
-    class Meta:  
-        model = models.Achievement  
-        fields = "__all__"  
-
-
-class AchievementLogSerializer(serializers.ModelSerializer):  
-    """
-    Serializador para o modelo AchievementLog, que representa as conquistas desbloqueadas por um usuário.
-    O campo 'achievement' é serializado usando o AchievementSerializer.
-    """
-    achievement = AchievementSerializer(read_only=True)
-
-    class Meta:  
-        model = models.AchievementLog  
-        fields = ['user', 'achievement', 'date_awarded']  

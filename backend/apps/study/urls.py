@@ -1,5 +1,5 @@
 from django.urls import path  
-from . import views  
+from apps.study.views import achievement,lessons  
 
 """
     Este arquivo define as rotas (URLs) relacionadas ao estudo e progresso do usuário.
@@ -18,9 +18,9 @@ app_name = 'study'
 # Mapeamento das rotas para as views relacionadas ao progresso do usuário no aprendizado
 urlpatterns = [
     # Rotas para lições concluídas
-    path('lessons/complete/', views.LessonLogListView.as_view(), name="lessons_log"),  
-    path('lessons/complete/create/', views.LessonLogCreateView.as_view(), name="lesson_log_create"),  
+    path('lessons/complete/', lessons.LessonLogListView.as_view(), name="lessons_log"),  
+    path('lessons/complete/create/', lessons.LessonLogCreateView.as_view(), name="lesson_log_create"),  
 
     # Rotas para conquistas do usuário
-    path('achievements/user/', views.UserAchievementsView.as_view(), name="achievements_user"),  
+    path('achievements/user/', achievement.UserAchievementsView.as_view(), name="achievements_user"),  
 ]

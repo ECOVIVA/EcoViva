@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . import models
+from apps.study.models.lessons import Category, Lesson, LessonLog
 
 """
     Este módulo registra os modelos no painel de administração do Django,
@@ -12,7 +12,7 @@ from . import models
     - AchievementLogAdmin → Administra as conquistas desbloqueadas pelos usuários.
 """
 
-@admin.register(models.Category)
+@admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     """
     Configuração do painel administrativo para o modelo Category.
@@ -23,7 +23,7 @@ class CategoryAdmin(admin.ModelAdmin):
     ordering = ('name',)  # Ordena em ordem alfabética
 
 
-@admin.register(models.Lesson)
+@admin.register(Lesson)
 class LessonAdmin(admin.ModelAdmin):
     """
     Configuração do painel administrativo para o modelo Lesson.
@@ -36,7 +36,7 @@ class LessonAdmin(admin.ModelAdmin):
     filter_horizontal = ('categories',)  # Facilita seleção de categorias
 
 
-@admin.register(models.LessonLog)
+@admin.register(LessonLog)
 class LessonLogAdmin(admin.ModelAdmin):
     """
     Configuração do painel administrativo para o modelo LessonLog.
@@ -46,24 +46,3 @@ class LessonLogAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'lesson__title')  # Busca por usuário e lição
     list_filter = ('lesson', 'completed_at')  # Filtro por lição e data
     ordering = ('-completed_at',)
-
-
-@admin.register(models.Achievement)
-class AchievementAdmin(admin.ModelAdmin):
-    """
-    Configuração do painel administrativo para o modelo Achievement.
-    Permite visualizar e gerenciar as conquistas do sistema.
-    """
-    list_display = ('id', 'name', 'category', 'condition')  # Exibe ID, nome, categoria e condição
-    search_fields = ('name', 'category', 'condition')  # Busca por nome, categoria ou condição
-    list_filter = ('category',)  # Filtro por categoria
-    ordering = ('name',)
-
-
-@admin.register(models.AchievementLog)
-class AchievementLogAdmin(admin.ModelAdmin):
-    """
-    Configuração do painel administrativo para o modelo AchievementLog.
-    Permite visualizar e gerenciar as conquistas desbloqueadas pelos usuários.
-    """
-    list_display = ('id', 'user', 'achievement', 'date_awarded')  # Exibe ID, usuário, conquista e data
