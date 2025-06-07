@@ -18,9 +18,10 @@ class BaseEvent(models.Model):
         verbose_name="Created By"
     )
     
+    image = models.ImageField()
     title = models.CharField(max_length=100, verbose_name="Title")
     description = models.TextField(verbose_name="Description")
-    deadline = models.DateTimeField(verbose_name="Deadline")
+    status = models.CharField()
     
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Updated At")
@@ -35,6 +36,7 @@ class Challenge(BaseEvent):
     paper_points = models.PositiveIntegerField(verbose_name="Paper Points")
     plastic_points = models.PositiveIntegerField(verbose_name="Plastic Points")
     glass_points = models.PositiveIntegerField(verbose_name="Glass Points")
+    deadline = models.DateTimeField(verbose_name="Deadline")
 
     class Meta:
         verbose_name = "Gincana"
@@ -80,6 +82,9 @@ class ChallengeRecord(models.Model):
         return f"Coleta {self.competitor_group.name} em {self.collected_at.strftime('%Y-%m-%d')}"
 
 class Campaign(BaseEvent):
+    category = models.CharField()
+    location = models.CharField()
+    momento = models.DateTimeField(verbose_name="Deadline")
     goal = models.TextField(blank=True, null=True, verbose_name="Goal")
     participants = models.ManyToManyField(Users, blank=True, related_name="campaign_member")
 
