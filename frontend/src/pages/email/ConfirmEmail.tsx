@@ -1,5 +1,5 @@
-import routes from "../services/API/routes";
-import api from "../services/API/axios";
+import routes from "../../services/API/routes";
+import api from "../../services/API/axios";
 import { useEffect, useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import { AxiosError } from "axios";

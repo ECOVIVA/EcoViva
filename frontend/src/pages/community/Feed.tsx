@@ -2,8 +2,8 @@
 
 import type React from "react"
 import { useState } from "react"
-import { PostCard } from "../PostCard"
-import { CreatePostBox } from "../CreatePostBox"
+import { PostCard } from "./PostCard"
+import { CreatePostBox } from "./CreatePostBox"
 import { usePosts } from "../../components/Auth/context/post-context"
 
 interface FeedProps {

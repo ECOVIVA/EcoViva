@@ -1,9 +1,9 @@
 import React from 'react';
 import { Users, Calendar, BookOpen, Settings, Share2, Bell } from 'lucide-react';
-import { CommunityHeader } from './community/CommunityHeader';
-import { CommunityTabs } from './community/CommunityTabs';
-import { CommunityRooms } from './community/CommunityRooms';
-import { CommunityMembers } from './community/CommunityMembers';
+import { CommunityHeader } from './CommunityHeader';
+import { CommunityTabs } from './CommunityTabs';
+import { CommunityRooms } from './CommunityRooms';
+import { CommunityMembers } from './CommunityMembers';
 
 export const CommunityProfile: React.FC = () => {
   const [activeTab, setActiveTab] = React.useState('sobre');

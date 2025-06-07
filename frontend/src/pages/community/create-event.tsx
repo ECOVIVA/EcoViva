@@ -18,7 +18,7 @@ import {
   Heart,
   ArrowLeft,
 } from "lucide-react"
-import { usePosts } from "../components/Auth/context/post-context" // Adjust the import path as necessary
+import { usePosts } from "../../components/Auth/context/post-context" // Adjust the import path as necessary
 
 interface CreateEventProps {
   onBack?: () => void

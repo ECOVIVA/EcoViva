@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 import { useState } from "react"
 import {
@@ -16,7 +14,7 @@ import {
   Camera,
   Send,
 } from "lucide-react"
-import type { Post } from "../types/typesCM"
+import type { Post } from "../../types/typesCM"
 
 interface PostCardProps {
   post: Post

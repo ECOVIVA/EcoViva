@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import Stars from '../components/comingsoon/Stars';
-import ComingSoon from '../components/comingsoon/ComingSoon';
+import Stars from '../../components/comingsoon/Stars';
+import ComingSoon from '../../components/comingsoon/ComingSoon';
 
 function App() {
   useEffect(() => {

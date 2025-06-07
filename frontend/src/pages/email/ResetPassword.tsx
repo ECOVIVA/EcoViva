@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Leaf, Lock, Eye, EyeOff } from 'lucide-react';
-import api from '../services/API/axios';
-import routes from '../services/API/routes';
+import api from '../../services/API/axios';
+import routes from '../../services/API/routes';
 
 
 const ResetPassword: React.FC = () => {

@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Heart, ArrowLeft } from 'lucide-react';
-import api from '../services/API/axios';
-import routes from '../services/API/routes';
-import { Threads } from '../types/types';
-import { useAuth } from '../components/Auth/AuthContext';
-import LikeButton from '../components/LikeButton';
+import api from '../../services/API/axios';
+import routes from '../../services/API/routes';
+import { Threads } from '../../types/types';
+import { useAuth } from '../../components/Auth/AuthContext';
+import LikeButton from '../../components/LikeButton';
 
 interface PostContent {
     thread: string

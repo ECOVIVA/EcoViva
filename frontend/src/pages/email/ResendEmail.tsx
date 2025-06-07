@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Leaf, Send } from 'lucide-react';
 import { isAxiosError } from 'axios'; 
-import api from '../services/API/axios';
-import routes from '../services/API/routes';
+import api from '../../services/API/axios';
+import routes from '../../services/API/routes';
 
-const RequestPassword = () => {
+const App = () => {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,16 +15,29 @@ const RequestPassword = () => {
 
     try {
       const response = await api.post(
-        routes.auth.request_reset_password,  
-        {email }  
+        routes.auth.resend_email,  // Endpoint da API
+        { email }  // Corpo da requisição com o e-mail
       );
 
       if (response.status === 200) {
-        setMessage(response.data);
+        setMessage('Código de verificação reenviado com sucesso!');
       }
     } catch (error) {
-      {/*@ts-ignore*/}
-      setMessage(error.respose.data.detail);
+      if (isAxiosError(error)) {
+        if (error.response) {
+          if (error.response.status === 404) {
+            setMessage('E-mail não encontrado.');
+          } else if (error.response.status === 400) {
+            setMessage('Usuário já está ativo.');
+          } else {
+            setMessage('Ocorreu um erro ao reenviar o código. Tente novamente.');
+          }
+        } else {
+          setMessage('Erro de conexão com o servidor. Tente novamente mais tarde.');
+        }
+      } else {
+        setMessage('Ocorreu um erro desconhecido. Tente novamente.');
+      }
     } finally {
       setLoading(false);  // Finaliza o estado de loading
     }
@@ -41,8 +54,8 @@ const RequestPassword = () => {
         
         <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">ECOviva</h1>
         <p className="text-center text-gray-600 mb-8">
-          Esqueceu sua senha?<br />
-          Coloque o email da conta, para que assim possa receber o link de acesso a alteração de senha.
+          Não recebeu o código de verificação?<br />
+          Reenviaremos para seu email.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -92,4 +105,4 @@ const RequestPassword = () => {
   );
 }
 
-export default RequestPassword;
+export default App;

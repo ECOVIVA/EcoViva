@@ -5,8 +5,8 @@ import { useEffect, useState } from "react"
 import { Leaf, Edit2, Save, Camera, ImageIcon, Heart, Plus, Sparkles, CloudRain, Sun, Wind } from "lucide-react"
 import { z } from "zod"
 import {motion} from "framer-motion"
-import api from "../services/API/axios"
-import routes from "../services/API/routes"
+import api from "../../services/API/axios"
+import routes from "../../services/API/routes"
 
 // Enhanced schema with more specific validations
 const profileSchema = z.object({

@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Header } from '../pages/Header';
-import { Sidebar } from '../pages/Sidebar';
-import { Feed } from './community/Feed';
-import { RightPanel } from '../pages/RightPanel';
-import { Footer } from '../pages/FooterCM';
-import { CommunityProfile } from '../pages/CommunityProfile';
-import { PostProvider } from '../components/Auth/context/post-context';
-import CreateEvent from "../pages/create-event";
+import { Sidebar } from '../../pages/community/Sidebar';
+import { Feed } from './Feed';
+import { RightPanel } from '../../pages/community/RightPanel';
+import { Footer } from './FooterCM';
+import { CommunityProfile } from '../../pages/community/CommunityProfile';
+import { PostProvider } from '../../components/Auth/context/post-context';
+import CreateEvent from "./create-event";
 
 export default function Page() {
   const [activeView, setActiveView] = useState<"feed" | "create-event">("feed");
@@ -14,7 +13,7 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-white text-gray-800 flex flex-col">
-      <Header />
+      
 
       {showCommunityProfile ? (
         <CommunityProfile />

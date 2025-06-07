@@ -24,7 +24,7 @@ import {
   Trash2,
   RecycleIcon,
 } from "lucide-react"
-import CreateAccount from "./CreateAccount"
+import CreateAccount from "../Checkin/CreateAccount"
 import { Link } from "react-router-dom"
 
 const FutureImpactPage: React.FC = () => {
