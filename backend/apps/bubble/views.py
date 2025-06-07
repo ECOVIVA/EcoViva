@@ -1,7 +1,7 @@
 from rest_framework.generics import RetrieveAPIView, CreateAPIView
 from rest_framework.response import Response  
 from rest_framework import status, permissions
-from apps.study.serializers import AchievementSerializer
+from apps.study.serializers.achievement import AchievementSerializer
 from apps.bubble.serializers.bubble_serializers import BubbleSerializer
 from apps.bubble.serializers.checkin_serializers import CheckInSerializer
 from utils.check_achievement import CheckAchievementsCheckIn
