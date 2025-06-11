@@ -1,6 +1,6 @@
 import React from 'react';
 import { UserProfileCard } from './UserProfileCard';
-import { CommunitiesCard } from './CommunnityCard';
+import { CommunitiesCard } from '../../pages/community/CommunnityCard';
 import { EventsCard } from './EventsCard';
 
 export const RightPanel: React.FC = () => {

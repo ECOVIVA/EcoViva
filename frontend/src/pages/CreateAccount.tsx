@@ -1,11 +1,11 @@
 import React, { useContext, useState } from 'react';
 import { Leaf, Mail, Lock, Eye, EyeOff, User, Phone, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../../components/Auth/AuthContext'; // Mantenha o import do AuthContext
-import api from '../../services/API/axios';
-import routes from '../../services/API/routes';
-import { userSchema, type UserSchema } from '../../schemas/userSchemas';
-import VerificationMessage from '../../components/VerificationMenssage';
+import { AuthContext } from '../components/Auth/AuthContext'; // Mantenha o import do AuthContext
+import api from '../services/API/axios';
+import routes from '../services/API/routes';
+import { userSchema, type UserSchema } from '../schemas/userSchemas';
+import VerificationMessage from '../components/VerificationMenssage';
 
 function App() {
   const navigate = useNavigate();
