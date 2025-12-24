@@ -3,7 +3,7 @@ from rest_framework import permissions
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from apps.bubble.serializer import BubbleSerializer, CheckInSerializer
+from apps.bubble.presentation.serializer import BubbleSerializer, CheckInSerializer
 
 
 class BubbleProfileView(BaseBubbleView):

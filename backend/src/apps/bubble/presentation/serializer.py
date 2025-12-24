@@ -4,7 +4,7 @@ from typing import cast
 from django.utils import timezone
 from rest_framework import serializers
 
-from apps.bubble.model import Bubble, CheckIn, Difficulty, Rank
+from apps.bubble.infrastructure.model import Bubble, CheckIn, Difficulty, Rank
 
 
 class DifficultySerializer(serializers.ModelSerializer):

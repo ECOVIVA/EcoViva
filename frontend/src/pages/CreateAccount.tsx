@@ -314,7 +314,10 @@ function App() {
                         name="photo"
                         type="file"
                         className="sr-only"
-                        onChange={(e) => setFormData({ ...formData, photo: e.target.files?.[0] || null })}
+                        onChange={(e) => {
+                          console.log(e.target.files?.[0]);
+                          setFormData({ ...formData, photo: e.target.files?.[0] || null });
+                        }}
                       />
                     </label>
                   </div>
