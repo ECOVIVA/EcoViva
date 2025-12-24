@@ -21,7 +21,7 @@ class BaseEvent(models.Model):
     image = models.ImageField()
     title = models.CharField(max_length=100, verbose_name="Title")
     description = models.TextField(verbose_name="Description")
-    status = models.CharField()
+    status = models.CharField(max_length=100)
     
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Updated At")
@@ -82,8 +82,8 @@ class ChallengeRecord(models.Model):
         return f"Coleta {self.competitor_group.name} em {self.collected_at.strftime('%Y-%m-%d')}"
 
 class Campaign(BaseEvent):
-    category = models.CharField()
-    location = models.CharField()
+    category = models.CharField(max_length=50)
+    location = models.CharField(max_length=200)
     momento = models.DateTimeField(verbose_name="Deadline")
     goal = models.TextField(blank=True, null=True, verbose_name="Goal")
     participants = models.ManyToManyField(Users, blank=True, related_name="campaign_member")

@@ -5,6 +5,6 @@ from apps.community.models.events import *
 
 @admin.register(Campaign)
 class CampaignAdmin(admin.ModelAdmin):
-    list_display = ('title', 'community', 'deadline', 'created_at')
+    list_display = ('title', 'community', 'created_at')
     search_fields = ('title',)
-    list_filter = ('community', 'deadline')
+    list_filter = ('community',)
