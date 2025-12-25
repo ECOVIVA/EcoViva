@@ -2,8 +2,10 @@ from django.db import models
 from django.dispatch import receiver
 
 from apps.bubble.application.service.create_default_ranks import CreateDefaultRanksService
+from apps.bubble.application.service.increment_points_bubble import IncrementPointsBubble
+from apps.bubble.application.service.upgrade_rank import UpgradeRankService
 
-from .model import CheckIn, Rank
+from .model import CheckIn
 
 
 @receiver(models.signals.post_migrate)
@@ -15,20 +17,11 @@ def signal_create_default_ranks(sender: object, **kwargs: object) -> None:
 def signal_increment_points_for_bubble(
     sender: CheckIn, instance: CheckIn, **kwargs: object
 ) -> None:
-    bubble = instance.bubble
-    difficulty = bubble.rank.difficulty
-
-    if difficulty:
-        bubble.progress += difficulty.points_for_activity
-        bubble.save()
+    IncrementPointsBubble(check_in=instance).execute()
 
 
 @receiver(models.signals.post_save, sender=CheckIn)
 def signal_upgrade_rank(sender: CheckIn, instance: CheckIn, **kwargs: object) -> None:
     bubble = instance.bubble
 
-    next_rank = Rank.objects.filter(points__lte=bubble.progress).order_by("-points").first()
-    if next_rank and next_rank != bubble.rank:
-        bubble.rank = next_rank
-        bubble.progress = 0
-        bubble.save()
+    UpgradeRankService(bubble=bubble).execute()
