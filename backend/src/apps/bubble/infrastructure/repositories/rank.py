@@ -1,18 +1,38 @@
+from apps.bubble.domain.entities.rank import RankEntity
+from apps.bubble.domain.exceptions import RankNotFoundError
 from apps.bubble.infrastructure.model import Bubble, Rank
 
 
 class RankRepository:
-    @staticmethod
-    def get_rank_by_name(name: str) -> Rank | None:
+    def _get(self, **filters: object) -> RankEntity:
         try:
-            return Rank.objects.get(name=name)
-        except Rank.DoesNotExist:
-            return None
+            rank = Rank.objects.get(**filters)
+            return self._to_entity(rank)
+        except Rank.DoesNotExist as e:
+            raise RankNotFoundError from e
 
-    @staticmethod
-    def create_rank(name: str, diff_name: str, points: int) -> None:
-        diff = RankRepository.get_rank_by_name(name=diff_name)
-        Rank.objects.get_or_create(name=name, difficulty=diff, points=points)
+    def _to_entity(self, rank: Rank) -> "RankEntity":
+        return RankEntity(
+            id=rank.pk,
+            name=rank.name,
+            difficulty_id=rank.difficulty.pk,
+            points=rank.points,
+        )
+
+    def get_rank_by_pk(self, pk: int) -> RankEntity:
+        return self._get(pk=pk)
+
+    def get_rank_by_name(self, name: str) -> RankEntity:
+        return self._get(name=name)
+
+    def get_next_rank(self, current_points: int) -> RankEntity:
+        try:
+            rank = Rank.objects.filter(points__gt=current_points).order_by("-points").first()
+            if not rank:
+                raise RankNotFoundError
+            return self._to_entity(rank)
+        except Rank.DoesNotExist as e:
+            raise RankNotFoundError from e
 
     @staticmethod
     def update_rank(bubble: Bubble) -> None:

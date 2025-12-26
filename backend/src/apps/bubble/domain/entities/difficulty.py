@@ -5,4 +5,3 @@ from dataclasses import dataclass
 class DifficultyEntity:
     name: str
     points_for_activity: int
-    

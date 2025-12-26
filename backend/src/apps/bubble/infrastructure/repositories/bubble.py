@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser
 
 from apps.bubble.domain.entities.bubble import BubbleEntity
+from apps.bubble.domain.value_objects.progress import Progress
 from apps.bubble.infrastructure.exceptions.bubble import BubbleNotFoundError
 from apps.bubble.infrastructure.model import Bubble
 
@@ -18,7 +19,7 @@ class BubbleRepository:
             id=bubble.pk,
             user_id=bubble.user.pk,
             rank_id=bubble.rank.pk,
-            progress=bubble.progress,
+            progress=Progress(bubble.progress),
         )
 
     def get_bubble_by_user(self, user: AbstractBaseUser) -> BubbleEntity:
