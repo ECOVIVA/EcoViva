@@ -1,6 +1,6 @@
 from django.urls import path
 
-from apps.bubble.presentation.views import BubbleCheckInCreateView, BubbleProfileView
+from apps.bubble.interface.views import BubbleCheckInCreateView, BubbleProfileView
 
 app_name = "bubble"
 

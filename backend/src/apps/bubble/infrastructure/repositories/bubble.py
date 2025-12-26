@@ -21,8 +21,8 @@ class BubbleRepository(BaseRepository[BubbleEntity, Bubble]):
     def save(self, entity: BubbleEntity) -> None:
         return super().save(entity)
 
-    def get_bubble_by_user(self, user: AbstractBaseUser) -> BubbleEntity:
-        return self._get(user=user)
+    def get_bubble_by_user(self, user_id: int) -> BubbleEntity:
+        return self._get(user=user_id)
 
     def get_bubble_by_pk(self, pk: int) -> BubbleEntity:
         return self._get(pk=pk)

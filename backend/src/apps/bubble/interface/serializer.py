@@ -4,7 +4,10 @@ from typing import cast
 from django.utils import timezone
 from rest_framework import serializers
 
-from apps.bubble.infrastructure.model import Bubble, CheckIn, Difficulty, Rank
+from apps.bubble.infrastructure.models.bubble import Bubble
+from apps.bubble.infrastructure.models.checkin import CheckIn
+from apps.bubble.infrastructure.models.difficulty import Difficulty
+from apps.bubble.infrastructure.models.rank import Rank
 
 
 class DifficultySerializer(serializers.ModelSerializer):
@@ -57,3 +60,17 @@ class CheckInSerializer(serializers.ModelSerializer):
         bubble = cast("Bubble", validated_data.get("bubble"))
         validated_data["xp_earned"] = bubble.rank.difficulty.points_for_activity
         return super().create(validated_data)
+
+
+class CheckInRealSerializer(serializers.Serializer):
+    description = serializers.CharField()
+    xp_earned = serializers.IntegerField()
+    created_at = serializers.DateTimeField()
+
+
+class BubbleProfileSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    progress = serializers.FloatField()
+    rank_name = serializers.CharField()
+    difficulty_name = serializers.CharField()
+    check_in = CheckInRealSerializer(many=True)
