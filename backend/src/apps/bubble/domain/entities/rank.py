@@ -1,22 +1,16 @@
 from dataclasses import dataclass
 
-from apps.bubble.infrastructure.repositories.difficulty import DifficultyRepository
+from core.domain.entities.base import Entity
 
 
 @dataclass
-class RankEntity:
+class RankEntity(Entity):
     id: int
     name: str
     difficulty_id: int
     points: int
 
-    def create_rank(self, name: str, points: int) -> None:
-        Rank.objects.get_or_create(name=name, difficulty=diff, points=points)
-
-    @staticmethod
-    def update_rank(bubble: Bubble) -> None:
-        next_rank = Rank.objects.filter(points__lte=bubble.progress).order_by("-points").first()
-        if next_rank and next_rank != bubble.rank:
-            bubble.rank = next_rank
-            bubble.progress = 0
-            bubble.save()
+    def can_create_rank(self, ranks_list: list["RankEntity"], name: str) -> None:
+        if any(self.name == rank.name for rank in ranks_list):
+            error_msg = f"Rank with name '{name}' already exists."
+            raise ValueError(error_msg)

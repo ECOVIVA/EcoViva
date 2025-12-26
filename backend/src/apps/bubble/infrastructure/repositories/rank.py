@@ -1,23 +1,26 @@
+from typing import override
+
 from apps.bubble.domain.entities.rank import RankEntity
 from apps.bubble.domain.exceptions import RankNotFoundError
-from apps.bubble.infrastructure.model import Bubble, Rank
+from apps.bubble.infrastructure.models.rank import Rank
+from core.infrastructure.repositories.base import BaseRepository
 
 
-class RankRepository:
-    def _get(self, **filters: object) -> RankEntity:
-        try:
-            rank = Rank.objects.get(**filters)
-            return self._to_entity(rank)
-        except Rank.DoesNotExist as e:
-            raise RankNotFoundError from e
-
-    def _to_entity(self, rank: Rank) -> "RankEntity":
+class RankRepository(BaseRepository[RankEntity, Rank]):
+    @override
+    def _to_entity(self, model: Rank) -> "RankEntity":
         return RankEntity(
-            id=rank.pk,
-            name=rank.name,
-            difficulty_id=rank.difficulty.pk,
-            points=rank.points,
+            id=model.pk,
+            name=model.name,
+            difficulty_id=model.difficulty.pk,
+            points=model.points,
         )
+
+    def save(self, entity: RankEntity) -> None:
+        return super().save(entity)
+
+    def list_ranks(self) -> list[RankEntity]:
+        return self._list()
 
     def get_rank_by_pk(self, pk: int) -> RankEntity:
         return self._get(pk=pk)
@@ -34,10 +37,8 @@ class RankRepository:
         except Rank.DoesNotExist as e:
             raise RankNotFoundError from e
 
-    @staticmethod
-    def update_rank(bubble: Bubble) -> None:
-        next_rank = Rank.objects.filter(points__lte=bubble.progress).order_by("-points").first()
-        if next_rank and next_rank != bubble.rank:
-            bubble.rank = next_rank
-            bubble.progress = 0
-            bubble.save()
+    def create_rank(self, name: str, diff_name: str, points: int) -> RankEntity:
+        return self._create(name=name, difficulty=Rank.objects.get(name=diff_name), points=points)
+
+    def rank_exists(self, name: str) -> bool:
+        return Rank.objects.filter(name=name).exists()

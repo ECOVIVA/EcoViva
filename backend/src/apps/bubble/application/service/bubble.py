@@ -1,9 +1,20 @@
+from dataclasses import dataclass
+
+from apps.bubble.domain.entities.bubble import BubbleEntity
+from apps.bubble.domain.entities.difficulty import DifficultyEntity
+from apps.bubble.infrastructure.repositories.bubble import BubbleRepository
+from apps.bubble.infrastructure.repositories.difficulty import DifficultyRepository
+from apps.bubble.infrastructure.repositories.rank import RankRepository
+
+
+@dataclass
 class BubbleService:
-    def calculate_bubble_difficulty(self, bubble) -> None:
-        DifficultyRepository.get_difficulty_by_pk(bubble.difficulty_id)
+    repository: BubbleRepository
 
-    def increment_points_for_bubble(self) -> None:
-        CheckInRepository.increment_points_for_bubble(self.check_in)
+    def get_bubble_difficulty(self, bubble: BubbleEntity) -> DifficultyEntity:
+        rank = RankRepository().get_rank_by_pk(bubble.rank_id)
+        return DifficultyRepository().get_difficulty_by_pk(rank.difficulty_id)
 
-    def execute(self) -> None:
-        RankRepository.update_rank(self.bubble)
+    def increment_points_for_bubble(self, bubble: BubbleEntity, points: int) -> None:
+        bubble.add_xp(points)
+        self.repository.update_bubble(bubble)
