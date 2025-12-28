@@ -4,6 +4,7 @@ from datetime import datetime
 
 @dataclass(frozen=True)
 class CheckProfileInDTO:
+    bubble_id: int
     description: str
     xp_earned: int
     created_at: datetime
@@ -15,4 +16,3 @@ class BubbleProfileDTO:
     progress: int
     rank_name: str
     difficulty_name: str
-    check_ins: list[CheckProfileInDTO]

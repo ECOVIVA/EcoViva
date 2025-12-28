@@ -6,6 +6,7 @@ from core.domain.entities.base import Entity
 
 @dataclass
 class BubbleEntity(Entity):
+    id: int
     user_id: int
     rank_id: int
     progress: Progress

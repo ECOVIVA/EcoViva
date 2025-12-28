@@ -6,6 +6,9 @@ from django.db.models.query import QuerySet
 from core.domain.entities.base import Entity
 from core.domain.exceptions import NotFoundError
 
+E: Entity
+M: Model
+
 
 class BaseRepository[E: Entity, M: Model](ABC):
     model: M
@@ -29,19 +32,14 @@ class BaseRepository[E: Entity, M: Model](ABC):
         models = self._list_model(**filters)
         return [self._to_entity(model) for model in models]
 
-    def _create(self, **data: object) -> E:
-        model = self.model.objects.create(**data)
-        return self._to_entity(model)
-
-    def _update(self, pk: int, **data: object) -> E:
-        model = self._get_model(pk=pk)
-        model.objects.update(**data)
-        return self._to_entity(model)
-
     @abstractmethod
     def _to_entity(self, model: M) -> E:
         pass
 
-    @abstractmethod
-    def save(self, entity: E) -> None:
-        pass
+
+class RepositoryWrite[E: Entity, NewE: Entity]:
+    def create(self, entity: NewE) -> E:
+        raise NotImplementedError(f"{self.__class__.__name__} não implementa create()")  # noqa
+
+    def update(self, entity: E) -> E:
+        raise NotImplementedError(f"{self.__class__.__name__} não implementa update()")  # noqa
