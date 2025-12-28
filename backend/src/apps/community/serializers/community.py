@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from apps.users.serializers import UsersSerializer, UsersMinimalSerializer
+from apps.users.interface.serializers import UsersSerializer, UsersMinimalSerializer
 from apps.users.models import Users
 from apps.community.models.community import Community
 

@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status 
 
 from apps.users.auth.permissions import IsCommunityAdmin, IsCommunityMember
-from apps.users.serializers import UsersMinimalSerializer
+from apps.users.interface.serializers import UsersMinimalSerializer
 from apps.community.serializers.events import CampaignSerializer
 from utils.mixins.community_mixins import CampaignViewMixin
 

@@ -1,5 +1,5 @@
 from django.urls import path, include  
-from . import views  
+from .interface import views  
 
 """
     Este arquivo define as rotas (URLs) relacionadas aos usuários da aplicação.

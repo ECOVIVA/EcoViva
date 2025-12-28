@@ -1,16 +1,28 @@
-from django.core.exceptions import ValidationError
-from PIL import Image
-import os
+from pathlib import Path
 
-def validate_image_size(image):
+from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import UploadedFile
+from PIL import Image
+
+
+def validate_image_size(image: UploadedFile) -> None:
     max_size = 5 * 1024 * 1024
+
     if image.size > max_size:
-        raise ValidationError("O arquivo de imagem não pode ser maior que 5MB.")
-    
-def resize_image_preserve_aspect_ratio(image_path, max_width, max_height):
-    if not os.path.exists(image_path):
+        e_msg = "O arquivo de imagem não pode ser maior que 5MB."
+        raise ValidationError(e_msg)
+
+
+def resize_image_preserve_aspect_ratio(
+    image_path: str | Path,
+    max_width: int,
+    max_height: int,
+) -> None:
+    path = Path(image_path)
+
+    if not path.exists():
         return
 
-    with Image.open(image_path) as img:
+    with Image.open(path) as img:
         img.thumbnail((max_width, max_height))
-        img.save(image_path)
+        img.save(path)

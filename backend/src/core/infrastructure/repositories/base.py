@@ -14,6 +14,9 @@ class BaseRepository[E: Entity, M: Model](ABC):
     model: M
     entity: E
 
+    def _create(self, **data: object) -> M:
+        return self.model.objects.create(**data)
+
     def _get_model(self, **filters: object) -> M:
         try:
             return self.model.objects.get(**filters)

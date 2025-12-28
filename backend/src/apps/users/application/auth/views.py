@@ -8,7 +8,7 @@ from rest_framework.exceptions import PermissionDenied
 
 
 from . import serializers
-from apps.users.serializers import UsersSerializer
+from apps.users.interface.serializers import UsersSerializer
 
 """
     Este arquivo contém as views responsáveis pela autenticação dos usuários utilizando JWT.
