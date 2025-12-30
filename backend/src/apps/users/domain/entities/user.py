@@ -1,30 +1,22 @@
 from dataclasses import dataclass
 
-from core.domain.entities.base import Entity
+from apps.users.domain.values_objects.bio import Bio
+from apps.users.domain.values_objects.email import Email
+from apps.users.domain.values_objects.password import Password
+from apps.users.domain.values_objects.phone import Phone
+from apps.users.domain.values_objects.photo import Photo
+from apps.users.domain.values_objects.username import Username
 
 
 @dataclass
-class UserEntity(Entity):
-    id: int
-    username: str
+class UserEntity:
+    id: int | None
+    username: Username
+    email: Email
+    password: Password | None
     first_name: str
     last_name: str
-    email: str
-    phone: str | None
-    bio: str | None
-    photo: str | None
-    interests: list[int] | None
-    is_active: bool
-
-
-@dataclass
-class NewUserEntity(Entity):
-    username: str
-    first_name: str
-    last_name: str
-    password: str
-    email: str
-    phone: str | None
-    bio: str | None
-    photo: str | None
-    interests: list[int] | None
+    phone: Phone | None
+    photo: Photo | None
+    bio: Bio | None
+    is_active: bool = False

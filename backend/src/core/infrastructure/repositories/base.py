@@ -14,6 +14,12 @@ class BaseRepository[E: Entity, M: Model](ABC):
     model: M
     entity: E
 
+    def _save(self, instance: M, **data: object) -> M:
+        for attr, value in data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
     def _create(self, **data: object) -> M:
         return self.model.objects.create(**data)
 
@@ -39,9 +45,10 @@ class BaseRepository[E: Entity, M: Model](ABC):
     def _to_entity(self, model: M) -> E:
         pass
 
+    @abstractmethod
+    def _to_model(self, entity: E, instance: M | None = None) -> M: ...
 
-class RepositoryWrite[E: Entity, NewE: Entity]:
-    def create(self, entity: NewE) -> E:
+    def create(self, entity: E) -> E:
         raise NotImplementedError(f"{self.__class__.__name__} não implementa create()")  # noqa
 
     def update(self, entity: E) -> E:

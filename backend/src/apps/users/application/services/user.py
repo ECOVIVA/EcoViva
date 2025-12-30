@@ -1,13 +1,31 @@
-from apps.users.domain.entities.user import UserEntity
+from apps.users.application.dtos.user import UserReadDTO, UserUpdateDTO, UserWriteDTO
+from apps.users.application.use_cases.create_user import CreateUser
+from apps.users.application.use_cases.get_user import GetUser
+from apps.users.application.use_cases.update_user import UpdateUser
 from apps.users.infrastructure.repositories.user import UserRepository
 
 
-class UserService:
-    def to_dto(self, entity: UserEntity) -> object: ...
+class UserFacade:
+    def __init__(
+        self, get_class: GetUser, create_class: CreateUser, update_class: UpdateUser
+    ) -> None:
+        self.get_class = get_class
+        self.create_class = create_class
+        self.update_class = update_class
 
-    def to_entity(self, dto_input: object) -> UserEntity: ...
+    def get_user(self, user_id: int) -> UserReadDTO:
+        return self.get_class.execute(user_id)
 
-    def get_user(self, user_id: int) -> UserEntity:
-        return UserRepository().get_by_pk(user_id)
+    def create_user(self, dto: UserWriteDTO) -> UserReadDTO:
+        return self.create_class.execute(dto)
 
-    def create_user(self, user_id: object) -> object: ...
+    def update_user(self, user_id: int, dto: UserUpdateDTO) -> UserReadDTO:
+        return self.update_class.execute(user_id, dto)
+
+
+class UserFacadeFactory:
+    @staticmethod
+    def create() -> UserFacade:
+        repo = UserRepository()
+
+        return UserFacade(GetUser(repo), CreateUser(repo), UpdateUser(repo))
