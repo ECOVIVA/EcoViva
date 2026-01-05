@@ -1,6 +1,6 @@
 from apps.users.application.dtos.user import UserReadDTO, UserWriteDTO
 from apps.users.application.mappers.user import UserMapper
-from apps.users.infrastructure.repositories.user import UserRepository
+from apps.users.domain.repositories.user import UserRepository
 
 
 class CreateUser:

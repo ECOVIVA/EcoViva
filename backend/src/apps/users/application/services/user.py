@@ -2,7 +2,9 @@ from apps.users.application.dtos.user import UserReadDTO, UserUpdateDTO, UserWri
 from apps.users.application.use_cases.create_user import CreateUser
 from apps.users.application.use_cases.get_user import GetUser
 from apps.users.application.use_cases.update_user import UpdateUser
-from apps.users.infrastructure.repositories.user import UserRepository
+from apps.users.infrastructure.repositories.user import (
+    UserRepositoryAssembler,
+)
 
 
 class UserFacade:
@@ -23,9 +25,9 @@ class UserFacade:
         return self.update_class.execute(user_id, dto)
 
 
-class UserFacadeFactory:
+class UserFacadeAssembler:
     @staticmethod
     def create() -> UserFacade:
-        repo = UserRepository()
+        repo = UserRepositoryAssembler.create()
 
         return UserFacade(GetUser(repo), CreateUser(repo), UpdateUser(repo))
