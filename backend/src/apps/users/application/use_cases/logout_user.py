@@ -2,16 +2,15 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
-class RefreshUser:
-    def execute(self, refresh_token: str) -> str:
+class LogoutUser:
+    def execute(self, refresh_token: str) -> None:
         if not refresh_token:
-            msg = "Token não encontrado."
+            msg = "Refresh token não informado."
             raise ValueError(msg)
 
         try:
-            refresh = RefreshToken(token=refresh_token)  # type: ignore
-            return str(refresh.access_token)
-
+            refresh = RefreshToken(refresh_token)  # type: ignore
+            refresh.blacklist()
         except TokenError as e:
             msg = "Token inválido ou expirado."
             raise ValueError(msg) from e

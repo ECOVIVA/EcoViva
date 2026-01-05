@@ -1,7 +1,7 @@
 from apps.users.application.ports.email_confirmations_sender import EmailConfirmationSender
 
 
-class SendEmailConfirmationUseCase:
+class SendEmailConfirmation:
     def __init__(self, sender: EmailConfirmationSender) -> None:
         self.sender = sender
 

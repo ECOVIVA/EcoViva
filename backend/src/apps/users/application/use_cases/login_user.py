@@ -1,26 +1,12 @@
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from apps.users.application.ports.email_auth import EmailAuthenticator
-from apps.users.application.use_cases.email_authenticator import EmailAuthenticatorAssembler
+from apps.users.application.ports.email_auth import Authenticator
 
 
 class LoginUser:
-    def __init__(self, authenticator: EmailAuthenticator) -> None:
+    def __init__(self, authenticator: Authenticator) -> None:
         self.authenticator = authenticator
 
-    def execute(self, email: str, password: str) -> dict[str, str]:
+    def execute(self, email: str, password: str) -> RefreshToken:
         user = self.authenticator.authenticate(email=email, password=password)
-        refresh = RefreshToken.for_user(user)
-
-        return {
-            "access_token": str(refresh.access_token),
-            "refresh_token": str(refresh),
-        }
-
-
-class LoginUserAssembler:
-    @staticmethod
-    def create() -> LoginUser:
-        auth = EmailAuthenticatorAssembler.create()
-
-        return LoginUser(auth)
+        return RefreshToken.for_user(user)

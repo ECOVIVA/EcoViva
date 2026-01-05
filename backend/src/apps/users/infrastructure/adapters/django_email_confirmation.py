@@ -1,8 +1,10 @@
 from dataclasses import dataclass
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from django.conf import settings
-from django.contrib.auth.models import AbstractBaseUser
+
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractBaseUser
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
 from django.urls import reverse
@@ -12,7 +14,6 @@ from django.utils.http import urlsafe_base64_encode
 from apps.users.application.ports.email_confirmations_sender import (
     EmailConfirmationSender,
 )
-from apps.users.application.use_cases.email_sender import SendEmailConfirmationUseCase
 from apps.users.infrastructure.tokens.email import email_confirmation_token
 
 
@@ -70,9 +71,3 @@ class DjangoEmailConfirmationSender(EmailConfirmationSender):
 
         message.attach_alternative(html, "text/html")
         message.send()
-
-
-class EmailConfirmationAssembler:
-    @staticmethod
-    def create() -> SendEmailConfirmationUseCase:
-        return SendEmailConfirmationUseCase(sender=DjangoEmailConfirmationSender())

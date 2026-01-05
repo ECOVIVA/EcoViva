@@ -1,11 +1,9 @@
-from apps.users.application.ports.email_auth import EmailAuthenticator
 from apps.users.domain.repositories.user import UserRepository
 from apps.users.infrastructure.models.user import Users
-from apps.users.infrastructure.repositories.user import UserRepositoryAssembler
 from core.domain.exceptions import BusinessRuleError
 
 
-class DjangoEmailAuthenticator:
+class DjangoAuthenticator:
     def __init__(self, repo: UserRepository) -> None:
         self._repo = repo
 
@@ -24,11 +22,3 @@ class DjangoEmailAuthenticator:
 
     def get_user(self, email: str) -> Users:
         return self._repo.get_model(email=email)
-
-
-class EmailAuthenticatorAssembler:
-    @staticmethod
-    def create() -> EmailAuthenticator:
-        repo = UserRepositoryAssembler.create()
-
-        return DjangoEmailAuthenticator(repo)
