@@ -1,0 +1,13 @@
+from typing import Protocol
+
+from apps.community.domain.entities.community import CommunityEntity
+
+
+class CommunityRepository(Protocol):
+    def list(self, **filters: object) -> list[CommunityEntity]: ...
+
+    def get(self, **filters: object) -> CommunityEntity: ...
+
+    def save(self, entity: CommunityEntity) -> CommunityEntity: ...
+
+    def delete(self, community_id: int) -> None: ...
