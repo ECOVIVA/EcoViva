@@ -1,5 +1,6 @@
 from apps.community.application.dtos.community import CommunityDTO
 from apps.community.application.mappers.community import CommunityMapper
+from apps.community.application.ports.repositories.community import CommunityFilter
 from apps.community.application.use_cases.community.add_member import RequestJoinCommunity
 from apps.community.application.use_cases.community.delete_community import DeleteCommunity
 from apps.community.application.use_cases.community.get_community import GetCommunity
@@ -8,7 +9,7 @@ from apps.community.infrastructure.mappers.community import CommunityDjangoMappe
 from apps.community.infrastructure.repositories.community import DjangoCommunityRepository
 
 
-class CommunityServiceFacade:
+class CommunityService:
     def __init__(
         self,
         get_class: GetCommunity,
@@ -21,23 +22,26 @@ class CommunityServiceFacade:
         self.request_class = request_class
         self.delete_class = delete_class
 
-    def get_community(self, **filters: object) -> CommunityDTO:
-        return self.get_class.execute(**filters)
+    def get_community(self, filters: CommunityFilter) -> CommunityDTO:
+        return self.get_class.execute(filters)
 
-    def list_communities(self, **filters: object) -> list[CommunityDTO]:
-        return self.list_class.execute(**filters)
+    def list_communities(self, filters: CommunityFilter | None = None) -> list[CommunityDTO]:
+        return self.list_class.execute(filters)
+
+    def create_community(self, data: object) -> object: ...
+
+    def update_community(self, instance: ..., data: object) -> object: ...
 
     def request_join(self, community_slug: str, user_id: int) -> None:
         return self.request_class.execute(community_slug, user_id)
 
     def delete_community(self, community_id: int) -> None:
-        delete_use_case = DeleteCommunity(repo=self.get_class.repo)
-        return delete_use_case.execute(community_id)
+        return self.delete_class.execute(community_id)
 
 
-class CommunityServiceAssembler:
+class CommunityServiceFactory:
     @staticmethod
-    def create() -> CommunityServiceFacade:
+    def create() -> CommunityService:
         repo_mapper = CommunityDjangoMapper()
         repo = DjangoCommunityRepository(repo_mapper)
 
@@ -48,7 +52,7 @@ class CommunityServiceAssembler:
         request_class = RequestJoinCommunity(repo=repo)
         delete_class = DeleteCommunity(repo=repo)
 
-        return CommunityServiceFacade(
+        return CommunityService(
             get_class=get_class,
             list_class=list_class,
             request_class=request_class,
