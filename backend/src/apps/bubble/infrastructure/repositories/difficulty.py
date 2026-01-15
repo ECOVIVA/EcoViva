@@ -1,22 +1,16 @@
 from apps.bubble.domain.entities.difficulty import DifficultyEntity
+from apps.bubble.infrastructure.mapper.difficulty import DifficultyDjangoMapper
 from apps.bubble.infrastructure.models.difficulty import Difficulty
-from core.infrastructure.repositories.base import BaseRepository
 
 
-class DifficultyRepository(BaseRepository[DifficultyEntity, Difficulty]):
-    def _to_entity(self, model: Difficulty) -> DifficultyEntity:
-        return DifficultyEntity(
-            id=model.pk,
-            name=model.name,
-            points_for_activity=model.points_for_activity,
-        )
+class DifficultyRepository:
+    def __init__(self, mapper: DifficultyDjangoMapper) -> None:
+        self.mapper = mapper
 
     def save(self, entity: DifficultyEntity) -> None:
-        return super().save(entity)
+        model = self.mapper.to_model(entity)
+        model.save()
 
-    def get_difficulty_by_pk(self, pk: int) -> DifficultyEntity:
-        return self._get(pk=pk)
-
-    @staticmethod
-    def create_difficulty(name: str, points: int) -> None:
-        Difficulty.objects.get_or_create(name=name, points_for_activity=points)
+    def get_by_pk(self, pk: int) -> DifficultyEntity:
+        diff = Difficulty.objects.get(pk=pk)
+        return self.mapper.to_entity(diff)

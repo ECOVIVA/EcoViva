@@ -9,14 +9,14 @@ from core.domain.exceptions import BusinessRuleError
 
 @dataclass
 class CheckInEntity(Entity):
-    id: int
+    id: int | None
     bubble_id: int
     description: str
     xp_earned: int
     created_at: datetime
 
     def ensure_check_in_after_24_hours(self, last_checkin: "CheckInEntity") -> None:
-        if not last_checkin:
+        if not last_checkin and last_checkin.created_at is None:
             return
 
         tempo = timezone.now() - last_checkin.created_at
@@ -24,10 +24,3 @@ class CheckInEntity(Entity):
         if tempo < timedelta(days=1):
             msg = "Um novo Check-in só pode ser feito após 24 horas."
             raise BusinessRuleError(msg)
-
-
-@dataclass
-class NewCheckInEntity(Entity):
-    bubble_id: int
-    description: str
-    xp_earned: int

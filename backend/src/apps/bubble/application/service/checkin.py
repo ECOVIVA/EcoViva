@@ -1,25 +1,30 @@
-from apps.bubble.application.dtos.bubble_profile import CheckProfileInDTO
-from apps.bubble.domain.entities.checkin import CheckInEntity, NewCheckInEntity
-from apps.bubble.infrastructure.repositories.checkin import CheckInRepository
+from apps.bubble.application.dtos.check_in import CheckInCreateDTO, CheckInDTO
+from apps.bubble.application.mapper.checkin import CheckInMapper
+from apps.bubble.application.use_cases.checkin.create_checkin import CreateCheckinUseCase
+from apps.bubble.application.use_cases.checkin.list_checkin import ListCheckInUseCase
+from apps.bubble.domain.entities.checkin import CheckInEntity
+from apps.bubble.infrastructure.repositories.checkin import CheckInRepositoryFactory
 
 
 class CheckInService:
-    def create(self, bubble_id: int, description: str) -> CheckInEntity:
-        xp_earned = CheckInRepository().get_xp_earned(bubble_id)
-        check_in = NewCheckInEntity(
-            bubble_id=bubble_id, description=description, xp_earned=xp_earned
-        )
+    def __init__(self, create_class: CreateCheckinUseCase, list_class: ListCheckInUseCase) -> None:
+        self.create_class = create_class
+        self.list_class = list_class
 
-        return CheckInRepository().create(check_in)
+    def create(self, dto: CheckInCreateDTO) -> CheckInEntity:
+        return self.create_class.execute(dto)
 
-    def list_check_ins_by_user(self, user_id: int) -> list[CheckProfileInDTO]:
-        check_ins = CheckInRepository().list_by_user_id(user_id)
-        return [
-            CheckProfileInDTO(
-                bubble_id=ci.bubble_id,
-                description=ci.description,
-                xp_earned=ci.xp_earned,
-                created_at=ci.created_at,
-            )
-            for ci in check_ins
-        ]
+    def list(self, bubble_pk: int) -> list[CheckInDTO]:
+        return self.list_class.execute(bubble_pk)
+
+
+class CheckInServiceFactory:
+    @staticmethod
+    def create() -> CheckInService:
+        repo = CheckInRepositoryFactory.create()
+        mapper = CheckInMapper()
+
+        create_class = CreateCheckinUseCase(repo)
+        list_class = ListCheckInUseCase(repo, mapper)
+
+        return CheckInService(create_class=create_class, list_class=list_class)

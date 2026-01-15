@@ -1,0 +1,13 @@
+from typing import Protocol
+
+from apps.bubble.domain.entities.checkin import CheckInEntity
+
+
+class CheckInRepository(Protocol):
+    def save(self, entity: CheckInEntity) -> CheckInEntity: ...
+
+    def list_by_bubble_pk(self, bubble_pk: int) -> list[CheckInEntity]: ...
+
+    def get_by_bubble_pk(self, bubble_pk: int) -> CheckInEntity: ...
+
+    def get_xp_earned(self, bubble_pk: int) -> int: ...

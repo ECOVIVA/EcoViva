@@ -1,26 +1,36 @@
-from dataclasses import dataclass
-
-from apps.bubble.application.dtos.bubble_profile import BubbleProfileDTO
+from apps.bubble.application.dtos.bubble_profile import BubbleDTO
+from apps.bubble.application.mapper.bubble import BubbleMapper
+from apps.bubble.application.use_cases.bubble.get_bubble import GetBubbleUseCase
+from apps.bubble.application.use_cases.bubble.increment_points_bubble import (
+    IncrementPointsBubbleUseCase,
+)
 from apps.bubble.domain.entities.bubble import BubbleEntity
-from apps.bubble.infrastructure.repositories.bubble import BubbleRepository
-from apps.bubble.infrastructure.repositories.difficulty import DifficultyRepository
-from apps.bubble.infrastructure.repositories.rank import RankRepository
+from apps.bubble.infrastructure.repositories.bubble import (
+    BubbleRepositoryFactory,
+)
 
 
-@dataclass
 class BubbleService:
-    def get_bubble(self, user_id: int) -> BubbleProfileDTO:
-        bubble = BubbleRepository().get_bubble_by_user(user_id)
-        rank = RankRepository().get_rank_by_pk(bubble.rank_id)
-        diff = DifficultyRepository().get_difficulty_by_pk(rank.difficulty_id)
+    def __init__(
+        self, get_class: GetBubbleUseCase, increment_class: IncrementPointsBubbleUseCase
+    ) -> None:
+        self.get_class = get_class
+        self.increment_class = increment_class
 
-        return BubbleProfileDTO(
-            user_id=bubble.user_id,
-            progress=bubble.progress.value,
-            rank_name=rank.name,
-            difficulty_name=diff.name,
-        )
+    def get_bubble(self, user_id: int) -> BubbleDTO:
+        return self.get_class.execute(user_id)
 
-    def increment_points_for_bubble(self, bubble: BubbleEntity, points: int) -> None:
-        bubble.add_xp(points)
-        BubbleRepository().update_bubble(bubble)
+    def increment_points_for_bubble(self, bubble: BubbleEntity, points: int) -> BubbleDTO:
+        return self.increment_class.execute(bubble, points)
+
+
+class BubbleServiceFactory:
+    @staticmethod
+    def create() -> BubbleService:
+        repo = BubbleRepositoryFactory.create()
+        mapper = BubbleMapper()
+
+        get_class = GetBubbleUseCase(repo, mapper)
+        increment_class = IncrementPointsBubbleUseCase(repo, mapper)
+
+        return BubbleService(get_class, increment_class)

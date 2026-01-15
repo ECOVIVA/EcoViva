@@ -2,6 +2,8 @@ from typing import TYPE_CHECKING
 
 from django.db import models
 
+from apps.users.infrastructure.models.user import Users
+
 if TYPE_CHECKING:
     from django.db.models.manager import Manager
 
@@ -9,7 +11,6 @@ if TYPE_CHECKING:
 
 
 from apps.bubble.infrastructure.models.rank import Rank
-from apps.users.models import Users
 
 
 class Bubble(models.Model):
