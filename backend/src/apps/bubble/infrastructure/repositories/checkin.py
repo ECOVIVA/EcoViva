@@ -21,9 +21,6 @@ class CheckInDjangoRepository:
         model = CheckIn.objects.get(pk=bubble_pk)
         return self.mapper.to_entity(model)
 
-    def get_xp_earned(self, bubble_pk: int) -> int:
-        return CheckIn.objects.get(pk=bubble_pk).bubble.rank.difficulty.points_for_activity
-
 
 class CheckInRepositoryFactory:
     @staticmethod

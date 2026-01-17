@@ -3,14 +3,14 @@ from datetime import datetime, timedelta
 
 from django.utils import timezone
 
-from core.domain.entities.base import Entity
+from apps.bubble.domain.entities.bubble import BubbleEntity
 from core.domain.exceptions import BusinessRuleError
 
 
 @dataclass
-class CheckInEntity(Entity):
+class CheckInEntity:
     id: int | None
-    bubble_id: int
+    bubble: BubbleEntity
     description: str
     xp_earned: int
     created_at: datetime

@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
-from core.domain.entities.base import Entity
+from apps.bubble.domain.entities.difficulty import DifficultyEntity
 
 
 @dataclass
-class RankEntity(Entity):
+class RankEntity:
     id: int | None
     name: str
-    difficulty_id: int
+    difficulty: DifficultyEntity
     points: int

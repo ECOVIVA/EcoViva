@@ -3,6 +3,7 @@ from apps.bubble.application.mapper.checkin import CheckInMapper
 from apps.bubble.application.use_cases.checkin.create_checkin import CreateCheckinUseCase
 from apps.bubble.application.use_cases.checkin.list_checkin import ListCheckInUseCase
 from apps.bubble.domain.entities.checkin import CheckInEntity
+from apps.bubble.infrastructure.repositories.bubble import BubbleRepositoryFactory
 from apps.bubble.infrastructure.repositories.checkin import CheckInRepositoryFactory
 
 
@@ -22,9 +23,10 @@ class CheckInServiceFactory:
     @staticmethod
     def create() -> CheckInService:
         repo = CheckInRepositoryFactory.create()
+        bubble_repo = BubbleRepositoryFactory.create()
         mapper = CheckInMapper()
 
-        create_class = CreateCheckinUseCase(repo)
+        create_class = CreateCheckinUseCase(repo, bubble_repo)
         list_class = ListCheckInUseCase(repo, mapper)
 
         return CheckInService(create_class=create_class, list_class=list_class)

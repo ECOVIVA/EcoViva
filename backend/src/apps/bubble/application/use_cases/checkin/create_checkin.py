@@ -1,22 +1,24 @@
 import datetime
 
 from apps.bubble.application.dtos.check_in import CheckInCreateDTO
+from apps.bubble.application.ports.repositories.bubble import BubbleRepository
 from apps.bubble.domain.entities.checkin import CheckInEntity
 from apps.bubble.infrastructure.repositories.checkin import CheckInRepository
 
 
 class CreateCheckinUseCase:
-    def __init__(self, repo: CheckInRepository) -> None:
+    def __init__(self, repo: CheckInRepository, bubble_repo: BubbleRepository) -> None:
+        self.bubble_repo = bubble_repo
         self.repo = repo
 
     def execute(self, dto: CheckInCreateDTO) -> CheckInEntity:
-        xp_earned = self.repo.get_xp_earned(dto.bubble_id)
+        bubble = self.bubble_repo.get_by_pk(dto.bubble_id)
 
         check_in = CheckInEntity(
             id=None,
-            bubble_id=dto.bubble_id,
+            bubble=bubble,
             description=dto.description,
-            xp_earned=xp_earned,
+            xp_earned=bubble.rank.difficulty.points_for_activity,
             created_at=datetime.datetime.now(),
         )
 

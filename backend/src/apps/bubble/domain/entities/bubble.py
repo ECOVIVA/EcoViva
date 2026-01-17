@@ -1,21 +1,21 @@
 from dataclasses import dataclass
 
+from apps.bubble.domain.entities.rank import RankEntity
 from apps.bubble.domain.value_objects.progress import Progress
-from core.domain.entities.base import Entity
 
 
 @dataclass
-class BubbleEntity(Entity):
+class BubbleEntity:
     id: int
     user_id: int
-    rank_id: int
+    rank: RankEntity
     progress: Progress
 
     def add_xp(self, points: int) -> "BubbleEntity":
         return BubbleEntity(
             id=self.id,
             user_id=self.user_id,
-            rank_id=self.rank_id,
+            rank=self.rank,
             progress=self.progress.increment(points),
         )
 
