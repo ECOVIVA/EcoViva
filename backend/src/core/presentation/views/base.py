@@ -10,16 +10,16 @@ TService = TypeVar("TService", covariant=True)
 
 
 class BaseAPIView[TService](APIView):
-    service_factory: TService
+    service: TService
     serializer_class: type[Serializer] | None = None
 
-    def validate_input(self, data: object) -> dict[str, object] | None:
+    def get_serializer(self, data: object) -> Serializer | None:
         if not self.serializer_class:
             return None
 
         serializer = self.serializer_class(data=data)
         serializer.is_valid(raise_exception=True)
-        return serializer.validated_data
+        return serializer
 
     def serialize_output(
         self,

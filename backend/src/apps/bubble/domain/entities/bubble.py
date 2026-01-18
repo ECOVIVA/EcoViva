@@ -19,10 +19,10 @@ class BubbleEntity:
             progress=self.progress.increment(points),
         )
 
-    def change_rank(self, new_rank_id: int) -> "BubbleEntity":
+    def change_rank(self, new_rank: RankEntity) -> "BubbleEntity":
         return BubbleEntity(
             id=self.id,
             user_id=self.user_id,
-            rank_id=new_rank_id,
+            rank=new_rank,
             progress=self.progress,
         )
