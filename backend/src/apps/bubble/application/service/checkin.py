@@ -1,10 +1,12 @@
 from apps.bubble.application.dtos.check_in import CheckInCreateDTO, CheckInDTO
 from apps.bubble.application.mapper.checkin import CheckInMapper
+from apps.bubble.application.use_cases.bubble.add_xp import AddXpUseCase
 from apps.bubble.application.use_cases.checkin.create_checkin import CreateCheckinUseCase
 from apps.bubble.application.use_cases.checkin.list_checkin import ListCheckInUseCase
 from apps.bubble.domain.entities.checkin import CheckInEntity
 from apps.bubble.infrastructure.repositories.bubble import BubbleRepositoryFactory
 from apps.bubble.infrastructure.repositories.checkin import CheckInRepositoryFactory
+from apps.bubble.infrastructure.repositories.rank import RankRepositoryFactory
 
 
 class CheckInService:
@@ -26,7 +28,11 @@ class CheckInServiceFactory:
         bubble_repo = BubbleRepositoryFactory.create()
         mapper = CheckInMapper()
 
-        create_class = CreateCheckinUseCase(repo, bubble_repo)
+        rank_repo = RankRepositoryFactory.create()
+
+        increment_class = AddXpUseCase(bubble_repo, rank_repo)
+
+        create_class = CreateCheckinUseCase(repo, increment_class, bubble_repo)
         list_class = ListCheckInUseCase(repo, mapper)
 
         return CheckInService(create_class=create_class, list_class=list_class)

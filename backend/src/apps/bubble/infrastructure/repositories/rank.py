@@ -1,3 +1,4 @@
+from apps.bubble.application.ports.repositories.rank import RankRepository
 from apps.bubble.domain.entities.rank import RankEntity
 from apps.bubble.infrastructure.mapper.rank import RankDjangoMapper
 from apps.bubble.infrastructure.models.rank import Rank
@@ -31,3 +32,11 @@ class RankDjangoRepository:
     def get_by_pk(self, pk: int) -> RankEntity:
         model = Rank.objects.get(pk=pk)
         return self.mapper.to_entity(model)
+
+
+class RankRepositoryFactory:
+    @staticmethod
+    def create() -> RankRepository:
+        mapper = RankDjangoMapper()
+
+        return RankDjangoRepository(mapper)

@@ -1,6 +1,9 @@
-from apps.bubble.models.bubble import Bubble, Difficulty, Rank
-from apps.bubble.models.checkin import CheckIn
 from django.contrib import admin
+
+from apps.bubble.infrastructure.models.bubble import Bubble
+from apps.bubble.infrastructure.models.checkin import CheckIn
+from apps.bubble.infrastructure.models.difficulty import Difficulty
+from apps.bubble.infrastructure.models.rank import Rank
 
 
 @admin.register(Difficulty)
